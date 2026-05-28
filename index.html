@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Premier League 2024–25 | Value for Money Dashboard</title>
+  <meta name="description" content="Interactive Premier League 2024–25 analytics dashboard. Explore standings, scorers, finances, value for money, and club profiles." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── HEADER ──────────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-badge">⚽</div>
+        <div>
+          <div class="logo-title">PremValue</div>
+          <div class="logo-sub">2024–25 Season · FBRef / Transfermarkt Data</div>
+        </div>
+      </div>
+      <nav class="nav" id="mainNav">
+        <button class="nav-btn active"  onclick="showSection('overview')">Overview</button>
+        <button class="nav-btn"         onclick="showSection('attack')">Attack</button>
+        <button class="nav-btn"         onclick="showSection('defence')">Defence</button>
+        <button class="nav-btn"         onclick="showSection('standings')">Standings</button>
+        <button class="nav-btn finance" onclick="showSection('finance')">💰 Finance</button>
+        <button class="nav-btn value"   onclick="showSection('value')">⚡ Value</button>
+        <button class="nav-btn clubs"   onclick="showSection('clubs')">🏟️ Clubs</button>
+        <button class="nav-btn"         onclick="showSection('facts')">Season Facts</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── HERO ────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <div class="hero-tag">📊 Real Data · All 20 Clubs · 2024–25</div>
+        <h1 class="hero-title">Premier League<br/><span class="gradient-text">Value for Money</span></h1>
+        <p class="hero-desc">Who overperformed? Who fell short? Explore goals, assists, wages, squad values, and value‑for‑money scores from the complete 2024–25 Premier League season.</p>
+        <div class="hero-chips" id="heroChips"></div>
+      </div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+    </div>
+  </section>
+
+  <!-- ── MAIN ────────────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <section class="section active" id="sectionOverview">
+      <div class="section-hdr"><h2>Season Overview</h2><p>Final standings points distribution and goals for vs against across all 20 clubs</p></div>
+      <div class="chart-grid">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Final League Points — All 20 Clubs</h3><span class="badge">Ranked by points</span></div>
+          <div class="chart-wrap tall"><canvas id="cOverviewPts"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Goals For vs Goals Against</h3><span class="badge">GF &amp; GA comparison</span></div>
+          <div class="chart-wrap"><canvas id="cOverviewGFGA"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Win / Draw / Loss Breakdown</h3><span class="badge">Top 10 clubs</span></div>
+          <div class="chart-wrap"><canvas id="cOverviewWDL"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ATTACK -->
+    <section class="section" id="sectionAttack">
+      <div class="section-hdr"><h2>Attacking Stats</h2><p>Top scorers, assists leaders, and team goal output</p></div>
+      <div class="chart-grid">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Top Scorers 2024–25</h3><span class="badge">Goals per player</span></div>
+          <div class="chart-wrap tall"><canvas id="cAttackScorers"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Top Assists 2024–25</h3><span class="badge">Assist leaders</span></div>
+          <div class="chart-wrap"><canvas id="cAttackAssists"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Team Goals Scored</h3><span class="badge">All 20 clubs</span></div>
+          <div class="chart-wrap"><canvas id="cAttackTeamGoals"></canvas></div>
+        </div>
+      </div>
+      <div class="table-section">
+        <div class="section-hdr" style="margin-top:2.5rem"><h2>Top Scorers — Full List</h2></div>
+        <div class="table-wrap">
+          <table class="stats-table" id="scorersTable">
+            <thead><tr>
+              <th>Rank</th><th>Player</th><th>Club</th><th>Apps</th><th>Goals</th><th>Assists</th><th>G+A</th>
+            </tr></thead>
+            <tbody id="scorersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEFENCE -->
+    <section class="section" id="sectionDefence">
+      <div class="section-hdr"><h2>Defensive Stats</h2><p>Clean sheets, goals conceded, and goalkeeper rankings</p></div>
+      <div class="chart-grid">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Goals Conceded — All 20 Clubs</h3><span class="badge">Lower = better</span></div>
+          <div class="chart-wrap tall"><canvas id="cDefGA"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Clean Sheet Leaders</h3><span class="badge">By goalkeeper</span></div>
+          <div class="chart-wrap"><canvas id="cDefCS"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Goals Conceded vs GD</h3><span class="badge">Scatter — defensive quality</span></div>
+          <div class="chart-wrap"><canvas id="cDefScatter"></canvas></div>
+        </div>
+      </div>
+      <div class="table-section">
+        <div class="section-hdr" style="margin-top:2.5rem"><h2>Goalkeeper Rankings</h2></div>
+        <div class="table-wrap">
+          <table class="stats-table" id="gkTable">
+            <thead><tr>
+              <th>Rank</th><th>Goalkeeper</th><th>Club</th><th>Apps</th><th>Clean Sheets</th><th>Goals Conceded</th>
+            </tr></thead>
+            <tbody id="gkBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- STANDINGS -->
+    <section class="section" id="sectionStandings">
+      <div class="section-hdr"><h2>Final Standings</h2><p>Complete 2024–25 Premier League table — all 20 clubs</p></div>
+      <div class="table-wrap">
+        <table class="stats-table" id="standingsTable">
+          <thead><tr>
+            <th>Pos</th><th>Club</th><th>MP</th><th>W</th><th>D</th><th>L</th>
+            <th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th>Pts/MP</th>
+          </tr></thead>
+          <tbody id="standingsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- FINANCE -->
+    <section class="section" id="sectionFinance">
+      <div class="section-hdr">
+        <h2>💰 Financial Analysis</h2>
+        <p>Squad market values, wage bills, cost per point, and team value index — who spends smart?</p>
+      </div>
+
+      <div class="finance-kpis" id="financeKpis"></div>
+
+      <div class="chart-grid" style="margin-top:1.5rem">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Squad Market Value — All 20 Clubs</h3><span class="badge">£M · Transfermarkt estimates</span></div>
+          <div class="chart-wrap tall"><canvas id="cFinSquadVal"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Annual Wage Bill</h3><span class="badge">£M / year</span></div>
+          <div class="chart-wrap"><canvas id="cFinWages"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Cost Per Point</h3><span class="badge">Wage bill ÷ pts · lower = better</span></div>
+          <div class="chart-wrap"><canvas id="cFinCPP"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Team Value Index chart (full-width) -->
+      <div class="chart-card wide" style="margin-top:1.25rem">
+        <div class="card-hdr">
+          <h3>Team Value Index</h3>
+          <span class="badge">Cost per pt ÷ league avg · &lt;1 = overperforming</span>
+        </div>
+        <div class="chart-wrap tall"><canvas id="cFinValueIndex"></canvas></div>
+      </div>
+
+      <!-- Famous player wages per club -->
+      <div class="section-hdr" style="margin-top:2.5rem">
+        <h2>Famous Player Wages by Club</h2>
+        <p>Weekly wage estimates (£K) for notable players — publicly reported figures</p>
+      </div>
+      <div class="wage-grid" id="wageGrid"></div>
+    </section>
+
+    <!-- VALUE FOR MONEY -->
+    <section class="section" id="sectionValue">
+      <div class="section-hdr">
+        <h2>⚡ Player Value for Money</h2>
+        <p>Performance per 90 minutes divided by market value — who gives the most for their price tag?</p>
+      </div>
+
+      <div class="value-kpis" id="valueKpis"></div>
+
+      <div class="metric-legend">
+        <div class="metric-item"><span class="dot green"></span><strong>Perf/90</strong> = (Goals + Assists) ÷ Minutes × 90</div>
+        <div class="metric-item"><span class="dot cyan"></span><strong>VFM Score</strong> = Perf/90 ÷ Market Value (£M) × 100</div>
+        <div class="metric-item"><span class="dot yellow"></span><strong>Bargain</strong> = Minutes ≥ 900 · Perf/90 ≥ position median · Value ≤ position median</div>
+      </div>
+
+      <div class="chart-grid" style="margin-top:1.5rem">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Performance per 90 vs Market Value</h3><span class="badge">Scatter · top-right = best value</span></div>
+          <div class="chart-wrap tall"><canvas id="cValScatter"></canvas></div>
+        </div>
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Top 25 — Value for Money Score</h3><span class="badge">Higher = better value</span></div>
+          <div class="chart-wrap tall"><canvas id="cValRanking"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Bargain Players Feature Cards -->
+      <div class="section-hdr" style="margin-top:2.5rem">
+        <h2>🏷️ Bargain Players</h2>
+        <p>Players meeting all three bargain criteria: 900+ minutes · above-median output · below-median market value</p>
+      </div>
+      <div class="bargain-grid" id="bargainGrid"></div>
+
+      <!-- Full Player Rankings Table -->
+      <div class="section-hdr" style="margin-top:2.5rem">
+        <h2>Full Player Rankings</h2>
+        <p>All analysed players sorted by Value for Money Score</p>
+      </div>
+      <div class="table-wrap">
+        <table class="stats-table" id="vfmTable">
+          <thead><tr>
+            <th>Rank</th><th>Player</th><th>Club</th><th>Pos</th>
+            <th>Mins</th><th>Goals</th><th>Assists</th>
+            <th>Perf/90</th><th>Value (£M)</th><th>VFM Score</th><th>Bargain?</th>
+          </tr></thead>
+          <tbody id="vfmBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CLUBS -->
+    <section class="section" id="sectionClubs">
+      <div class="section-hdr">
+        <h2>🏟️ Club Profiles</h2>
+        <p>All 20 Premier League clubs — squad finances, position, and star player wages</p>
+      </div>
+      <div class="clubs-grid" id="clubsGrid"></div>
+    </section>
+
+    <!-- FACTS -->
+    <section class="section" id="sectionFacts">
+      <div class="section-hdr"><h2>Season Facts &amp; Awards</h2><p>Records, individual awards and European qualification</p></div>
+      <div id="factsGrid" class="facts-grid"></div>
+    </section>
+
+  </main>
+
+  <!-- ── FOOTER ───────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>Data: <a href="https://fbref.com/en/comps/9/Premier-League-Stats" target="_blank">FBRef</a> · <a href="https://www.transfermarkt.com" target="_blank">Transfermarkt</a> · Premier League Official · Season ended 25 May 2025</span>
+      <span>PremValue Analytics ⚽ · Financial data: estimates from public reports</span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+[
+  {
+    "rank": 1,
+    "goalkeeper": "David Raya",
+    "club": "Arsenal",
+    "apps": 38,
+    "clean_sheets": 13,
+    "goals_conceded": 40
+  },
+  {
+    "rank": 1,
+    "goalkeeper": "Matz Sels",
+    "club": "Nottingham Forest",
+    "apps": 38,
+    "clean_sheets": 13,
+    "goals_conceded": 51
+  },
+  {
+    "rank": 3,
+    "goalkeeper": "Alisson Becker",
+    "club": "Liverpool",
+    "apps": 32,
+    "clean_sheets": 12,
+    "goals_conceded": 33
+  },
+  {
+    "rank": 4,
+    "goalkeeper": "Nick Pope",
+    "club": "Newcastle United",
+    "apps": 35,
+    "clean_sheets": 11,
+    "goals_conceded": 50
+  },
+  {
+    "rank": 5,
+    "goalkeeper": "Mark Flekken",
+    "club": "Brentford",
+    "apps": 38,
+    "clean_sheets": 10,
+    "goals_conceded": 67
+  },
+  {
+    "rank": 6,
+    "goalkeeper": "Robert S\u00e1nchez",
+    "club": "Chelsea",
+    "apps": 38,
+    "clean_sheets": 9,
+    "goals_conceded": 55
+  },
+  {
+    "rank": 7,
+    "goalkeeper": "Ederson",
+    "club": "Manchester City",
+    "apps": 33,
+    "clean_sheets": 8,
+    "goals_conceded": 53
+  },
+  {
+    "rank": 8,
+    "goalkeeper": "Neto",
+    "club": "Bournemouth",
+    "apps": 38,
+    "clean_sheets": 8,
+    "goals_conceded": 59
+  },
+  {
+    "rank": 9,
+    "goalkeeper": "Fabian Riemann",
+    "club": "Brentford",
+    "apps": 5,
+    "clean_sheets": 3,
+    "goals_conceded": 10
+  },
+  {
+    "rank": 10,
+    "goalkeeper": "Lukasz Fabianski",
+    "club": "West Ham United",
+    "apps": 30,
+    "clean_sheets": 7,
+    "goals_conceded": 72
+  }
+]

@@ -1,0 +1,130 @@
+[
+  {
+    "rank": 1,
+    "player": "Mohamed Salah",
+    "club": "Liverpool",
+    "apps": 38,
+    "assists": 18,
+    "goals": 29
+  },
+  {
+    "rank": 2,
+    "player": "Anthony Elanga",
+    "club": "Nottingham Forest",
+    "apps": 38,
+    "assists": 12,
+    "goals": 4
+  },
+  {
+    "rank": 2,
+    "player": "Jacob Murphy",
+    "club": "Newcastle United",
+    "apps": 35,
+    "assists": 12,
+    "goals": 8
+  },
+  {
+    "rank": 4,
+    "player": "Bruno Fernandes",
+    "club": "Manchester United",
+    "apps": 36,
+    "assists": 11,
+    "goals": 8
+  },
+  {
+    "rank": 5,
+    "player": "Ollie Watkins",
+    "club": "Aston Villa",
+    "apps": 38,
+    "assists": 10,
+    "goals": 16
+  },
+  {
+    "rank": 5,
+    "player": "Morgan Rogers",
+    "club": "Aston Villa",
+    "apps": 37,
+    "assists": 10,
+    "goals": 8
+  },
+  {
+    "rank": 5,
+    "player": "Antonee Robinson",
+    "club": "Fulham",
+    "apps": 36,
+    "assists": 10,
+    "goals": 2
+  },
+  {
+    "rank": 5,
+    "player": "Mikkel Damsgaard",
+    "club": "Brentford",
+    "apps": 38,
+    "assists": 10,
+    "goals": 5
+  },
+  {
+    "rank": 5,
+    "player": "Bukayo Saka",
+    "club": "Arsenal",
+    "apps": 25,
+    "assists": 10,
+    "goals": 7
+  },
+  {
+    "rank": 10,
+    "player": "Son Heung-min",
+    "club": "Tottenham Hotspur",
+    "apps": 30,
+    "assists": 9,
+    "goals": 7
+  },
+  {
+    "rank": 11,
+    "player": "Cole Palmer",
+    "club": "Chelsea",
+    "apps": 37,
+    "assists": 8,
+    "goals": 15
+  },
+  {
+    "rank": 11,
+    "player": "Adama Traor\u00e9",
+    "club": "Fulham",
+    "apps": 35,
+    "assists": 8,
+    "goals": 5
+  },
+  {
+    "rank": 11,
+    "player": "Phil Foden",
+    "club": "Manchester City",
+    "apps": 28,
+    "assists": 8,
+    "goals": 7
+  },
+  {
+    "rank": 14,
+    "player": "Trent Alexander-Arnold",
+    "club": "Liverpool",
+    "apps": 34,
+    "assists": 7,
+    "goals": 3
+  },
+  {
+    "rank": 14,
+    "player": "Noni Madueke",
+    "club": "Chelsea",
+    "apps": 32,
+    "assists": 7,
+    "goals": 7
+  },
+  {
+    "rank": 14,
+    "player": "Dejan Kulusevski",
+    "club": "Tottenham Hotspur",
+    "apps": 32,
+    "assists": 7,
+    "goals": 7
+  }
+]
