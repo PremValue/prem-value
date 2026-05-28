@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Premier League 2024–25 | Value for Money Dashboard</title>
+  <meta name="description" content="Interactive Premier League 2024–25 analytics dashboard. Explore standings, scorers, finances, value for money, and club profiles." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+/* ═══════════════════════════════════════════════════════════
+   PremValue — style.css  v2  (Finance · Value · Clubs)
+   Dark glassmorphism · purple/violet/cyan palette
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --bg-0:      #07070f;
+  --bg-1:      #0d0d1c;
+  --bg-2:      #12122a;
+  --glass:     rgba(255,255,255,0.035);
+  --border:    rgba(255,255,255,0.07);
+  --border-hi: rgba(139,92,246,0.4);
+
+  --purple:    #8b5cf6;
+  --purple-lt: #a78bfa;
+  --cyan:      #22d3ee;
+  --pink:      #ec4899;
+  --green:     #10b981;
+  --yellow:    #f59e0b;
+  --red:       #ef4444;
+  --blue:      #3b82f6;
+  --orange:    #f97316;
+
+  --t1: #f1f5f9;
+  --t2: #94a3b8;
+  --t3: #64748b;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+*,*::before,*::after { box-sizing:border-box;margin:0;padding:0 }
+html { scroll-behavior:smooth }
+body {
+  font-family:'Inter',sans-serif;
+  background:var(--bg-0);
+  color:var(--t1);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::before {
+  content:'';
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 5%   0%,  rgba(139,92,246,.12) 0%,transparent 60%),
+    radial-gradient(ellipse 55% 40% at 95% 100%, rgba(34,211,238,.09)  0%,transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50%  55%, rgba(236,72,153,.05)  0%,transparent 65%);
+}
+
+/* ── HEADER ─────────────────────────────────────────────────── */
+.header {
+  position:sticky;top:0;z-index:100;
+  background:rgba(7,7,15,.92);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.header-inner {
+  max-width:1400px;margin:0 auto;padding:0 2rem;
+  height:66px;display:flex;align-items:center;gap:2rem;
+}
+.logo { display:flex;align-items:center;gap:.75rem }
+.logo-badge {
+  width:40px;height:40px;border-radius:var(--r-sm);
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+  box-shadow:0 0 22px rgba(139,92,246,.45);
+  flex-shrink:0;
+}
+.logo-title {
+  font-family:'Outfit',sans-serif;font-weight:800;font-size:1.2rem;
+  background:linear-gradient(135deg,var(--purple-lt),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.logo-sub { font-size:.65rem;color:var(--t3);letter-spacing:.05em }
+
+.nav { display:flex;gap:.35rem;margin-left:auto;flex-wrap:wrap }
+.nav-btn {
+  background:transparent;border:1px solid var(--border);
+  color:var(--t2);padding:.4rem .9rem;border-radius:50px;
+  font-size:.8rem;font-family:'Inter',sans-serif;cursor:pointer;
+  transition:all .2s;white-space:nowrap;
+}
+.nav-btn:hover   { color:var(--t1);border-color:var(--border-hi) }
+.nav-btn.active  {
+  background:linear-gradient(135deg,var(--purple),#6d28d9);
+  border-color:transparent;color:#fff;font-weight:600;
+  box-shadow:0 0 18px rgba(139,92,246,.35);
+}
+.nav-btn.finance { border-color:rgba(249,115,22,.25);color:#fdba74 }
+.nav-btn.finance:hover,
+.nav-btn.finance.active { background:linear-gradient(135deg,#ea580c,#b45309);border-color:transparent;color:#fff }
+.nav-btn.value  { border-color:rgba(34,197,94,.25);color:#86efac }
+.nav-btn.value:hover,
+.nav-btn.value.active   { background:linear-gradient(135deg,#16a34a,#15803d);border-color:transparent;color:#fff }
+.nav-btn.clubs  { border-color:rgba(34,211,238,.25);color:#67e8f9 }
+.nav-btn.clubs:hover,
+.nav-btn.clubs.active   { background:linear-gradient(135deg,#0891b2,#0e7490);border-color:transparent;color:#fff }
+
+/* ── HERO ────────────────────────────────────────────────────── */
+.hero {
+  position:relative;z-index:1;
+  max-width:1400px;margin:0 auto;padding:4.5rem 2rem 2.5rem;
+}
+.hero-bg {
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 70% at 50% 50%, rgba(139,92,246,.07) 0%,transparent 70%);
+}
+.hero-inner {
+  display:grid;grid-template-columns:1fr 1fr;gap:3.5rem;align-items:center;
+}
+.hero-tag {
+  display:inline-block;
+  background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.3);
+  color:var(--purple-lt);padding:.3rem .9rem;border-radius:50px;
+  font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  margin-bottom:1.1rem;
+}
+.hero-title {
+  font-family:'Outfit',sans-serif;
+  font-size:clamp(2.4rem,4.5vw,3.8rem);font-weight:900;line-height:1.08;
+  margin-bottom:1.1rem;
+}
+.gradient-text {
+  background:linear-gradient(135deg,var(--purple-lt) 0%,var(--cyan) 50%,var(--pink) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-desc  { font-size:1rem;color:var(--t2);line-height:1.75;max-width:460px;margin-bottom:1.25rem }
+.hero-chips { display:flex;flex-wrap:wrap;gap:.5rem }
+.chip {
+  background:var(--glass);border:1px solid var(--border);
+  padding:.3rem .75rem;border-radius:50px;font-size:.75rem;color:var(--t2);
+}
+.chip strong { color:var(--t1) }
+
+/* KPI cards */
+.kpi-grid { display:grid;grid-template-columns:1fr 1fr;gap:.9rem }
+.kpi-card {
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:1.3rem 1.4rem;
+  backdrop-filter:blur(16px);box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
+  transition:transform .2s,border-color .2s;
+}
+.kpi-card::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--kpi-accent,linear-gradient(90deg,var(--purple),var(--cyan)));
+}
+.kpi-card:hover  { transform:translateY(-2px);border-color:var(--border-hi) }
+.kpi-icon        { font-size:1.4rem;margin-bottom:.45rem;display:flex;align-items:center;gap:.4rem }
+.kpi-value       { font-family:'Outfit',sans-serif;font-size:1.65rem;font-weight:800;line-height:1;margin-bottom:.25rem;color:var(--t1) }
+.kpi-label       { font-size:.77rem;color:var(--t3);font-weight:500 }
+.kpi-sub         { font-size:.72rem;color:var(--green);margin-top:.2rem }
+
+/* Finance / Value KPI grids */
+.finance-kpis,
+.value-kpis {
+  display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem;margin-bottom:.5rem;
+}
+
+/* ── MAIN ────────────────────────────────────────────────────── */
+.main {
+  position:relative;z-index:1;
+  max-width:1400px;margin:0 auto;padding:2rem 2rem 5rem;
+}
+.section       { display:none }
+.section.active{ display:block }
+.section-hdr   { margin-bottom:1.75rem }
+.section-hdr h2 {
+  font-family:'Outfit',sans-serif;font-size:1.7rem;font-weight:700;margin-bottom:.3rem;
+}
+.section-hdr p { color:var(--t2);font-size:.9rem }
+.table-section { }
+
+/* Chart grid */
+.chart-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem }
+.chart-card {
+  background:var(--glass);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:1.4rem;backdrop-filter:blur(16px);box-shadow:var(--shadow);
+  transition:border-color .3s;
+}
+.chart-card:hover { border-color:var(--border-hi) }
+.chart-card.wide  { grid-column:1/-1 }
+.card-hdr  { display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem }
+.card-hdr h3 { font-size:.92rem;font-weight:600;color:var(--t1) }
+.badge {
+  background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.25);
+  color:var(--purple-lt);padding:.22rem .65rem;border-radius:50px;
+  font-size:.7rem;font-weight:600;white-space:nowrap;
+}
+.chart-wrap      { position:relative;height:290px }
+.chart-wrap.tall { height:420px }
+
+/* ── TABLES ──────────────────────────────────────────────────── */
+.table-wrap {
+  overflow-x:auto;border-radius:var(--r-md);
+  border:1px solid var(--border);box-shadow:var(--shadow);
+}
+.stats-table { width:100%;border-collapse:collapse;font-size:.83rem }
+.stats-table thead tr { background:rgba(139,92,246,.1);border-bottom:1px solid var(--border-hi) }
+.stats-table thead th {
+  padding:.9rem .85rem;text-align:left;font-weight:600;
+  color:var(--purple-lt);white-space:nowrap;font-size:.75rem;
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.stats-table tbody tr { border-bottom:1px solid var(--border);transition:background .15s }
+.stats-table tbody tr:last-child { border-bottom:none }
+.stats-table tbody tr:hover { background:rgba(139,92,246,.07) }
+.stats-table tbody td { padding:.75rem .85rem;color:var(--t2);white-space:nowrap }
+.stats-table td.name-col  { color:var(--t1);font-weight:600 }
+.stats-table td.pts-col   { color:var(--cyan);font-weight:700;font-size:.9rem }
+.stats-table td.goals-col { color:var(--purple-lt);font-weight:600 }
+.stats-table td.num-col   { color:var(--t1);font-weight:500 }
+.stats-table td.vfm-col   { color:var(--green);font-weight:700;font-size:.9rem }
+
+/* Row highlights */
+.row-champion td { background:rgba(16,185,129,.07)!important }
+.row-cl td       { background:rgba(34,211,238,.04)!important }
+.row-el td       { background:rgba(139,92,246,.04)!important }
+.row-rel td      { background:rgba(239,68,68,.06)!important }
+.row-bargain td  { background:rgba(16,185,129,.06)!important }
+.row-bargain td:first-child { border-left:3px solid var(--green) }
+
+/* GD coloring */
+.gd-pos  { color:var(--green)!important;font-weight:600 }
+.gd-neg  { color:var(--red)!important;font-weight:600 }
+.gd-zero { color:var(--t3)!important }
+
+/* Position badges */
+.pos-badge {
+  display:inline-block;padding:.15rem .45rem;border-radius:4px;font-size:.7rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.04em;
+}
+.pos-fw { background:rgba(239,68,68,.2);color:#fca5a5 }
+.pos-mf { background:rgba(59,130,246,.2);color:#93c5fd }
+.pos-df { background:rgba(16,185,129,.2);color:#6ee7b7 }
+.pos-gk { background:rgba(245,158,11,.2);color:#fcd34d }
+.pos-cb { background:rgba(16,185,129,.2);color:#6ee7b7 }
+
+/* Bargain tag */
+.bargain-tag {
+  display:inline-block;background:rgba(16,185,129,.2);color:var(--green);
+  border:1px solid rgba(16,185,129,.3);padding:.15rem .5rem;border-radius:50px;
+  font-size:.72rem;font-weight:600;
+}
+
+/* Player avatar (initials circle) */
+.p-avatar {
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:50%;font-weight:700;letter-spacing:-.03em;
+  vertical-align:middle;flex-shrink:0;
+}
+
+/* ── TAG PILLS ───────────────────────────────────────────────── */
+.tag-pill {
+  display:inline-block;padding:.2rem .55rem;border-radius:50px;
+  font-size:.7rem;font-weight:600;background:var(--glass);
+  border:1px solid var(--border);color:var(--t2);margin-right:.3rem;
+}
+.qual-badge { background:rgba(34,211,238,.12);border-color:rgba(34,211,238,.25);color:var(--cyan) }
+
+/* ── FINANCE SECTION ─────────────────────────────────────────── */
+
+/* Wage grid */
+.wage-grid {
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:1.1rem;
+}
+.wage-card {
+  background:var(--glass);border:1px solid var(--border);border-radius:var(--r-md);
+  overflow:hidden;box-shadow:var(--shadow);transition:border-color .25s,transform .2s;
+}
+.wage-card:hover { border-color:var(--border-hi);transform:translateY(-2px) }
+
+.wage-card-header {
+  padding:1rem 1.1rem;display:flex;align-items:center;gap:.85rem;
+  border-bottom:1px solid var(--border);
+}
+.wage-club-logo  { flex-shrink:0;display:flex;align-items:center }
+.wage-club-name  { font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;color:var(--t1);margin-bottom:.3rem }
+.wage-club-meta  { display:flex;flex-wrap:wrap;gap:.3rem }
+
+.wage-players { padding:.85rem 1.1rem }
+.wage-row {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.55rem 0;border-bottom:1px solid rgba(255,255,255,.04);gap:.75rem;
+}
+.wage-row:last-child { border-bottom:none }
+.wage-row-left  { display:flex;align-items:center;gap:.65rem;flex:1;min-width:0 }
+.wage-row-info  { min-width:0 }
+.wage-player-name { font-size:.83rem;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+.wage-position    { font-size:.72rem;color:var(--t3);margin-top:.1rem }
+.wage-row-right   { text-align:right;flex-shrink:0 }
+.wage-amount      { font-size:.85rem;font-weight:700;color:var(--green);margin-bottom:.3rem }
+.wage-bar-wrap  { width:80px;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden }
+.wage-bar-fill  { height:100%;border-radius:2px;transition:width .5s ease }
+
+/* ── VALUE FOR MONEY SECTION ─────────────────────────────────── */
+
+/* Metric legend */
+.metric-legend {
+  display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:.5rem;
+  padding:.85rem 1rem;background:var(--glass);border:1px solid var(--border);border-radius:var(--r-md);
+}
+.metric-item { display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--t2) }
+.metric-item strong { color:var(--t1) }
+.dot {
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+}
+.dot.green  { background:var(--green) }
+.dot.cyan   { background:var(--cyan) }
+.dot.yellow { background:var(--yellow) }
+
+/* Bargain grid */
+.bargain-grid {
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1rem;
+}
+.bargain-card {
+  background:linear-gradient(160deg,var(--club-bg,#0d0d1c) 0%,var(--club-color,#8b5cf6)15 100%);
+  border:1px solid var(--club-color,var(--border));
+  border-radius:var(--r-md);overflow:hidden;
+  box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s;
+  position:relative;
+}
+.bargain-card:hover { transform:translateY(-4px);box-shadow:var(--shadow-lg) }
+.bargain-card::before {
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(160deg,transparent 40%,var(--club-color,#8b5cf6)15 100%);
+  opacity:.12;
+}
+
+.bc-header {
+  display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;
+  border-bottom:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.25);
+}
+.bc-badge {
+  font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;
+  background:rgba(16,185,129,.2);color:var(--green);border:1px solid rgba(16,185,129,.3);
+  padding:.15rem .45rem;border-radius:4px;white-space:nowrap;
+}
+.bc-club { font-size:.72rem;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+
+.bc-body { padding:.9rem }
+.bc-avatar-row { display:flex;align-items:center;gap:.75rem;margin-bottom:.85rem }
+.bc-name-block  { flex:1;min-width:0 }
+.bc-player-name { font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:800;color:var(--t1);line-height:1.25;word-break:break-word }
+.bc-pos         { font-size:.73rem;color:var(--t3);margin-top:.2rem }
+.bc-stars       { font-size:.9rem;color:var(--yellow);margin-top:.25rem;letter-spacing:.1em }
+
+.bc-stats-grid {
+  display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;
+  margin-bottom:.8rem;
+}
+.bc-stat       { text-align:center;background:rgba(0,0,0,.25);border-radius:8px;padding:.5rem .3rem }
+.bc-stat-val   { font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:700;color:var(--t1) }
+.bc-stat-lbl   { font-size:.62rem;color:var(--t3);margin-top:.1rem }
+
+.bc-vfm-row {
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);
+  border-radius:8px;padding:.5rem .7rem;
+}
+.bc-vfm-label { font-size:.75rem;font-weight:600;color:var(--green) }
+.bc-vfm-val   { font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:800;color:var(--green) }
+
+/* ── CLUBS SECTION ───────────────────────────────────────────── */
+.clubs-grid {
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:1.1rem;
+}
+.club-card {
+  background:var(--glass);border:1px solid rgba(255,255,255,.08);border-radius:var(--r-lg);
+  overflow:hidden;box-shadow:var(--shadow);
+  transition:border-color .25s,transform .2s,box-shadow .2s;
+}
+.club-card:hover {
+  border-color:var(--club-color,var(--border-hi));
+  transform:translateY(-3px);box-shadow:var(--shadow-lg);
+}
+
+.cc-banner {
+  padding:1.25rem 1.25rem 1rem;display:flex;align-items:center;gap:1rem;
+  border-bottom:1px solid rgba(255,255,255,.06);position:relative;overflow:hidden;
+}
+.cc-banner::after {
+  content:'';position:absolute;bottom:0;right:0;width:120px;height:120px;
+  background:radial-gradient(circle,var(--club-color,#8b5cf6)30 0%,transparent 70%);
+  opacity:.12;pointer-events:none;
+}
+.cc-logo-wrap { width:64px;height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:center }
+.cc-logo { width:64px;height:64px;object-fit:contain }
+.cc-logo-fallback {
+  width:64px;height:64px;border-radius:50%;
+  align-items:center;justify-content:center;font-size:2rem;
+}
+.cc-team-name {
+  font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:800;
+  color:var(--t1);margin-bottom:.35rem;line-height:1.2;
+}
+.cc-meta  { display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.35rem }
+.cc-record { font-size:.75rem;color:var(--t3) }
+
+.cc-finances {
+  padding:.85rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.cc-fin-row  { display:flex;gap:.5rem }
+.cc-fin-item {
+  flex:1;text-align:center;background:rgba(0,0,0,.2);border-radius:10px;padding:.6rem .4rem;
+}
+.cc-fin-val  { font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;color:var(--t1) }
+.cc-fin-lbl  { font-size:.65rem;color:var(--t3);margin-top:.15rem }
+
+.cc-players { padding:.85rem 1.25rem }
+.cc-section-label {
+  font-size:.67rem;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--purple-lt);font-weight:700;margin-bottom:.65rem;
+  padding-bottom:.4rem;border-bottom:1px solid rgba(255,255,255,.05);
+}
+.cc-player-row {
+  display:flex;align-items:center;gap:.75rem;padding:.5rem 0;
+  border-bottom:1px solid rgba(255,255,255,.03);
+}
+.cc-player-row:last-child { border-bottom:none }
+.cc-player-info  { flex:1;min-width:0 }
+.cc-player-name  { font-size:.82rem;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+.cc-player-meta  { font-size:.7rem;color:var(--t3);margin-top:.1rem }
+.cc-player-wage  { text-align:right;flex-shrink:0 }
+.cc-wage-num     { font-size:.88rem;font-weight:700;color:var(--green) }
+.cc-wage-lbl     { font-size:.65rem;color:var(--t3) }
+
+/* ── FACTS GRID ─────────────────────────────────────────────── */
+.facts-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.1rem }
+.fact-card {
+  background:var(--glass);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:1.3rem 1.4rem;backdrop-filter:blur(12px);box-shadow:var(--shadow);
+  transition:border-color .25s,transform .2s;
+}
+.fact-card:hover { border-color:var(--border-hi);transform:translateY(-2px) }
+.fact-card.highlight {
+  border-color:rgba(139,92,246,.35);background:rgba(139,92,246,.07);
+}
+.fact-section-title {
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--purple-lt);font-weight:700;margin-bottom:.7rem;
+  padding-bottom:.5rem;border-bottom:1px solid var(--border);
+}
+.fact-key { font-size:.78rem;color:var(--t3);margin-bottom:.15rem }
+.fact-val  { font-size:.95rem;color:var(--t1);font-weight:600;line-height:1.4 }
+
+/* ── FOOTER ──────────────────────────────────────────────────── */
+.footer {
+  position:relative;z-index:1;
+  border-top:1px solid var(--border);padding:1.4rem 2rem;
+}
+.footer-inner {
+  max-width:1400px;margin:0 auto;
+  display:flex;justify-content:space-between;
+  font-size:.78rem;color:var(--t3);flex-wrap:wrap;gap:.5rem;
+}
+.footer a { color:var(--purple-lt);text-decoration:none }
+.footer a:hover { text-decoration:underline }
+
+/* ── ANIMATIONS ──────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity:0;transform:translateY(18px) }
+  to   { opacity:1;transform:translateY(0) }
+}
+@keyframes pulse-glow {
+  0%,100% { box-shadow:0 0 8px rgba(16,185,129,.3) }
+  50%     { box-shadow:0 0 20px rgba(16,185,129,.6) }
+}
+.chart-card,.kpi-card,.fact-card { animation:fadeUp .45s ease both }
+.kpi-card:nth-child(1) { animation-delay:.05s }
+.kpi-card:nth-child(2) { animation-delay:.10s }
+.kpi-card:nth-child(3) { animation-delay:.15s }
+.kpi-card:nth-child(4) { animation-delay:.20s }
+.bargain-card { animation:fadeUp .4s ease both }
+.club-card    { animation:fadeUp .4s ease both }
+.wage-card    { animation:fadeUp .4s ease both }
+
+/* Stagger for grids */
+.bargain-grid .bargain-card:nth-child(1)  { animation-delay:.03s }
+.bargain-grid .bargain-card:nth-child(2)  { animation-delay:.06s }
+.bargain-grid .bargain-card:nth-child(3)  { animation-delay:.09s }
+.bargain-grid .bargain-card:nth-child(4)  { animation-delay:.12s }
+.bargain-grid .bargain-card:nth-child(5)  { animation-delay:.15s }
+.bargain-grid .bargain-card:nth-child(6)  { animation-delay:.18s }
+.bargain-grid .bargain-card:nth-child(7)  { animation-delay:.21s }
+.bargain-grid .bargain-card:nth-child(8)  { animation-delay:.24s }
+
+/* ── RESPONSIVE ──────────────────────────────────────────────── */
+@media (max-width:1080px) {
+  .finance-kpis,
+  .value-kpis { grid-template-columns:repeat(2,1fr) }
+}
+@media (max-width:960px) {
+  .hero-inner  { grid-template-columns:1fr;gap:2rem }
+  .chart-grid  { grid-template-columns:1fr }
+  .chart-card.wide { grid-column:1 }
+  .kpi-grid    { grid-template-columns:1fr 1fr }
+}
+@media (max-width:720px) {
+  .clubs-grid  { grid-template-columns:1fr }
+  .wage-grid   { grid-template-columns:1fr }
+  .bargain-grid{ grid-template-columns:repeat(2,1fr) }
+  .finance-kpis,
+  .value-kpis  { grid-template-columns:1fr 1fr }
+}
+@media (max-width:600px) {
+  .hero        { padding:3rem 1rem 2rem }
+  .main        { padding:1.25rem 1rem 3rem }
+  .header-inner{ padding:0 1rem }
+  .nav-btn     { padding:.35rem .65rem;font-size:.73rem }
+  .bargain-grid{ grid-template-columns:1fr }
+  .metric-legend { flex-direction:column }
+}
+
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ──────────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-badge">⚽</div>
+        <div>
+          <div class="logo-title">PremValue</div>
+          <div class="logo-sub">2024–25 Season · FBRef / Transfermarkt Data</div>
+        </div>
+      </div>
+      <nav class="nav" id="mainNav">
+        <button class="nav-btn active"  onclick="showSection('overview')">Overview</button>
+        <button class="nav-btn"         onclick="showSection('attack')">Attack</button>
+        <button class="nav-btn"         onclick="showSection('defence')">Defence</button>
+        <button class="nav-btn"         onclick="showSection('standings')">Standings</button>
+        <button class="nav-btn finance" onclick="showSection('finance')">💰 Finance</button>
+        <button class="nav-btn value"   onclick="showSection('value')">⚡ Value</button>
+        <button class="nav-btn clubs"   onclick="showSection('clubs')">🏟️ Clubs</button>
+        <button class="nav-btn"         onclick="showSection('facts')">Season Facts</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── HERO ────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <div class="hero-tag">📊 Real Data · All 20 Clubs · 2024–25</div>
+        <h1 class="hero-title">Premier League<br/><span class="gradient-text">Value for Money</span></h1>
+        <p class="hero-desc">Who overperformed? Who fell short? Explore goals, assists, wages, squad values, and value‑for‑money scores from the complete 2024–25 Premier League season.</p>
+        <div class="hero-chips" id="heroChips"></div>
+      </div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+    </div>
+  </section>
+
+  <!-- ── MAIN ────────────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <section class="section active" id="sectionOverview">
+      <div class="section-hdr"><h2>Season Overview</h2><p>Final standings points distribution and goals for vs against across all 20 clubs</p></div>
+      <div class="chart-grid">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Final League Points — All 20 Clubs</h3><span class="badge">Ranked by points</span></div>
+          <div class="chart-wrap tall"><canvas id="cOverviewPts"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Goals For vs Goals Against</h3><span class="badge">GF &amp; GA comparison</span></div>
+          <div class="chart-wrap"><canvas id="cOverviewGFGA"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Win / Draw / Loss Breakdown</h3><span class="badge">Top 10 clubs</span></div>
+          <div class="chart-wrap"><canvas id="cOverviewWDL"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ATTACK -->
+    <section class="section" id="sectionAttack">
+      <div class="section-hdr"><h2>Attacking Stats</h2><p>Top scorers, assists leaders, and team goal output</p></div>
+      <div class="chart-grid">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Top Scorers 2024–25</h3><span class="badge">Goals per player</span></div>
+          <div class="chart-wrap tall"><canvas id="cAttackScorers"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Top Assists 2024–25</h3><span class="badge">Assist leaders</span></div>
+          <div class="chart-wrap"><canvas id="cAttackAssists"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Team Goals Scored</h3><span class="badge">All 20 clubs</span></div>
+          <div class="chart-wrap"><canvas id="cAttackTeamGoals"></canvas></div>
+        </div>
+      </div>
+      <div class="table-section">
+        <div class="section-hdr" style="margin-top:2.5rem"><h2>Top Scorers — Full List</h2></div>
+        <div class="table-wrap">
+          <table class="stats-table" id="scorersTable">
+            <thead><tr>
+              <th>Rank</th><th>Player</th><th>Club</th><th>Apps</th><th>Goals</th><th>Assists</th><th>G+A</th>
+            </tr></thead>
+            <tbody id="scorersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEFENCE -->
+    <section class="section" id="sectionDefence">
+      <div class="section-hdr"><h2>Defensive Stats</h2><p>Clean sheets, goals conceded, and goalkeeper rankings</p></div>
+      <div class="chart-grid">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Goals Conceded — All 20 Clubs</h3><span class="badge">Lower = better</span></div>
+          <div class="chart-wrap tall"><canvas id="cDefGA"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Clean Sheet Leaders</h3><span class="badge">By goalkeeper</span></div>
+          <div class="chart-wrap"><canvas id="cDefCS"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Goals Conceded vs GD</h3><span class="badge">Scatter — defensive quality</span></div>
+          <div class="chart-wrap"><canvas id="cDefScatter"></canvas></div>
+        </div>
+      </div>
+      <div class="table-section">
+        <div class="section-hdr" style="margin-top:2.5rem"><h2>Goalkeeper Rankings</h2></div>
+        <div class="table-wrap">
+          <table class="stats-table" id="gkTable">
+            <thead><tr>
+              <th>Rank</th><th>Goalkeeper</th><th>Club</th><th>Apps</th><th>Clean Sheets</th><th>Goals Conceded</th>
+            </tr></thead>
+            <tbody id="gkBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- STANDINGS -->
+    <section class="section" id="sectionStandings">
+      <div class="section-hdr"><h2>Final Standings</h2><p>Complete 2024–25 Premier League table — all 20 clubs</p></div>
+      <div class="table-wrap">
+        <table class="stats-table" id="standingsTable">
+          <thead><tr>
+            <th>Pos</th><th>Club</th><th>MP</th><th>W</th><th>D</th><th>L</th>
+            <th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th>Pts/MP</th>
+          </tr></thead>
+          <tbody id="standingsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- FINANCE -->
+    <section class="section" id="sectionFinance">
+      <div class="section-hdr">
+        <h2>💰 Financial Analysis</h2>
+        <p>Squad market values, wage bills, cost per point, and team value index — who spends smart?</p>
+      </div>
+
+      <div class="finance-kpis" id="financeKpis"></div>
+
+      <div class="chart-grid" style="margin-top:1.5rem">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Squad Market Value — All 20 Clubs</h3><span class="badge">£M · Transfermarkt estimates</span></div>
+          <div class="chart-wrap tall"><canvas id="cFinSquadVal"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Annual Wage Bill</h3><span class="badge">£M / year</span></div>
+          <div class="chart-wrap"><canvas id="cFinWages"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Cost Per Point</h3><span class="badge">Wage bill ÷ pts · lower = better</span></div>
+          <div class="chart-wrap"><canvas id="cFinCPP"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Team Value Index chart (full-width) -->
+      <div class="chart-card wide" style="margin-top:1.25rem">
+        <div class="card-hdr">
+          <h3>Team Value Index</h3>
+          <span class="badge">Cost per pt ÷ league avg · &lt;1 = overperforming</span>
+        </div>
+        <div class="chart-wrap tall"><canvas id="cFinValueIndex"></canvas></div>
+      </div>
+
+      <!-- Famous player wages per club -->
+      <div class="section-hdr" style="margin-top:2.5rem">
+        <h2>Famous Player Wages by Club</h2>
+        <p>Weekly wage estimates (£K) for notable players — publicly reported figures</p>
+      </div>
+      <div class="wage-grid" id="wageGrid"></div>
+    </section>
+
+    <!-- VALUE FOR MONEY -->
+    <section class="section" id="sectionValue">
+      <div class="section-hdr">
+        <h2>⚡ Player Value for Money</h2>
+        <p>Performance per 90 minutes divided by market value — who gives the most for their price tag?</p>
+      </div>
+
+      <div class="value-kpis" id="valueKpis"></div>
+
+      <div class="metric-legend">
+        <div class="metric-item"><span class="dot green"></span><strong>Perf/90</strong> = (Goals + Assists) ÷ Minutes × 90</div>
+        <div class="metric-item"><span class="dot cyan"></span><strong>VFM Score</strong> = Perf/90 ÷ Market Value (£M) × 100</div>
+        <div class="metric-item"><span class="dot yellow"></span><strong>Bargain</strong> = Minutes ≥ 900 · Perf/90 ≥ position median · Value ≤ position median</div>
+      </div>
+
+      <div class="chart-grid" style="margin-top:1.5rem">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Performance per 90 vs Market Value</h3><span class="badge">Scatter · top-right = best value</span></div>
+          <div class="chart-wrap tall"><canvas id="cValScatter"></canvas></div>
+        </div>
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Top 25 — Value for Money Score</h3><span class="badge">Higher = better value</span></div>
+          <div class="chart-wrap tall"><canvas id="cValRanking"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Bargain Players Feature Cards -->
+      <div class="section-hdr" style="margin-top:2.5rem">
+        <h2>🏷️ Bargain Players</h2>
+        <p>Players meeting all three bargain criteria: 900+ minutes · above-median output · below-median market value</p>
+      </div>
+      <div class="bargain-grid" id="bargainGrid"></div>
+
+      <!-- Full Player Rankings Table -->
+      <div class="section-hdr" style="margin-top:2.5rem">
+        <h2>Full Player Rankings</h2>
+        <p>All analysed players sorted by Value for Money Score</p>
+      </div>
+      <div class="table-wrap">
+        <table class="stats-table" id="vfmTable">
+          <thead><tr>
+            <th>Rank</th><th>Player</th><th>Club</th><th>Pos</th>
+            <th>Mins</th><th>Goals</th><th>Assists</th>
+            <th>Perf/90</th><th>Value (£M)</th><th>VFM Score</th><th>Bargain?</th>
+          </tr></thead>
+          <tbody id="vfmBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CLUBS -->
+    <section class="section" id="sectionClubs">
+      <div class="section-hdr">
+        <h2>🏟️ Club Profiles</h2>
+        <p>All 20 Premier League clubs — squad finances, position, and star player wages</p>
+      </div>
+      <div class="clubs-grid" id="clubsGrid"></div>
+    </section>
+
+    <!-- FACTS -->
+    <section class="section" id="sectionFacts">
+      <div class="section-hdr"><h2>Season Facts &amp; Awards</h2><p>Records, individual awards and European qualification</p></div>
+      <div id="factsGrid" class="facts-grid"></div>
+    </section>
+
+  </main>
+
+  <!-- ── FOOTER ───────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>Data: <a href="https://fbref.com/en/comps/9/Premier-League-Stats" target="_blank">FBRef</a> · <a href="https://www.transfermarkt.com" target="_blank">Transfermarkt</a> · Premier League Official · Season ended 25 May 2025</span>
+      <span>PremValue Analytics ⚽ · Financial data: estimates from public reports</span>
+    </div>
+  </footer>
+
+  <script>
+/* ═══════════════════════════════════════════════════════════════
+   PremValue — app.js  v2  (Finance + Value + Clubs expansion)
+   ═══════════════════════════════════════════════════════════════ */
+
+Chart.defaults.color       = "#94a3b8";
+Chart.defaults.borderColor = "rgba(255,255,255,0.06)";
+Chart.defaults.font.family = "'Inter', sans-serif";
+
+const C = {
+  purple:"#8b5cf6", purpleLt:"#a78bfa", cyan:"#22d3ee",
+  pink:"#ec4899",   green:"#10b981",    yellow:"#f59e0b",
+  red:"#ef4444",    blue:"#3b82f6",     orange:"#f97316",
+};
+
+// ── Team metadata (color · emoji · crest) ────────────────────
+const TEAM = {
+  "Liverpool":               { color:"#c8102e", bg:"#1a0508", emoji:"🔴", crest:"https://crests.football-data.org/64.png"  },
+  "Arsenal":                 { color:"#ef0107", bg:"#1a0001", emoji:"🔴", crest:"https://crests.football-data.org/57.png"  },
+  "Manchester City":         { color:"#6cabdd", bg:"#051520", emoji:"🩵", crest:"https://crests.football-data.org/65.png"  },
+  "Chelsea":                 { color:"#034694", bg:"#010b1a", emoji:"🔵", crest:"https://crests.football-data.org/61.png"  },
+  "Newcastle United":        { color:"#241f20", bg:"#0a0a0a", emoji:"⚫", crest:"https://crests.football-data.org/67.png"  },
+  "Aston Villa":             { color:"#95bfe5", bg:"#0d0515", emoji:"💜", crest:"https://crests.football-data.org/58.png"  },
+  "Nottingham Forest":       { color:"#dd0000", bg:"#190000", emoji:"🌳", crest:"https://crests.football-data.org/351.png" },
+  "Bournemouth":             { color:"#da291c", bg:"#190100", emoji:"🍒", crest:"https://crests.football-data.org/1044.png"},
+  "Brighton & Hove Albion":  { color:"#0057b8", bg:"#010e20", emoji:"🔵", crest:"https://crests.football-data.org/397.png" },
+  "Tottenham Hotspur":       { color:"#132257", bg:"#060b1a", emoji:"⚪", crest:"https://crests.football-data.org/73.png"  },
+  "Brentford":               { color:"#e30613", bg:"#190001", emoji:"🐝", crest:"https://crests.football-data.org/402.png" },
+  "Fulham":                  { color:"#cccccc", bg:"#0d0d0d", emoji:"⚪", crest:"https://crests.football-data.org/63.png"  },
+  "Wolverhampton Wanderers": { color:"#fdb913", bg:"#191100", emoji:"🟡", crest:"https://crests.football-data.org/76.png"  },
+  "Manchester United":       { color:"#da291c", bg:"#190100", emoji:"🔴", crest:"https://crests.football-data.org/66.png"  },
+  "West Ham United":         { color:"#7a263a", bg:"#0f0409", emoji:"🟣", crest:"https://crests.football-data.org/563.png" },
+  "Crystal Palace":          { color:"#1b458f", bg:"#020917", emoji:"🦅", crest:"https://crests.football-data.org/354.png" },
+  "Everton":                 { color:"#003399", bg:"#000a1a", emoji:"🔵", crest:"https://crests.football-data.org/62.png"  },
+  "Leicester City":          { color:"#003090", bg:"#000a1a", emoji:"🦊", crest:"https://crests.football-data.org/338.png" },
+  "Ipswich Town":            { color:"#003594", bg:"#000a1a", emoji:"🔵", crest:"https://crests.football-data.org/349.png" },
+  "Southampton":             { color:"#d71920", bg:"#190001", emoji:"🔴", crest:"https://crests.football-data.org/340.png" },
+};
+const tc  = n => TEAM[n]?.color  || C.purple;
+const tbg = n => TEAM[n]?.bg     || "#0d0d1c";
+const te  = n => TEAM[n]?.emoji  || "⚽";
+const tCrest = n => TEAM[n]?.crest || "";
+
+const SHORT = {
+  "Liverpool":"Liverpool","Arsenal":"Arsenal","Manchester City":"Man City",
+  "Chelsea":"Chelsea","Newcastle United":"Newcastle","Aston Villa":"Aston Villa",
+  "Nottingham Forest":"Nott'm Forest","Bournemouth":"Bournemouth",
+  "Brighton & Hove Albion":"Brighton","Tottenham Hotspur":"Spurs",
+  "Brentford":"Brentford","Fulham":"Fulham",
+  "Wolverhampton Wanderers":"Wolves","Manchester United":"Man Utd",
+  "West Ham United":"West Ham","Crystal Palace":"C. Palace",
+  "Everton":"Everton","Leicester City":"Leicester",
+  "Ipswich Town":"Ipswich","Southampton":"Southampton",
+};
+const sn = n => SHORT[n] || n;
+
+// Build a crest <img> element (with emoji fallback)
+function crestImg(team, size = 24) {
+  const url = tCrest(team);
+  if (!url) return `<span style="font-size:${size * 0.6}px">${te(team)}</span>`;
+  return `<img src="${url}" alt="${team}" width="${size}" height="${size}"
+    style="object-fit:contain;vertical-align:middle;margin-right:6px;border-radius:3px"
+    onerror="this.style.display='none';this.nextSibling.style.display='inline'">
+    <span style="display:none;font-size:${size * 0.5}px">${te(team)}</span>`;
+}
+
+// Player initials avatar
+function playerAvatar(name, club, size = 48) {
+  const parts = name.split(" ");
+  const init  = (parts[0][0] + (parts[parts.length - 1][0] || "")).toUpperCase();
+  const col   = tc(club);
+  const bg    = col + "33";
+  return `<div class="p-avatar" style="width:${size}px;height:${size}px;background:${bg};border:2px solid ${col};font-size:${size * 0.35}px;color:${col}">${init}</div>`;
+}
+
+// Position icon & label
+const POS_ICON  = { FW:"⚽", MF:"🔀", DF:"🛡️", GK:"🧤", CB:"🛡️" };
+const POS_LABEL = { FW:"Forward", MF:"Midfielder", DF:"Defender", GK:"Goalkeeper", CB:"Defender" };
+const posIcon   = p => POS_ICON[p]  || "⚽";
+const posLabel  = p => POS_LABEL[p] || p;
+
+// ── Chart registry ────────────────────────────────────────────
+const charts = {};
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+// ── State ─────────────────────────────────────────────────────
+let DATA = {};
+let activeSection = "overview";
+
+// ── Load all JSON in parallel ─────────────────────────────────
+const INLINE_DATA = {"standings": [{"position": 1, "team": "Liverpool", "MP": 38, "W": 25, "D": 9, "L": 4, "GF": 86, "GA": 41, "GD": 45, "Pts": 84}, {"position": 2, "team": "Arsenal", "MP": 38, "W": 22, "D": 8, "L": 8, "GF": 75, "GA": 40, "GD": 35, "Pts": 74}, {"position": 3, "team": "Manchester City", "MP": 38, "W": 23, "D": 5, "L": 10, "GF": 85, "GA": 53, "GD": 32, "Pts": 74}, {"position": 4, "team": "Chelsea", "MP": 38, "W": 20, "D": 9, "L": 9, "GF": 73, "GA": 55, "GD": 18, "Pts": 69}, {"position": 5, "team": "Newcastle United", "MP": 38, "W": 19, "D": 8, "L": 11, "GF": 64, "GA": 50, "GD": 14, "Pts": 65}, {"position": 6, "team": "Aston Villa", "MP": 38, "W": 17, "D": 10, "L": 11, "GF": 70, "GA": 57, "GD": 13, "Pts": 61}, {"position": 7, "team": "Nottingham Forest", "MP": 38, "W": 16, "D": 9, "L": 13, "GF": 65, "GA": 51, "GD": 14, "Pts": 57}, {"position": 8, "team": "Bournemouth", "MP": 38, "W": 16, "D": 8, "L": 14, "GF": 64, "GA": 59, "GD": 5, "Pts": 56}, {"position": 9, "team": "Brighton & Hove Albion", "MP": 38, "W": 14, "D": 9, "L": 15, "GF": 56, "GA": 63, "GD": -7, "Pts": 51}, {"position": 10, "team": "Tottenham Hotspur", "MP": 38, "W": 14, "D": 8, "L": 16, "GF": 63, "GA": 70, "GD": -7, "Pts": 50}, {"position": 11, "team": "Brentford", "MP": 38, "W": 14, "D": 8, "L": 16, "GF": 72, "GA": 67, "GD": 5, "Pts": 50}, {"position": 12, "team": "Fulham", "MP": 38, "W": 13, "D": 9, "L": 16, "GF": 55, "GA": 61, "GD": -6, "Pts": 48}, {"position": 13, "team": "Wolverhampton Wanderers", "MP": 38, "W": 14, "D": 6, "L": 18, "GF": 60, "GA": 70, "GD": -10, "Pts": 48}, {"position": 14, "team": "Manchester United", "MP": 38, "W": 13, "D": 7, "L": 18, "GF": 57, "GA": 68, "GD": -11, "Pts": 46}, {"position": 15, "team": "West Ham United", "MP": 38, "W": 12, "D": 9, "L": 17, "GF": 55, "GA": 72, "GD": -17, "Pts": 45}, {"position": 16, "team": "Crystal Palace", "MP": 38, "W": 12, "D": 7, "L": 19, "GF": 47, "GA": 61, "GD": -14, "Pts": 43}, {"position": 17, "team": "Everton", "MP": 38, "W": 10, "D": 11, "L": 17, "GF": 42, "GA": 56, "GD": -14, "Pts": 41}, {"position": 18, "team": "Leicester City", "MP": 38, "W": 6, "D": 7, "L": 25, "GF": 31, "GA": 82, "GD": -51, "Pts": 25}, {"position": 19, "team": "Ipswich Town", "MP": 38, "W": 5, "D": 6, "L": 27, "GF": 38, "GA": 91, "GD": -53, "Pts": 21}, {"position": 20, "team": "Southampton", "MP": 38, "W": 2, "D": 6, "L": 30, "GF": 26, "GA": 92, "GD": -66, "Pts": 12}], "scorers": [{"rank": 1, "player": "Mohamed Salah", "club": "Liverpool", "apps": 38, "goals": 29, "assists": 18}, {"rank": 2, "player": "Alexander Isak", "club": "Newcastle United", "apps": 34, "goals": 23, "assists": 4}, {"rank": 3, "player": "Erling Haaland", "club": "Manchester City", "apps": 31, "goals": 22, "assists": 4}, {"rank": 4, "player": "Bryan Mbeumo", "club": "Brentford", "apps": 38, "goals": 20, "assists": 5}, {"rank": 4, "player": "Chris Wood", "club": "Nottingham Forest", "apps": 36, "goals": 20, "assists": 3}, {"rank": 6, "player": "Yoane Wissa", "club": "Brentford", "apps": 35, "goals": 19, "assists": 4}, {"rank": 7, "player": "Ollie Watkins", "club": "Aston Villa", "apps": 38, "goals": 16, "assists": 10}, {"rank": 8, "player": "Cole Palmer", "club": "Chelsea", "apps": 37, "goals": 15, "assists": 8}, {"rank": 8, "player": "Matheus Cunha", "club": "Wolverhampton Wanderers", "apps": 33, "goals": 15, "assists": 5}, {"rank": 10, "player": "Jean-Philippe Mateta", "club": "Crystal Palace", "apps": 37, "goals": 14, "assists": 3}, {"rank": 10, "player": "J\u00f8rgen Strand Larsen", "club": "Wolverhampton Wanderers", "apps": 35, "goals": 14, "assists": 3}, {"rank": 12, "player": "Luis D\u00edaz", "club": "Liverpool", "apps": 36, "goals": 13, "assists": 5}, {"rank": 12, "player": "Jarrod Bowen", "club": "West Ham United", "apps": 34, "goals": 13, "assists": 6}, {"rank": 14, "player": "Ra\u00fal Jim\u00e9nez", "club": "Fulham", "apps": 38, "goals": 12, "assists": 2}, {"rank": 14, "player": "Liam Delap", "club": "Ipswich Town", "apps": 37, "goals": 12, "assists": 3}, {"rank": 14, "player": "Justin Kluivert", "club": "Bournemouth", "apps": 34, "goals": 12, "assists": 4}, {"rank": 17, "player": "Kevin Schade", "club": "Brentford", "apps": 38, "goals": 11, "assists": 5}, {"rank": 17, "player": "Antoine Semenyo", "club": "Bournemouth", "apps": 37, "goals": 11, "assists": 4}, {"rank": 17, "player": "Brennan Johnson", "club": "Tottenham Hotspur", "apps": 33, "goals": 11, "assists": 4}, {"rank": 20, "player": "Kaoru Mitoma", "club": "Brighton & Hove Albion", "apps": 36, "goals": 10, "assists": 4}, {"rank": 20, "player": "Cody Gakpo", "club": "Liverpool", "apps": 35, "goals": 10, "assists": 5}, {"rank": 20, "player": "Evanilson", "club": "Bournemouth", "apps": 31, "goals": 10, "assists": 2}, {"rank": 20, "player": "Nicolas Jackson", "club": "Chelsea", "apps": 30, "goals": 10, "assists": 3}, {"rank": 20, "player": "Danny Welbeck", "club": "Brighton & Hove Albion", "apps": 30, "goals": 10, "assists": 3}, {"rank": 20, "player": "Jo\u00e3o Pedro", "club": "Brighton & Hove Albion", "apps": 27, "goals": 10, "assists": 2}], "assists": [{"rank": 1, "player": "Mohamed Salah", "club": "Liverpool", "apps": 38, "assists": 18, "goals": 29}, {"rank": 2, "player": "Anthony Elanga", "club": "Nottingham Forest", "apps": 38, "assists": 12, "goals": 4}, {"rank": 2, "player": "Jacob Murphy", "club": "Newcastle United", "apps": 35, "assists": 12, "goals": 8}, {"rank": 4, "player": "Bruno Fernandes", "club": "Manchester United", "apps": 36, "assists": 11, "goals": 8}, {"rank": 5, "player": "Ollie Watkins", "club": "Aston Villa", "apps": 38, "assists": 10, "goals": 16}, {"rank": 5, "player": "Morgan Rogers", "club": "Aston Villa", "apps": 37, "assists": 10, "goals": 8}, {"rank": 5, "player": "Antonee Robinson", "club": "Fulham", "apps": 36, "assists": 10, "goals": 2}, {"rank": 5, "player": "Mikkel Damsgaard", "club": "Brentford", "apps": 38, "assists": 10, "goals": 5}, {"rank": 5, "player": "Bukayo Saka", "club": "Arsenal", "apps": 25, "assists": 10, "goals": 7}, {"rank": 10, "player": "Son Heung-min", "club": "Tottenham Hotspur", "apps": 30, "assists": 9, "goals": 7}, {"rank": 11, "player": "Cole Palmer", "club": "Chelsea", "apps": 37, "assists": 8, "goals": 15}, {"rank": 11, "player": "Adama Traor\u00e9", "club": "Fulham", "apps": 35, "assists": 8, "goals": 5}, {"rank": 11, "player": "Phil Foden", "club": "Manchester City", "apps": 28, "assists": 8, "goals": 7}, {"rank": 14, "player": "Trent Alexander-Arnold", "club": "Liverpool", "apps": 34, "assists": 7, "goals": 3}, {"rank": 14, "player": "Noni Madueke", "club": "Chelsea", "apps": 32, "assists": 7, "goals": 7}, {"rank": 14, "player": "Dejan Kulusevski", "club": "Tottenham Hotspur", "apps": 32, "assists": 7, "goals": 7}], "goalkeeping": [{"rank": 1, "goalkeeper": "David Raya", "club": "Arsenal", "apps": 38, "clean_sheets": 13, "goals_conceded": 40}, {"rank": 1, "goalkeeper": "Matz Sels", "club": "Nottingham Forest", "apps": 38, "clean_sheets": 13, "goals_conceded": 51}, {"rank": 3, "goalkeeper": "Alisson Becker", "club": "Liverpool", "apps": 32, "clean_sheets": 12, "goals_conceded": 33}, {"rank": 4, "goalkeeper": "Nick Pope", "club": "Newcastle United", "apps": 35, "clean_sheets": 11, "goals_conceded": 50}, {"rank": 5, "goalkeeper": "Mark Flekken", "club": "Brentford", "apps": 38, "clean_sheets": 10, "goals_conceded": 67}, {"rank": 6, "goalkeeper": "Robert S\u00e1nchez", "club": "Chelsea", "apps": 38, "clean_sheets": 9, "goals_conceded": 55}, {"rank": 7, "goalkeeper": "Ederson", "club": "Manchester City", "apps": 33, "clean_sheets": 8, "goals_conceded": 53}, {"rank": 8, "goalkeeper": "Neto", "club": "Bournemouth", "apps": 38, "clean_sheets": 8, "goals_conceded": 59}, {"rank": 9, "goalkeeper": "Fabian Riemann", "club": "Brentford", "apps": 5, "clean_sheets": 3, "goals_conceded": 10}, {"rank": 10, "goalkeeper": "Lukasz Fabianski", "club": "West Ham United", "apps": 30, "clean_sheets": 7, "goals_conceded": 72}], "facts": {"Season dates": "16 August 2024 \u2013 25 May 2025", "Champions": "Liverpool (2nd PL title / 20th English title)", "Relegated": "Leicester City, Ipswich Town, Southampton", "Total matches played": "380", "Total goals scored": "1115", "Average goals per match": "2.93", "Average attendance": "40,423", "Golden Boot": "Mohamed Salah (Liverpool) \u2014 29 goals", "Playmaker Award (Assists)": "Mohamed Salah (Liverpool) \u2014 18 assists", "Golden Glove": "David Raya (Arsenal) & Matz Sels (Nottingham Forest) \u2014 13 clean sheets each", "Player of the Season": "Mohamed Salah (Liverpool)", "Champions League (1\u20135)": "Liverpool, Arsenal, Manchester City, Chelsea, Newcastle United", "Champions League (UEL winners)": "Tottenham Hotspur", "Europa League (6\u20137)": "Aston Villa, Nottingham Forest", "Conference League (FA Cup)": "Crystal Palace", "Biggest home win": "Nottingham Forest 7\u20130 Brighton & Hove Albion (1 Feb 2025)", "Biggest away win": "Ipswich Town 0\u20136 Manchester City (19 Jan 2025)", "Highest scoring match": "Tottenham Hotspur 3\u20136 Liverpool (22 Dec 2024)", "Longest unbeaten run": "Liverpool \u2014 26 matches", "First relegated team": "Southampton (6 Apr 2025, record earliest PL relegation)"}, "finances": [{"team": "Liverpool", "squad_value_m": 890, "wage_bill_m": 185, "famous_players": [{"player": "Mohamed Salah", "position": "FW", "weekly_k": 400}, {"player": "Virgil van Dijk", "position": "CB", "weekly_k": 220}, {"player": "Darwin N\u00fa\u00f1ez", "position": "FW", "weekly_k": 140}, {"player": "Alisson Becker", "position": "GK", "weekly_k": 120}]}, {"team": "Arsenal", "squad_value_m": 850, "wage_bill_m": 190, "famous_players": [{"player": "Bukayo Saka", "position": "FW", "weekly_k": 300}, {"player": "Declan Rice", "position": "MF", "weekly_k": 200}, {"player": "Martin \u00d8degaard", "position": "MF", "weekly_k": 200}, {"player": "David Raya", "position": "GK", "weekly_k": 100}]}, {"team": "Manchester City", "squad_value_m": 950, "wage_bill_m": 220, "famous_players": [{"player": "Kevin De Bruyne", "position": "MF", "weekly_k": 400}, {"player": "Erling Haaland", "position": "FW", "weekly_k": 375}, {"player": "Jack Grealish", "position": "FW", "weekly_k": 300}, {"player": "Phil Foden", "position": "MF", "weekly_k": 200}]}, {"team": "Chelsea", "squad_value_m": 870, "wage_bill_m": 240, "famous_players": [{"player": "Enzo Fern\u00e1ndez", "position": "MF", "weekly_k": 280}, {"player": "Reece James", "position": "DF", "weekly_k": 200}, {"player": "Cole Palmer", "position": "MF", "weekly_k": 120}, {"player": "Nicolas Jackson", "position": "FW", "weekly_k": 100}]}, {"team": "Newcastle United", "squad_value_m": 480, "wage_bill_m": 130, "famous_players": [{"player": "Bruno Guimar\u00e3es", "position": "MF", "weekly_k": 220}, {"player": "Alexander Isak", "position": "FW", "weekly_k": 180}, {"player": "Nick Pope", "position": "GK", "weekly_k": 100}, {"player": "Jacob Murphy", "position": "MF", "weekly_k": 70}]}, {"team": "Aston Villa", "squad_value_m": 520, "wage_bill_m": 140, "famous_players": [{"player": "Emiliano Mart\u00ednez", "position": "GK", "weekly_k": 200}, {"player": "Ollie Watkins", "position": "FW", "weekly_k": 120}, {"player": "Pau Torres", "position": "CB", "weekly_k": 100}, {"player": "Morgan Rogers", "position": "MF", "weekly_k": 50}]}, {"team": "Nottingham Forest", "squad_value_m": 400, "wage_bill_m": 90, "famous_players": [{"player": "Chris Wood", "position": "FW", "weekly_k": 80}, {"player": "Anthony Elanga", "position": "FW", "weekly_k": 70}, {"player": "Matz Sels", "position": "GK", "weekly_k": 60}, {"player": "Ola Aina", "position": "DF", "weekly_k": 50}]}, {"team": "Bournemouth", "squad_value_m": 290, "wage_bill_m": 65, "famous_players": [{"player": "Evanilson", "position": "FW", "weekly_k": 80}, {"player": "Justin Kluivert", "position": "FW", "weekly_k": 50}, {"player": "Antoine Semenyo", "position": "FW", "weekly_k": 45}, {"player": "Milos Kerkez", "position": "DF", "weekly_k": 50}]}, {"team": "Brighton & Hove Albion", "squad_value_m": 460, "wage_bill_m": 100, "famous_players": [{"player": "Kaoru Mitoma", "position": "FW", "weekly_k": 80}, {"player": "Jo\u00e3o Pedro", "position": "FW", "weekly_k": 80}, {"player": "Georginio Rutter", "position": "FW", "weekly_k": 80}, {"player": "Danny Welbeck", "position": "FW", "weekly_k": 60}]}, {"team": "Tottenham Hotspur", "squad_value_m": 700, "wage_bill_m": 160, "famous_players": [{"player": "Son Heung-min", "position": "FW", "weekly_k": 200}, {"player": "Dominic Solanke", "position": "FW", "weekly_k": 150}, {"player": "Dejan Kulusevski", "position": "MF", "weekly_k": 120}, {"player": "Brennan Johnson", "position": "FW", "weekly_k": 100}]}, {"team": "Brentford", "squad_value_m": 320, "wage_bill_m": 70, "famous_players": [{"player": "Bryan Mbeumo", "position": "FW", "weekly_k": 70}, {"player": "Yoane Wissa", "position": "FW", "weekly_k": 70}, {"player": "Mikkel Damsgaard", "position": "MF", "weekly_k": 60}, {"player": "Mark Flekken", "position": "GK", "weekly_k": 50}]}, {"team": "Fulham", "squad_value_m": 310, "wage_bill_m": 85, "famous_players": [{"player": "Ra\u00fal Jim\u00e9nez", "position": "FW", "weekly_k": 75}, {"player": "Adama Traor\u00e9", "position": "FW", "weekly_k": 65}, {"player": "Andreas Pereira", "position": "MF", "weekly_k": 70}, {"player": "Antonee Robinson", "position": "DF", "weekly_k": 60}]}, {"team": "Wolverhampton Wanderers", "squad_value_m": 280, "wage_bill_m": 75, "famous_players": [{"player": "Matheus Cunha", "position": "FW", "weekly_k": 110}, {"player": "J\u00f8rgen Strand Larsen", "position": "FW", "weekly_k": 60}, {"player": "Hwang Hee-chan", "position": "FW", "weekly_k": 80}, {"player": "Pedro Neto", "position": "FW", "weekly_k": 70}]}, {"team": "Manchester United", "squad_value_m": 650, "wage_bill_m": 200, "famous_players": [{"player": "Marcus Rashford", "position": "FW", "weekly_k": 300}, {"player": "Bruno Fernandes", "position": "MF", "weekly_k": 240}, {"player": "Rasmus H\u00f8jlund", "position": "FW", "weekly_k": 150}, {"player": "Kobbie Mainoo", "position": "MF", "weekly_k": 60}]}, {"team": "West Ham United", "squad_value_m": 420, "wage_bill_m": 110, "famous_players": [{"player": "Lucas Paquet\u00e1", "position": "MF", "weekly_k": 150}, {"player": "Jarrod Bowen", "position": "FW", "weekly_k": 120}, {"player": "Mohammed Kudus", "position": "FW", "weekly_k": 80}, {"player": "Tom\u00e1\u0161 Sou\u010dek", "position": "MF", "weekly_k": 70}]}, {"team": "Crystal Palace", "squad_value_m": 270, "wage_bill_m": 80, "famous_players": [{"player": "Eberechi Eze", "position": "MF", "weekly_k": 130}, {"player": "Jean-Philippe Mateta", "position": "FW", "weekly_k": 60}, {"player": "Marc Gu\u00e9hi", "position": "CB", "weekly_k": 80}, {"player": "Michael Olise", "position": "FW", "weekly_k": 80}]}, {"team": "Everton", "squad_value_m": 220, "wage_bill_m": 90, "famous_players": [{"player": "Jordan Pickford", "position": "GK", "weekly_k": 100}, {"player": "Dominic Calvert-Lewin", "position": "FW", "weekly_k": 140}, {"player": "Beto", "position": "FW", "weekly_k": 70}, {"player": "Iliman Ndiaye", "position": "FW", "weekly_k": 50}]}, {"team": "Leicester City", "squad_value_m": 200, "wage_bill_m": 80, "famous_players": [{"player": "Jamie Vardy", "position": "FW", "weekly_k": 130}, {"player": "Wilfred Ndidi", "position": "MF", "weekly_k": 80}, {"player": "Mads Hermansen", "position": "GK", "weekly_k": 50}, {"player": "Stephy Mavididi", "position": "FW", "weekly_k": 30}]}, {"team": "Ipswich Town", "squad_value_m": 190, "wage_bill_m": 50, "famous_players": [{"player": "Liam Delap", "position": "FW", "weekly_k": 40}, {"player": "Omari Hutchinson", "position": "FW", "weekly_k": 40}, {"player": "Sam Morsy", "position": "MF", "weekly_k": 25}, {"player": "Arijanet Muric", "position": "GK", "weekly_k": 30}]}, {"team": "Southampton", "squad_value_m": 180, "wage_bill_m": 55, "famous_players": [{"player": "Adam Armstrong", "position": "FW", "weekly_k": 60}, {"player": "Cameron Archer", "position": "FW", "weekly_k": 50}, {"player": "Joe Aribo", "position": "MF", "weekly_k": 60}, {"player": "Gavin Bazunu", "position": "GK", "weekly_k": 40}]}], "players": [{"player": "Mohamed Salah", "club": "Liverpool", "position": "FW", "apps": 38, "mins": 3250, "goals": 29, "assists": 18, "market_value_m": 55}, {"player": "Alexander Isak", "club": "Newcastle United", "position": "FW", "apps": 34, "mins": 2820, "goals": 23, "assists": 4, "market_value_m": 90}, {"player": "Erling Haaland", "club": "Manchester City", "position": "FW", "apps": 31, "mins": 2570, "goals": 22, "assists": 4, "market_value_m": 175}, {"player": "Bryan Mbeumo", "club": "Brentford", "position": "FW", "apps": 38, "mins": 3160, "goals": 20, "assists": 5, "market_value_m": 55}, {"player": "Chris Wood", "club": "Nottingham Forest", "position": "FW", "apps": 36, "mins": 2990, "goals": 20, "assists": 3, "market_value_m": 12}, {"player": "Yoane Wissa", "club": "Brentford", "position": "FW", "apps": 35, "mins": 2900, "goals": 19, "assists": 4, "market_value_m": 40}, {"player": "Ollie Watkins", "club": "Aston Villa", "position": "FW", "apps": 38, "mins": 3160, "goals": 16, "assists": 10, "market_value_m": 65}, {"player": "Cole Palmer", "club": "Chelsea", "position": "MF", "apps": 37, "mins": 3070, "goals": 15, "assists": 8, "market_value_m": 100}, {"player": "Matheus Cunha", "club": "Wolverhampton Wanderers", "position": "FW", "apps": 33, "mins": 2740, "goals": 15, "assists": 5, "market_value_m": 55}, {"player": "Jean-Philippe Mateta", "club": "Crystal Palace", "position": "FW", "apps": 37, "mins": 3000, "goals": 14, "assists": 3, "market_value_m": 35}, {"player": "J\u00f8rgen Strand Larsen", "club": "Wolverhampton Wanderers", "position": "FW", "apps": 35, "mins": 2640, "goals": 14, "assists": 3, "market_value_m": 25}, {"player": "Luis D\u00edaz", "club": "Liverpool", "position": "FW", "apps": 36, "mins": 2990, "goals": 13, "assists": 5, "market_value_m": 75}, {"player": "Jarrod Bowen", "club": "West Ham United", "position": "FW", "apps": 34, "mins": 2820, "goals": 13, "assists": 6, "market_value_m": 45}, {"player": "Ra\u00fal Jim\u00e9nez", "club": "Fulham", "position": "FW", "apps": 38, "mins": 3000, "goals": 12, "assists": 2, "market_value_m": 15}, {"player": "Liam Delap", "club": "Ipswich Town", "position": "FW", "apps": 37, "mins": 2800, "goals": 12, "assists": 3, "market_value_m": 25}, {"player": "Justin Kluivert", "club": "Bournemouth", "position": "FW", "apps": 34, "mins": 2800, "goals": 12, "assists": 4, "market_value_m": 22}, {"player": "Kevin Schade", "club": "Brentford", "position": "FW", "apps": 38, "mins": 3000, "goals": 11, "assists": 5, "market_value_m": 20}, {"player": "Antoine Semenyo", "club": "Bournemouth", "position": "FW", "apps": 37, "mins": 2950, "goals": 11, "assists": 4, "market_value_m": 22}, {"player": "Brennan Johnson", "club": "Tottenham Hotspur", "position": "FW", "apps": 33, "mins": 2600, "goals": 11, "assists": 4, "market_value_m": 35}, {"player": "Kaoru Mitoma", "club": "Brighton & Hove Albion", "position": "FW", "apps": 36, "mins": 3000, "goals": 10, "assists": 4, "market_value_m": 55}, {"player": "Cody Gakpo", "club": "Liverpool", "position": "FW", "apps": 35, "mins": 2900, "goals": 10, "assists": 5, "market_value_m": 45}, {"player": "Evanilson", "club": "Bournemouth", "position": "FW", "apps": 31, "mins": 2400, "goals": 10, "assists": 2, "market_value_m": 30}, {"player": "Nicolas Jackson", "club": "Chelsea", "position": "FW", "apps": 30, "mins": 2350, "goals": 10, "assists": 3, "market_value_m": 45}, {"player": "Danny Welbeck", "club": "Brighton & Hove Albion", "position": "FW", "apps": 30, "mins": 2250, "goals": 10, "assists": 3, "market_value_m": 8}, {"player": "Jo\u00e3o Pedro", "club": "Brighton & Hove Albion", "position": "FW", "apps": 27, "mins": 2000, "goals": 10, "assists": 2, "market_value_m": 35}, {"player": "Anthony Elanga", "club": "Nottingham Forest", "position": "FW", "apps": 38, "mins": 3100, "goals": 4, "assists": 12, "market_value_m": 30}, {"player": "Jacob Murphy", "club": "Newcastle United", "position": "MF", "apps": 35, "mins": 2750, "goals": 8, "assists": 12, "market_value_m": 18}, {"player": "Bruno Fernandes", "club": "Manchester United", "position": "MF", "apps": 36, "mins": 3000, "goals": 8, "assists": 11, "market_value_m": 50}, {"player": "Morgan Rogers", "club": "Aston Villa", "position": "MF", "apps": 37, "mins": 2900, "goals": 8, "assists": 10, "market_value_m": 30}, {"player": "Antonee Robinson", "club": "Fulham", "position": "DF", "apps": 36, "mins": 3000, "goals": 2, "assists": 10, "market_value_m": 20}, {"player": "Mikkel Damsgaard", "club": "Brentford", "position": "MF", "apps": 38, "mins": 3100, "goals": 5, "assists": 10, "market_value_m": 22}, {"player": "Bukayo Saka", "club": "Arsenal", "position": "FW", "apps": 25, "mins": 2050, "goals": 7, "assists": 10, "market_value_m": 150}, {"player": "Son Heung-min", "club": "Tottenham Hotspur", "position": "FW", "apps": 30, "mins": 2450, "goals": 7, "assists": 9, "market_value_m": 20}, {"player": "Cole Palmer (ast)", "club": "Chelsea", "position": "MF", "apps": 37, "mins": 3070, "goals": 15, "assists": 8, "market_value_m": 100}, {"player": "Adama Traor\u00e9", "club": "Fulham", "position": "FW", "apps": 35, "mins": 2800, "goals": 5, "assists": 8, "market_value_m": 15}, {"player": "Phil Foden", "club": "Manchester City", "position": "MF", "apps": 28, "mins": 2200, "goals": 7, "assists": 8, "market_value_m": 110}, {"player": "Trent Alexander-Arnold", "club": "Liverpool", "position": "DF", "apps": 34, "mins": 2700, "goals": 3, "assists": 7, "market_value_m": 70}, {"player": "Noni Madueke", "club": "Chelsea", "position": "FW", "apps": 32, "mins": 2500, "goals": 7, "assists": 7, "market_value_m": 35}, {"player": "Dejan Kulusevski", "club": "Tottenham Hotspur", "position": "MF", "apps": 32, "mins": 2600, "goals": 7, "assists": 7, "market_value_m": 40}, {"player": "Marcus Rashford", "club": "Manchester United", "position": "FW", "apps": 25, "mins": 1600, "goals": 3, "assists": 3, "market_value_m": 50}, {"player": "Jack Grealish", "club": "Manchester City", "position": "FW", "apps": 22, "mins": 1400, "goals": 2, "assists": 3, "market_value_m": 60}, {"player": "Eberechi Eze", "club": "Crystal Palace", "position": "MF", "apps": 30, "mins": 2400, "goals": 8, "assists": 5, "market_value_m": 85}, {"player": "Declan Rice", "club": "Arsenal", "position": "MF", "apps": 35, "mins": 3000, "goals": 7, "assists": 6, "market_value_m": 100}]};
+async function loadAll() {
+  const files = ["standings","scorers","assists","goalkeeping","facts","finances","players"];
+  files.forEach(f => DATA[f] = INLINE_DATA[f]);
+  init();
+}
+
+function init() {
+  renderKPIs();
+  renderHeroChips();
+  renderAllCharts();
+  renderStandingsTable();
+  renderScorersTable();
+  renderGKTable();
+  renderFacts();
+  // Pre-render data-only sections
+  renderWageGrid();
+  renderClubs();
+  renderVFMTable();
+  renderBargainGrid();
+}
+
+/* ════════════════════════════════════════════════════════════
+   KPIs & HERO
+   ════════════════════════════════════════════════════════════ */
+function renderKPIs() {
+  const s   = DATA.standings;
+  const champ = s[0];
+  const topScorer = DATA.scorers[0];
+  const relegated = s.slice(-3).map(t => sn(t.team)).join(", ");
+  const totalGoals = s.reduce((a, t) => a + t.GF, 0);
+
+  const kpis = [
+    {
+      icon: crestImg(champ.team, 32), value: sn(champ.team),
+      label: "2024–25 Champions", sub: `${champ.Pts} points · ${champ.W}W ${champ.D}D ${champ.L}L`,
+      accent: `linear-gradient(90deg,${C.yellow},${C.green})`
+    },
+    {
+      icon: "👟", value: `${topScorer.goals} Goals`,
+      label: `Golden Boot — ${topScorer.player}`, sub: `${topScorer.club} · ${topScorer.apps} apps`,
+      accent: `linear-gradient(90deg,${C.purple},${C.pink})`
+    },
+    {
+      icon: "⚽", value: totalGoals.toLocaleString(),
+      label: "Total Goals Scored", sub: `${DATA.facts["Average goals per match"]} per match avg`,
+      accent: `linear-gradient(90deg,${C.cyan},${C.purple})`
+    },
+    {
+      icon: "📉", value: "3 Clubs",
+      label: "Relegated", sub: relegated,
+      accent: `linear-gradient(90deg,${C.red},${C.pink})`
+    },
+  ];
+
+  document.getElementById("kpiGrid").innerHTML = kpis.map((k, i) => `
+    <div class="kpi-card" style="--kpi-accent:${k.accent};animation-delay:${i * 0.07}s">
+      <div class="kpi-icon">${k.icon}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join("");
+}
+
+function renderHeroChips() {
+  const f = DATA.facts;
+  const chips = [
+    { label: "Season",        val: f["Season dates"]          || "Aug 2024 – May 2025" },
+    { label: "Matches",       val: f["Total matches played"]  || "380"                 },
+    { label: "Avg Attendance",val: f["Average attendance"]    || "40,423"              },
+  ];
+  document.getElementById("heroChips").innerHTML = chips.map(c =>
+    `<span class="chip">${c.label}: <strong>${c.val}</strong></span>`
+  ).join("");
+}
+
+/* ════════════════════════════════════════════════════════════
+   SECTION NAVIGATION
+   ════════════════════════════════════════════════════════════ */
+function showSection(name) {
+  activeSection = name;
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  const cap = name.charAt(0).toUpperCase() + name.slice(1);
+  document.getElementById(`section${cap}`)?.classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b => {
+    const t = b.textContent.replace(/[^\w]/g, "").toLowerCase();
+    if (t.includes(name.toLowerCase().slice(0, 5))) b.classList.add("active");
+  });
+  renderAllCharts();
+}
+
+function renderAllCharts() {
+  if (activeSection === "overview")  { renderOverviewPts(); renderOverviewGFGA(); renderOverviewWDL(); }
+  if (activeSection === "attack")    { renderAttackScorers(); renderAttackAssists(); renderAttackTeamGoals(); }
+  if (activeSection === "defence")   { renderDefGA(); renderDefCS(); renderDefScatter(); }
+  if (activeSection === "finance")   { renderFinanceCharts(); }
+  if (activeSection === "value")     { renderValueCharts(); }
+}
+
+/* ════════════════════════════════════════════════════════════
+   OVERVIEW CHARTS
+   ════════════════════════════════════════════════════════════ */
+function renderOverviewPts() {
+  destroyChart("cOverviewPts");
+  const ctx = document.getElementById("cOverviewPts"); if (!ctx) return;
+  const d = DATA.standings;
+  charts["cOverviewPts"] = new Chart(ctx, {
+    type: "bar", data: {
+      labels: d.map(t => sn(t.team)),
+      datasets: [{ label: "Points", data: d.map(t => t.Pts),
+        backgroundColor: d.map(t => tc(t.team) + "cc"), borderColor: d.map(t => tc(t.team)),
+        borderWidth: 1.5, borderRadius: 5, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: "y",
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${c.parsed.x} pts  ·  ${d[c.dataIndex].W}W ${d[c.dataIndex].D}D ${d[c.dataIndex].L}L` } } },
+      scales: { x: { grid: { color: "rgba(255,255,255,0.05)" }, min: 0, max: 90 },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } } }
+    }
+  });
+}
+
+function renderOverviewGFGA() {
+  destroyChart("cOverviewGFGA");
+  const ctx = document.getElementById("cOverviewGFGA"); if (!ctx) return;
+  const d = DATA.standings;
+  charts["cOverviewGFGA"] = new Chart(ctx, {
+    type: "bar", data: {
+      labels: d.map(t => sn(t.team)),
+      datasets: [
+        { label: "Goals For",     data: d.map(t => t.GF), backgroundColor: C.green + "bb", borderColor: C.green, borderWidth: 1, borderRadius: 3 },
+        { label: "Goals Against", data: d.map(t => t.GA), backgroundColor: C.red   + "88", borderColor: C.red,   borderWidth: 1, borderRadius: 3 },
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+      plugins: { legend: { labels: { color: "#94a3b8", boxWidth: 10, font: { size: 11 } } } },
+      scales: { x: { grid: { color: "rgba(255,255,255,0.05)" } }, y: { grid: { display: false }, ticks: { font: { size: 9 } } } }
+    }
+  });
+}
+
+function renderOverviewWDL() {
+  destroyChart("cOverviewWDL");
+  const ctx = document.getElementById("cOverviewWDL"); if (!ctx) return;
+  const d = DATA.standings.slice(0, 10);
+  charts["cOverviewWDL"] = new Chart(ctx, {
+    type: "bar", data: {
+      labels: d.map(t => sn(t.team)),
+      datasets: [
+        { label: "Wins",   data: d.map(t => t.W), backgroundColor: C.green  + "cc", borderColor: C.green,  borderWidth: 1, borderRadius: 3 },
+        { label: "Draws",  data: d.map(t => t.D), backgroundColor: C.yellow + "aa", borderColor: C.yellow, borderWidth: 1, borderRadius: 3 },
+        { label: "Losses", data: d.map(t => t.L), backgroundColor: C.red    + "99", borderColor: C.red,    borderWidth: 1, borderRadius: 3 },
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: "#94a3b8", boxWidth: 10, font: { size: 11 } } } },
+      scales: { x: { stacked: true, grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 40 } },
+        y: { stacked: true, max: 38, grid: { color: "rgba(255,255,255,0.05)" } } }
+    }
+  });
+}
+
+/* ════════════════════════════════════════════════════════════
+   ATTACK CHARTS
+   ════════════════════════════════════════════════════════════ */
+function renderAttackScorers() {
+  destroyChart("cAttackScorers");
+  const ctx = document.getElementById("cAttackScorers"); if (!ctx) return;
+  const d = DATA.scorers.slice(0, 20);
+  charts["cAttackScorers"] = new Chart(ctx, {
+    type: "bar", data: {
+      labels: d.map(p => p.player),
+      datasets: [
+        { label: "Goals",   data: d.map(p => p.goals),   backgroundColor: d.map(p => tc(p.club) + "cc"), borderColor: d.map(p => tc(p.club)), borderWidth: 1.5, borderRadius: 5, borderSkipped: false },
+        { label: "Assists", data: d.map(p => p.assists),  backgroundColor: C.cyan + "66", borderColor: C.cyan, borderWidth: 1, borderRadius: 3, borderSkipped: false },
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+      plugins: { legend: { labels: { color: "#94a3b8", boxWidth: 10 } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.x}  (${d[c.dataIndex].club})` } } },
+      scales: { x: { grid: { color: "rgba(255,255,255,0.05)" } }, y: { grid: { display: false }, ticks: { font: { size: 10.5 } } } }
+    }
+  });
+}
+
+function renderAttackAssists() {
+  destroyChart("cAttackAssists");
+  const ctx = document.getElementById("cAttackAssists"); if (!ctx) return;
+  const d = DATA.assists.slice(0, 12);
+  charts["cAttackAssists"] = new Chart(ctx, {
+    type: "bar", data: {
+      labels: d.map(p => p.player),
+      datasets: [{ label: "Assists", data: d.map(p => p.assists),
+        backgroundColor: d.map(p => tc(p.club) + "cc"), borderColor: d.map(p => tc(p.club)),
+        borderWidth: 1.5, borderRadius: 5, borderSkipped: false }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => ` Assists: ${c.parsed.x}  (${d[c.dataIndex].club})` } } },
+      scales: { x: { grid: { color: "rgba(255,255,255,0.05)" } }, y: { grid: { display: false }, ticks: { font: { size: 10.5 } } } }
+    }
+  });
+}
+
+function renderAttackTeamGoals() {
+  destroyChart("cAttackTeamGoals");
+  const ctx = document.getElementById("cAttackTeamGoals"); if (!ctx) return;
+  const d = [...DATA.standings].sort((a, b) => b.GF - a.GF);
+  charts["cAttackTeamGoals"] = new Chart(ctx, {
+    type: "bar", data: {
+      labels: d.map(t => sn(t.team)),
+      datasets: [{ label: "Goals", data: d.map(t => t.GF),
+        backgroundColor: d.map(t => tc(t.team) + "cc"), borderColor: d.map(t => tc(t.team)),
+        borderWidth: 1.5, borderRadius: 4, borderSkipped: false }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y} goals` } } },
+      scales: { x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45 } },
+        y: { grid: { color: "rgba(255,255,255,0.05)" } } }
+    }
+  });
+}
+
+/* ════════════════════════════════════════════════════════════
+   DEFENCE CHARTS
+   ════════════════════════════════════════════════════════════ */
+function renderDefGA() {
+  destroyChart("cDefGA");
+  const ctx = document.getElementById("cDefGA"); if (!ctx) return;
+  const d = [...DATA.standings].sort((a, b) => a.GA - b.GA);
+  charts["cDefGA"] = new Chart(ctx, {
+    type: "bar", data: {
+      labels: d.map(t => sn(t.team)),
+      datasets: [{ label: "Goals Against", data: d.map(t => t.GA),
+        backgroundColor: d.map(t => tc(t.team) + "cc"), borderColor: d.map(t => tc(t.team)),
+        borderWidth: 1.5, borderRadius: 5, borderSkipped: false }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.x} goals conceded` } } },
+      scales: { x: { grid: { color: "rgba(255,255,255,0.05)" } }, y: { grid: { display: false }, ticks: { font: { size: 11 } } } }
+    }
+  });
+}
+
+function renderDefCS() {
+  destroyChart("cDefCS");
+  const ctx = document.getElementById("cDefCS"); if (!ctx) return;
+  const d = [...DATA.goalkeeping].sort((a, b) => b.clean_sheets - a.clean_sheets);
+  charts["cDefCS"] = new Chart(ctx, {
+    type: "bar", data: {
+      labels: d.map(g => g.goalkeeper.split(" ").slice(-1)[0]),
+      datasets: [{ label: "Clean Sheets", data: d.map(g => g.clean_sheets),
+        backgroundColor: d.map(g => tc(g.club) + "cc"), borderColor: d.map(g => tc(g.club)),
+        borderWidth: 1.5, borderRadius: 4, borderSkipped: false }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${d[c.dataIndex].goalkeeper} (${d[c.dataIndex].club}): ${c.parsed.y} clean sheets` } } },
+      scales: { x: { grid: { display: false }, ticks: { font: { size: 10 } } }, y: { grid: { color: "rgba(255,255,255,0.05)" } } }
+    }
+  });
+}
+
+function renderDefScatter() {
+  destroyChart("cDefScatter");
+  const ctx = document.getElementById("cDefScatter"); if (!ctx) return;
+  const d = DATA.standings;
+  charts["cDefScatter"] = new Chart(ctx, {
+    type: "scatter", data: {
+      datasets: [{ label: "Team",
+        data: d.map(t => ({ x: t.GA, y: t.GD, team: t.team })),
+        backgroundColor: d.map(t => tc(t.team) + "cc"), borderColor: d.map(t => tc(t.team)),
+        borderWidth: 1.5, pointRadius: 8, pointHoverRadius: 11 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${c.raw.team}  GA: ${c.raw.x}  GD: ${c.raw.y}` } } },
+      scales: {
+        x: { title: { display: true, text: "Goals Against",    color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } },
+        y: { title: { display: true, text: "Goal Difference",  color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } }
+      }
+    }
+  });
+}
+
+/* ════════════════════════════════════════════════════════════
+   FINANCE SECTION
+   ════════════════════════════════════════════════════════════ */
+
+// Compute cost-per-point and value index for each team
+function buildFinanceMetrics() {
+  const finMap = {};
+  DATA.finances.forEach(f => finMap[f.team] = f);
+  return DATA.standings.map(t => {
+    const fin  = finMap[t.team] || {};
+    const cost = fin.wage_bill_m || 0;
+    const cpp  = t.Pts > 0 ? cost / t.Pts : 0;
+    const cpg  = t.GF > 0  ? cost / t.GF  : 0;
+    return { ...t, ...fin, cpp: parseFloat(cpp.toFixed(2)), cpg: parseFloat(cpg.toFixed(2)) };
+  });
+}
+
+function buildValueIndex(metrics) {
+  const avg = metrics.reduce((s, m) => s + m.cpp, 0) / metrics.length;
+  return metrics.map(m => ({ ...m, valueIndex: parseFloat((m.cpp / avg).toFixed(3)) }));
+}
+
+function renderFinanceKPIs(metrics) {
+  const sorted   = [...metrics].sort((a, b) => a.valueIndex - b.valueIndex);
+  const best     = sorted[0];
+  const worst    = sorted[sorted.length - 1];
+  const bigSpend = [...metrics].sort((a, b) => b.wage_bill_m - a.wage_bill_m)[0];
+  const topVal   = [...metrics].sort((a, b) => b.squad_value_m - a.squad_value_m)[0];
+
+  document.getElementById("financeKpis").innerHTML = [
+    { icon: crestImg(best.team, 32), value: sn(best.team),    label: "Best Value Team",      sub: `£${best.cpp}M per point · Index ${best.valueIndex}`, accent: `linear-gradient(90deg,${C.green},${C.cyan})` },
+    { icon: crestImg(worst.team, 32),value: sn(worst.team),   label: "Worst Value Team",     sub: `£${worst.cpp}M per point · Index ${worst.valueIndex}`, accent: `linear-gradient(90deg,${C.red},${C.pink})` },
+    { icon: "💷",                     value: `£${bigSpend.wage_bill_m}M`, label: `Biggest Wage Bill — ${sn(bigSpend.team)}`, sub: `${bigSpend.Pts} pts · ${bigSpend.W}W`, accent: `linear-gradient(90deg,${C.orange},${C.yellow})` },
+    { icon: "📊",                     value: `£${topVal.squad_value_m}M`, label: `Highest Squad Value — ${sn(topVal.team)}`, sub: `${topVal.Pts} pts this season`, accent: `linear-gradient(90deg,${C.purple},${C.blue})` },
+  ].map((k, i) => `
+    <div class="kpi-card" style="--kpi-accent:${k.accent};animation-delay:${i * 0.07}s">
+      <div class="kpi-icon">${k.icon}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join("");
+}
+
+function renderFinanceCharts() {
+  const raw     = buildFinanceMetrics();
+  const metrics = buildValueIndex(raw);
+
+  renderFinanceKPIs(metrics);
+
+  // Squad value chart
+  destroyChart("cFinSquadVal");
+  const ctx1 = document.getElementById("cFinSquadVal"); if (!ctx1) return;
+  const byVal = [...metrics].sort((a, b) => b.squad_value_m - a.squad_value_m);
+  charts["cFinSquadVal"] = new Chart(ctx1, {
+    type: "bar", data: {
+      labels: byVal.map(t => sn(t.team)),
+      datasets: [{ label: "Squad Value (£M)", data: byVal.map(t => t.squad_value_m),
+        backgroundColor: byVal.map(t => tc(t.team) + "cc"), borderColor: byVal.map(t => tc(t.team)),
+        borderWidth: 1.5, borderRadius: 5, borderSkipped: false }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => ` £${c.parsed.x}M squad value` } } },
+      scales: { x: { grid: { color: "rgba(255,255,255,0.05)" } }, y: { grid: { display: false }, ticks: { font: { size: 11 } } } }
+    }
+  });
+
+  // Wage bill chart
+  destroyChart("cFinWages");
+  const ctx2 = document.getElementById("cFinWages"); if (!ctx2) return;
+  const byWage = [...metrics].sort((a, b) => b.wage_bill_m - a.wage_bill_m);
+  charts["cFinWages"] = new Chart(ctx2, {
+    type: "bar", data: {
+      labels: byWage.map(t => sn(t.team)),
+      datasets: [{ label: "Wage Bill (£M/yr)", data: byWage.map(t => t.wage_bill_m),
+        backgroundColor: byWage.map(t => tc(t.team) + "cc"), borderColor: byWage.map(t => tc(t.team)),
+        borderWidth: 1.5, borderRadius: 4, borderSkipped: false }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: "rgba(255,255,255,0.05)" } }, y: { grid: { display: false }, ticks: { font: { size: 9 } } } }
+    }
+  });
+
+  // Cost per point chart
+  destroyChart("cFinCPP");
+  const ctx3 = document.getElementById("cFinCPP"); if (!ctx3) return;
+  const byCpp = [...metrics].sort((a, b) => a.cpp - b.cpp);
+  const avgCpp = metrics.reduce((s, m) => s + m.cpp, 0) / metrics.length;
+  charts["cFinCPP"] = new Chart(ctx3, {
+    type: "bar", data: {
+      labels: byCpp.map(t => sn(t.team)),
+      datasets: [{ label: "Cost/Point (£M)", data: byCpp.map(t => t.cpp),
+        backgroundColor: byCpp.map(t => t.cpp <= avgCpp ? C.green + "bb" : C.red + "99"),
+        borderColor:     byCpp.map(t => t.cpp <= avgCpp ? C.green       : C.red),
+        borderWidth: 1.5, borderRadius: 4, borderSkipped: false }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => ` £${c.parsed.x}M per point` } } },
+      scales: { x: { grid: { color: "rgba(255,255,255,0.05)" } }, y: { grid: { display: false }, ticks: { font: { size: 9 } } } }
+    }
+  });
+
+  // Team Value Index
+  destroyChart("cFinValueIndex");
+  const ctx4 = document.getElementById("cFinValueIndex"); if (!ctx4) return;
+  const byIdx = [...metrics].sort((a, b) => a.valueIndex - b.valueIndex);
+  charts["cFinValueIndex"] = new Chart(ctx4, {
+    type: "bar", data: {
+      labels: byIdx.map(t => sn(t.team)),
+      datasets: [{ label: "Value Index", data: byIdx.map(t => t.valueIndex),
+        backgroundColor: byIdx.map(t => t.valueIndex <= 1 ? C.green + "bb" : C.red + "99"),
+        borderColor:     byIdx.map(t => t.valueIndex <= 1 ? C.green       : C.red),
+        borderWidth: 1.5, borderRadius: 5, borderSkipped: false }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => {
+          const t = byIdx[c.dataIndex];
+          return ` Index: ${c.parsed.x}  (${c.parsed.x <= 1 ? "✅ Better than avg" : "❌ Worse than avg"})  |  ${t.Pts} pts`;
+        }}}},
+      scales: {
+        x: { grid: { color: "rgba(255,255,255,0.05)" },
+          ticks: { callback: v => v.toFixed(1) } },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+// ── Famous Player Wage Cards ──────────────────────────────────
+function renderWageGrid() {
+  const el = document.getElementById("wageGrid"); if (!el) return;
+  const maxWage = 400; // max weekly wage for scale
+
+  el.innerHTML = DATA.finances.map(f => {
+    const st = DATA.standings.find(s => s.team === f.team) || {};
+    return `
+    <div class="wage-card">
+      <div class="wage-card-header" style="background:linear-gradient(135deg,${tbg(f.team)},${tc(f.team)}22)">
+        <div class="wage-club-logo">${crestImg(f.team, 44)}</div>
+        <div class="wage-club-info">
+          <div class="wage-club-name">${f.team}</div>
+          <div class="wage-club-meta">
+            <span class="tag-pill" style="background:${tc(f.team)}22;color:${tc(f.team)}">#${st.position || "–"}</span>
+            <span class="tag-pill">£${f.squad_value_m}M squad</span>
+            <span class="tag-pill">£${f.wage_bill_m}M/yr wages</span>
+          </div>
+        </div>
+      </div>
+      <div class="wage-players">
+        ${f.famous_players.map(p => `
+          <div class="wage-row">
+            <div class="wage-row-left">
+              ${playerAvatar(p.player, f.team, 36)}
+              <div class="wage-row-info">
+                <div class="wage-player-name">${p.player}</div>
+                <div class="wage-position">${posIcon(p.position)} ${posLabel(p.position)}</div>
+              </div>
+            </div>
+            <div class="wage-row-right">
+              <div class="wage-amount">£${p.weekly_k}K/wk</div>
+              <div class="wage-bar-wrap">
+                <div class="wage-bar-fill" style="width:${Math.round(p.weekly_k / maxWage * 100)}%;background:${tc(f.team)}"></div>
+              </div>
+            </div>
+          </div>`).join("")}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ════════════════════════════════════════════════════════════
+   VALUE FOR MONEY SECTION
+   ════════════════════════════════════════════════════════════ */
+
+// Deduplicate players.json (Cole Palmer appears twice due to data entry)
+function cleanPlayers() {
+  const seen = new Set();
+  return DATA.players.filter(p => {
+    const key = `${p.player}|${p.club}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function computeVFM(players) {
+  return players.map(p => {
+    const perf90 = p.mins > 0 ? parseFloat(((p.goals + p.assists) / p.mins * 90).toFixed(3)) : 0;
+    const vfm    = p.market_value_m > 0 ? parseFloat((perf90 / p.market_value_m * 100).toFixed(3)) : 0;
+    return { ...p, perf90, vfm };
+  });
+}
+
+function computeBargains(players) {
+  const groups = {};
+  players.forEach(p => {
+    const pos = p.position === "CB" ? "DF" : p.position;
+    if (!groups[pos]) groups[pos] = [];
+    groups[pos].push(p);
+  });
+
+  const medianOf = arr => {
+    const s = [...arr].sort((a, b) => a - b);
+    const m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  };
+
+  const medians = {};
+  Object.entries(groups).forEach(([pos, ps]) => {
+    medians[pos] = {
+      perf90: medianOf(ps.map(p => p.perf90)),
+      value:  medianOf(ps.map(p => p.market_value_m)),
+    };
+  });
+
+  return players.map(p => {
+    const pos = p.position === "CB" ? "DF" : p.position;
+    const med = medians[pos] || { perf90: 0, value: 99 };
+    const isBargain = p.mins >= 900
+      && p.perf90 >= med.perf90
+      && p.market_value_m <= med.value;
+    return { ...p, isBargain, medians: med };
+  });
+}
+
+function renderValueKPIs(players) {
+  const byVfm  = [...players].sort((a, b) => b.vfm  - a.vfm);
+  const byPerf = [...players].sort((a, b) => b.perf90 - a.perf90);
+  const bargains = players.filter(p => p.isBargain);
+  const topBargain = [...bargains].sort((a, b) => b.vfm - a.vfm)[0] || byVfm[0];
+
+  document.getElementById("valueKpis").innerHTML = [
+    { icon: crestImg(byVfm[0].club, 32), value: byVfm[0].player,
+      label: "Top VFM Score", sub: `VFM ${byVfm[0].vfm.toFixed(1)} · £${byVfm[0].market_value_m}M · ${byVfm[0].club}`,
+      accent: `linear-gradient(90deg,${C.green},${C.cyan})` },
+    { icon: "🏹", value: byPerf[0].player,
+      label: "Best Output per 90", sub: `${byPerf[0].perf90.toFixed(2)} perf/90 · ${byPerf[0].goals}G ${byPerf[0].assists}A`,
+      accent: `linear-gradient(90deg,${C.purple},${C.pink})` },
+    { icon: "🏷️", value: bargains.length + " Players",
+      label: "Bargain Players Found", sub: `Top: ${topBargain?.player || "–"}`,
+      accent: `linear-gradient(90deg,${C.yellow},${C.orange})` },
+    { icon: "💎", value: topBargain?.player || "–",
+      label: "Best Bargain", sub: `£${topBargain?.market_value_m}M · ${topBargain?.goals}G ${topBargain?.assists}A`,
+      accent: `linear-gradient(90deg,${C.cyan},${C.blue})` },
+  ].map((k, i) => `
+    <div class="kpi-card" style="--kpi-accent:${k.accent};animation-delay:${i * 0.07}s">
+      <div class="kpi-icon">${k.icon}</div>
+      <div class="kpi-value" style="font-size:1.2rem">${k.value}</div>
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join("");
+}
+
+function renderValueCharts() {
+  const raw     = cleanPlayers();
+  const withVfm = computeVFM(raw);
+  const players = computeBargains(withVfm);
+
+  renderValueKPIs(players);
+
+  // Scatter: Perf/90 vs Market Value
+  destroyChart("cValScatter");
+  const ctx1 = document.getElementById("cValScatter"); if (!ctx1) return;
+  const validP = players.filter(p => p.mins >= 500);
+  charts["cValScatter"] = new Chart(ctx1, {
+    type: "scatter", data: {
+      datasets: [{
+        label: "Players",
+        data: validP.map(p => ({ x: p.market_value_m, y: p.perf90, player: p.player, club: p.club, bargain: p.isBargain })),
+        backgroundColor: validP.map(p => p.isBargain ? C.green + "ee" : tc(p.club) + "bb"),
+        borderColor:     validP.map(p => p.isBargain ? C.green         : tc(p.club)),
+        borderWidth: validP.map(p => p.isBargain ? 2 : 1),
+        pointRadius: validP.map(p => p.isBargain ? 9 : 6),
+        pointHoverRadius: 12,
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${c.raw.player} (${c.raw.club})  £${c.raw.x}M  Perf/90: ${c.raw.y}  ${c.raw.bargain ? "🏷️ Bargain" : ""}` } } },
+      scales: {
+        x: { title: { display: true, text: "Market Value (£M)", color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } },
+        y: { title: { display: true, text: "Performance per 90",  color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } }
+      }
+    }
+  });
+
+  // VFM Bar chart — top 25
+  destroyChart("cValRanking");
+  const ctx2 = document.getElementById("cValRanking"); if (!ctx2) return;
+  const top25 = [...players].filter(p => p.mins >= 900).sort((a, b) => b.vfm - a.vfm).slice(0, 25);
+  charts["cValRanking"] = new Chart(ctx2, {
+    type: "bar", data: {
+      labels: top25.map(p => p.player),
+      datasets: [{ label: "VFM Score", data: top25.map(p => p.vfm),
+        backgroundColor: top25.map(p => p.isBargain ? C.green + "dd" : tc(p.club) + "cc"),
+        borderColor:     top25.map(p => p.isBargain ? C.green         : tc(p.club)),
+        borderWidth: 1.5, borderRadius: 5, borderSkipped: false }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => {
+          const p = top25[c.dataIndex];
+          return ` VFM: ${c.parsed.x.toFixed(1)}  |  £${p.market_value_m}M  |  ${p.goals}G ${p.assists}A  ${p.isBargain ? "🏷️" : ""}`;
+        }}}},
+      scales: { x: { grid: { color: "rgba(255,255,255,0.05)" } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } }
+    }
+  });
+}
+
+// ── Bargain Player Feature Cards ──────────────────────────────
+function renderBargainGrid() {
+  const raw     = cleanPlayers();
+  const withVfm = computeVFM(raw);
+  const players = computeBargains(withVfm);
+  const bargains = [...players.filter(p => p.isBargain)].sort((a, b) => b.vfm - a.vfm);
+
+  const el = document.getElementById("bargainGrid"); if (!el) return;
+  if (!bargains.length) { el.innerHTML = `<p style="color:var(--t3)">No bargain players found with current criteria.</p>`; return; }
+
+  el.innerHTML = bargains.map(p => {
+    const col   = tc(p.club);
+    const stars = Math.min(5, Math.round(p.vfm * 2));
+    const starStr = "★".repeat(stars) + "☆".repeat(5 - stars);
+    return `
+    <div class="bargain-card" style="--club-color:${col};--club-bg:${tbg(p.club)}">
+      <div class="bc-header">
+        <div class="bc-badge">🏷️ BARGAIN</div>
+        ${crestImg(p.club, 28)}
+        <span class="bc-club">${sn(p.club)}</span>
+      </div>
+      <div class="bc-body">
+        <div class="bc-avatar-row">
+          ${playerAvatar(p.player, p.club, 64)}
+          <div class="bc-name-block">
+            <div class="bc-player-name">${p.player}</div>
+            <div class="bc-pos">${posIcon(p.position)} ${posLabel(p.position)}</div>
+            <div class="bc-stars" title="VFM rating">${starStr}</div>
+          </div>
+        </div>
+        <div class="bc-stats-grid">
+          <div class="bc-stat"><div class="bc-stat-val">${p.goals}</div><div class="bc-stat-lbl">Goals</div></div>
+          <div class="bc-stat"><div class="bc-stat-val">${p.assists}</div><div class="bc-stat-lbl">Assists</div></div>
+          <div class="bc-stat"><div class="bc-stat-val">${p.perf90.toFixed(2)}</div><div class="bc-stat-lbl">Perf/90</div></div>
+          <div class="bc-stat"><div class="bc-stat-val">£${p.market_value_m}M</div><div class="bc-stat-lbl">Value</div></div>
+        </div>
+        <div class="bc-vfm-row">
+          <span class="bc-vfm-label">VFM Score</span>
+          <span class="bc-vfm-val">${p.vfm.toFixed(1)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ── VFM Rankings Table ────────────────────────────────────────
+function renderVFMTable() {
+  const body = document.getElementById("vfmBody"); if (!body) return;
+  const raw     = cleanPlayers();
+  const withVfm = computeVFM(raw);
+  const players = computeBargains(withVfm);
+  const sorted  = [...players].filter(p => p.mins >= 500).sort((a, b) => b.vfm - a.vfm);
+
+  body.innerHTML = sorted.map((p, i) => `
+    <tr class="${p.isBargain ? "row-bargain" : ""}">
+      <td class="num-col">${i + 1}</td>
+      <td class="name-col">${playerAvatar(p.player, p.club, 28)} <span style="vertical-align:middle">${p.player}</span></td>
+      <td>${crestImg(p.club, 20)} <span style="vertical-align:middle;font-size:.8rem">${sn(p.club)}</span></td>
+      <td><span class="pos-badge pos-${p.position.toLowerCase()}">${p.position}</span></td>
+      <td>${p.mins.toLocaleString()}</td>
+      <td class="goals-col">${p.goals}</td>
+      <td style="color:var(--cyan)">${p.assists}</td>
+      <td style="color:var(--green);font-weight:600">${p.perf90.toFixed(2)}</td>
+      <td>£${p.market_value_m}M</td>
+      <td class="vfm-col">${p.vfm.toFixed(1)}</td>
+      <td>${p.isBargain ? '<span class="bargain-tag">🏷️ Yes</span>' : '<span style="color:var(--t3)">–</span>'}</td>
+    </tr>`).join("");
+}
+
+/* ════════════════════════════════════════════════════════════
+   CLUBS SECTION
+   ════════════════════════════════════════════════════════════ */
+function renderClubs() {
+  const el = document.getElementById("clubsGrid"); if (!el) return;
+  const finMap = {};
+  DATA.finances.forEach(f => finMap[f.team] = f);
+
+  el.innerHTML = DATA.standings.map(t => {
+    const fin = finMap[t.team] || {};
+    const col = tc(t.team);
+    const pos = t.position;
+    const badge = pos === 1 ? "🏆 Champions"
+      : [2,3,4,5].includes(pos) ? "🔵 UCL"
+      : [6,7].includes(pos) ? "🟢 UEL"
+      : [18,19,20].includes(pos) ? "🔴 Relegated"
+      : "";
+    const cpp = fin.wage_bill_m && t.Pts ? (fin.wage_bill_m / t.Pts).toFixed(1) : "–";
+
+    return `
+    <div class="club-card" style="--club-color:${col};--club-bg:${tbg(t.team)}">
+      <div class="cc-banner" style="background:linear-gradient(160deg,${tbg(t.team)} 0%,${col}33 100%)">
+        <div class="cc-logo-wrap">
+          <img src="${tCrest(t.team)}" alt="${t.team}" class="cc-logo"
+            onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+          <div class="cc-logo-fallback" style="display:none;background:${col}22;border:2px solid ${col}">
+            <span>${te(t.team)}</span>
+          </div>
+        </div>
+        <div class="cc-header-info">
+          <div class="cc-team-name">${t.team}</div>
+          <div class="cc-meta">
+            <span class="tag-pill" style="background:${col}22;color:${col}">
+              #${pos} · ${t.Pts} pts
+            </span>
+            ${badge ? `<span class="tag-pill qual-badge">${badge}</span>` : ""}
+          </div>
+          <div class="cc-record">${t.W}W ${t.D}D ${t.L}L &nbsp;·&nbsp; ${t.GF} GF ${t.GA} GA</div>
+        </div>
+      </div>
+      <div class="cc-finances">
+        <div class="cc-fin-row">
+          <div class="cc-fin-item">
+            <div class="cc-fin-val">£${fin.squad_value_m || "–"}M</div>
+            <div class="cc-fin-lbl">Squad Value</div>
+          </div>
+          <div class="cc-fin-item">
+            <div class="cc-fin-val">£${fin.wage_bill_m || "–"}M</div>
+            <div class="cc-fin-lbl">Wage Bill/yr</div>
+          </div>
+          <div class="cc-fin-item">
+            <div class="cc-fin-val" style="color:${cpp !== '–' && parseFloat(cpp) <= 2.5 ? 'var(--green)' : cpp !== '–' && parseFloat(cpp) >= 4.5 ? 'var(--red)' : 'var(--yellow)'}">
+              £${cpp}M
+            </div>
+            <div class="cc-fin-lbl">Cost/Point</div>
+          </div>
+        </div>
+      </div>
+      <div class="cc-players">
+        <div class="cc-section-label">Star Player Wages</div>
+        ${(fin.famous_players || []).map(p => `
+          <div class="cc-player-row">
+            ${playerAvatar(p.player, t.team, 32)}
+            <div class="cc-player-info">
+              <div class="cc-player-name">${p.player}</div>
+              <div class="cc-player-meta">${posIcon(p.position)} ${posLabel(p.position)}</div>
+            </div>
+            <div class="cc-player-wage">
+              <div class="cc-wage-num">£${p.weekly_k}K</div>
+              <div class="cc-wage-lbl">per week</div>
+            </div>
+          </div>`).join("")}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ════════════════════════════════════════════════════════════
+   EXISTING TABLES
+   ════════════════════════════════════════════════════════════ */
+function renderStandingsTable() {
+  const body = document.getElementById("standingsBody"); if (!body) return;
+  const cl = [1, 2, 3, 4, 5], el = [6, 7], rel = [18, 19, 20];
+
+  body.innerHTML = DATA.standings.map(t => {
+    const pos    = t.position;
+    const rowCls = pos === 1 ? "row-champion" : cl.includes(pos) ? "row-cl" : el.includes(pos) ? "row-el" : rel.includes(pos) ? "row-rel" : "";
+    const gdCls  = t.GD > 0 ? "gd-pos" : t.GD < 0 ? "gd-neg" : "gd-zero";
+    const gdStr  = t.GD > 0 ? `+${t.GD}` : String(t.GD);
+    const ppm    = (t.Pts / t.MP).toFixed(2);
+    const qual   = pos === 1 ? "🏆" : cl.includes(pos) ? "🔵" : el.includes(pos) ? "🟢" : rel.includes(pos) ? "🔴" : "";
+    return `
+    <tr class="${rowCls}">
+      <td class="num-col">${pos}</td>
+      <td class="name-col">${crestImg(t.team, 22)} ${t.team}${qual ? ` <span style="font-size:.75rem;opacity:.7">${qual}</span>` : ""}</td>
+      <td>${t.MP}</td><td>${t.W}</td><td>${t.D}</td><td>${t.L}</td>
+      <td class="goals-col">${t.GF}</td><td>${t.GA}</td>
+      <td class="${gdCls}">${gdStr}</td>
+      <td class="pts-col">${t.Pts}</td>
+      <td style="color:var(--t3)">${ppm}</td>
+    </tr>`;
+  }).join("");
+}
+
+function renderScorersTable() {
+  const body = document.getElementById("scorersBody"); if (!body) return;
+  body.innerHTML = DATA.scorers.map(p => `
+    <tr>
+      <td class="num-col">${p.rank}</td>
+      <td class="name-col">${playerAvatar(p.player, p.club, 28)} <span style="vertical-align:middle">${p.player}</span></td>
+      <td>${crestImg(p.club, 20)} <span style="vertical-align:middle;font-size:.8rem">${p.club}</span></td>
+      <td>${p.apps}</td>
+      <td class="goals-col">${p.goals}</td>
+      <td>${p.assists}</td>
+      <td style="color:var(--cyan);font-weight:600">${p.goals + (p.assists || 0)}</td>
+    </tr>`).join("");
+}
+
+function renderGKTable() {
+  const body = document.getElementById("gkBody"); if (!body) return;
+  body.innerHTML = DATA.goalkeeping.map(g => `
+    <tr>
+      <td class="num-col">${g.rank}</td>
+      <td class="name-col">${playerAvatar(g.goalkeeper, g.club, 28)} <span style="vertical-align:middle">${g.goalkeeper}</span></td>
+      <td>${crestImg(g.club, 20)} <span style="vertical-align:middle;font-size:.8rem">${g.club}</span></td>
+      <td>${g.apps}</td>
+      <td style="color:var(--green);font-weight:600">${g.clean_sheets}</td>
+      <td style="color:var(--red)">${g.goals_conceded}</td>
+    </tr>`).join("");
+}
+
+/* ════════════════════════════════════════════════════════════
+   SEASON FACTS
+   ════════════════════════════════════════════════════════════ */
+function renderFacts() {
+  const grid = document.getElementById("factsGrid"); if (!grid) return;
+  const f = DATA.facts;
+  const groups = [
+    { title: "🏆 Season Summary", highlight: true, items: [
+      { key: "Season Dates",     val: f["Season dates"]      },
+      { key: "Champions",        val: f["Champions"]          },
+      { key: "Relegated",        val: f["Relegated"]          },
+      { key: "Total Matches",    val: f["Total matches played"] },
+      { key: "Total Goals",      val: `${f["Total goals scored"]} (avg ${f["Average goals per match"]}/game)` },
+      { key: "Avg Attendance",   val: f["Average attendance"] },
+    ]},
+    { title: "🥇 Individual Awards", highlight: true, items: [
+      { key: "Golden Boot",      val: f["Golden Boot"]                     },
+      { key: "Playmaker Award",  val: f["Playmaker Award (Assists)"]       },
+      { key: "Golden Glove",     val: f["Golden Glove"]                    },
+      { key: "Player of Season", val: f["Player of the Season"]            },
+    ]},
+    { title: "🌍 European Qualification", highlight: false, items: [
+      { key: "Champions League (1–5)", val: f["Champions League (1–5)"]        },
+      { key: "UCL (UEL Winners)",      val: f["Champions League (UEL winners)"]},
+      { key: "Europa League (6–7)",    val: f["Europa League (6–7)"]           },
+      { key: "Conference League",      val: f["Conference League (FA Cup)"]    },
+    ]},
+    { title: "📋 Record Moments", highlight: false, items: [
+      { key: "Biggest Home Win",     val: f["Biggest home win"]         },
+      { key: "Biggest Away Win",     val: f["Biggest away win"]         },
+      { key: "Highest Scoring Game", val: f["Highest scoring match"]    },
+      { key: "Longest Unbeaten Run", val: f["Longest unbeaten run"]     },
+      { key: "First Relegated",      val: f["First relegated team"]     },
+    ]},
+  ];
+
+  grid.innerHTML = groups.map(g => `
+    <div class="fact-card ${g.highlight ? "highlight" : ""}">
+      <div class="fact-section-title">${g.title}</div>
+      ${g.items.filter(i => i.val).map(i => `
+        <div style="margin-bottom:.75rem">
+          <div class="fact-key">${i.key}</div>
+          <div class="fact-val">${i.val}</div>
+        </div>`).join("")}
+    </div>`).join("");
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded", loadAll);
+
+  </script>
+</body>
+</html>
