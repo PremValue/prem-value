@@ -1,0 +1,2044 @@
+{
+  "_meta": {
+    "schema_version": 1,
+    "season": "2024-25",
+    "generated_by": "fetch_data.py",
+    "source_files": {
+      "standings": "sha256:2a9926039ff6107384f8e0d533e213e27359b933c45bf9e2a9df802fe99888fd",
+      "scorers": "sha256:fb25b31c3fe486779dfd08b601d722936f91067bcf9db30b19937498e8eebe7e",
+      "assists": "sha256:a791e1f02c0bda268c3994618c39f38ee36afcd5f2743581db402e0cd6c8d7ce",
+      "goalkeeping": "sha256:c5465b25ea0276b6f1688825c86002b67a2de273c2231fabfda41221d6008efa",
+      "facts": "sha256:4d1288f623ee4e6af31c556bb29202dd905a0a9ec06b8f2bc8f7d03a0f96de82",
+      "finances": "sha256:8db20270d8b4b7860c524c0a90c1c78854066ccb28a0d906ae6b0c4e206efd68",
+      "players": "sha256:636a3947912ec3fb96cb903c68153afbeee0afc53774eda7a0d101799aaa41b0",
+      "squads": "sha256:d5091755d2518c78c62f3089af34cc960da95f2538f6f69c765d3804f83dabe9"
+    },
+    "warnings": [
+      "Removed duplicate player alias 'Cole Palmer (ast)' (kept 'Cole Palmer')."
+    ]
+  },
+  "standings": [
+    {
+      "position": 1,
+      "team": "Liverpool",
+      "MP": 38,
+      "W": 25,
+      "D": 9,
+      "L": 4,
+      "GF": 86,
+      "GA": 41,
+      "GD": 45,
+      "Pts": 84
+    },
+    {
+      "position": 2,
+      "team": "Arsenal",
+      "MP": 38,
+      "W": 20,
+      "D": 14,
+      "L": 4,
+      "GF": 69,
+      "GA": 34,
+      "GD": 35,
+      "Pts": 74
+    },
+    {
+      "position": 3,
+      "team": "Manchester City",
+      "MP": 38,
+      "W": 21,
+      "D": 8,
+      "L": 9,
+      "GF": 72,
+      "GA": 44,
+      "GD": 28,
+      "Pts": 71
+    },
+    {
+      "position": 4,
+      "team": "Chelsea",
+      "MP": 38,
+      "W": 20,
+      "D": 9,
+      "L": 9,
+      "GF": 64,
+      "GA": 43,
+      "GD": 21,
+      "Pts": 69
+    },
+    {
+      "position": 5,
+      "team": "Newcastle United",
+      "MP": 38,
+      "W": 20,
+      "D": 6,
+      "L": 12,
+      "GF": 68,
+      "GA": 47,
+      "GD": 21,
+      "Pts": 66
+    },
+    {
+      "position": 6,
+      "team": "Aston Villa",
+      "MP": 38,
+      "W": 19,
+      "D": 9,
+      "L": 10,
+      "GF": 58,
+      "GA": 51,
+      "GD": 7,
+      "Pts": 66
+    },
+    {
+      "position": 7,
+      "team": "Nottingham Forest",
+      "MP": 38,
+      "W": 19,
+      "D": 8,
+      "L": 11,
+      "GF": 58,
+      "GA": 46,
+      "GD": 12,
+      "Pts": 65
+    },
+    {
+      "position": 8,
+      "team": "Brighton & Hove Albion",
+      "MP": 38,
+      "W": 16,
+      "D": 13,
+      "L": 9,
+      "GF": 66,
+      "GA": 59,
+      "GD": 7,
+      "Pts": 61
+    },
+    {
+      "position": 9,
+      "team": "Bournemouth",
+      "MP": 38,
+      "W": 15,
+      "D": 11,
+      "L": 12,
+      "GF": 58,
+      "GA": 46,
+      "GD": 12,
+      "Pts": 56
+    },
+    {
+      "position": 10,
+      "team": "Brentford",
+      "MP": 38,
+      "W": 16,
+      "D": 8,
+      "L": 14,
+      "GF": 66,
+      "GA": 57,
+      "GD": 9,
+      "Pts": 56
+    },
+    {
+      "position": 11,
+      "team": "Fulham",
+      "MP": 38,
+      "W": 15,
+      "D": 9,
+      "L": 14,
+      "GF": 54,
+      "GA": 54,
+      "GD": 0,
+      "Pts": 54
+    },
+    {
+      "position": 12,
+      "team": "Crystal Palace",
+      "MP": 38,
+      "W": 13,
+      "D": 14,
+      "L": 11,
+      "GF": 51,
+      "GA": 51,
+      "GD": 0,
+      "Pts": 53
+    },
+    {
+      "position": 13,
+      "team": "Everton",
+      "MP": 38,
+      "W": 11,
+      "D": 15,
+      "L": 12,
+      "GF": 42,
+      "GA": 44,
+      "GD": -2,
+      "Pts": 48
+    },
+    {
+      "position": 14,
+      "team": "West Ham United",
+      "MP": 38,
+      "W": 11,
+      "D": 10,
+      "L": 17,
+      "GF": 46,
+      "GA": 62,
+      "GD": -16,
+      "Pts": 43
+    },
+    {
+      "position": 15,
+      "team": "Manchester United",
+      "MP": 38,
+      "W": 11,
+      "D": 9,
+      "L": 18,
+      "GF": 44,
+      "GA": 54,
+      "GD": -10,
+      "Pts": 42
+    },
+    {
+      "position": 16,
+      "team": "Wolverhampton Wanderers",
+      "MP": 38,
+      "W": 12,
+      "D": 6,
+      "L": 20,
+      "GF": 54,
+      "GA": 69,
+      "GD": -15,
+      "Pts": 42
+    },
+    {
+      "position": 17,
+      "team": "Tottenham Hotspur",
+      "MP": 38,
+      "W": 11,
+      "D": 5,
+      "L": 22,
+      "GF": 64,
+      "GA": 65,
+      "GD": -1,
+      "Pts": 38
+    },
+    {
+      "position": 18,
+      "team": "Leicester City",
+      "MP": 38,
+      "W": 6,
+      "D": 7,
+      "L": 25,
+      "GF": 33,
+      "GA": 80,
+      "GD": -47,
+      "Pts": 25
+    },
+    {
+      "position": 19,
+      "team": "Ipswich Town",
+      "MP": 38,
+      "W": 4,
+      "D": 10,
+      "L": 24,
+      "GF": 36,
+      "GA": 82,
+      "GD": -46,
+      "Pts": 22
+    },
+    {
+      "position": 20,
+      "team": "Southampton",
+      "MP": 38,
+      "W": 2,
+      "D": 6,
+      "L": 30,
+      "GF": 26,
+      "GA": 86,
+      "GD": -60,
+      "Pts": 12
+    }
+  ],
+  "scorers": [
+    {
+      "rank": 1,
+      "player": "Mohamed Salah",
+      "club": "Liverpool",
+      "apps": 38,
+      "goals": 29,
+      "assists": 18
+    },
+    {
+      "rank": 2,
+      "player": "Alexander Isak",
+      "club": "Newcastle United",
+      "apps": 34,
+      "goals": 23,
+      "assists": 4
+    },
+    {
+      "rank": 3,
+      "player": "Erling Haaland",
+      "club": "Manchester City",
+      "apps": 31,
+      "goals": 22,
+      "assists": 4
+    },
+    {
+      "rank": 4,
+      "player": "Bryan Mbeumo",
+      "club": "Brentford",
+      "apps": 38,
+      "goals": 20,
+      "assists": 5
+    },
+    {
+      "rank": 4,
+      "player": "Chris Wood",
+      "club": "Nottingham Forest",
+      "apps": 36,
+      "goals": 20,
+      "assists": 3
+    },
+    {
+      "rank": 6,
+      "player": "Yoane Wissa",
+      "club": "Brentford",
+      "apps": 35,
+      "goals": 19,
+      "assists": 4
+    },
+    {
+      "rank": 7,
+      "player": "Ollie Watkins",
+      "club": "Aston Villa",
+      "apps": 38,
+      "goals": 16,
+      "assists": 10
+    },
+    {
+      "rank": 8,
+      "player": "Cole Palmer",
+      "club": "Chelsea",
+      "apps": 37,
+      "goals": 15,
+      "assists": 8
+    },
+    {
+      "rank": 8,
+      "player": "Matheus Cunha",
+      "club": "Wolverhampton Wanderers",
+      "apps": 33,
+      "goals": 15,
+      "assists": 5
+    },
+    {
+      "rank": 10,
+      "player": "Jean-Philippe Mateta",
+      "club": "Crystal Palace",
+      "apps": 37,
+      "goals": 14,
+      "assists": 3
+    },
+    {
+      "rank": 10,
+      "player": "Jørgen Strand Larsen",
+      "club": "Wolverhampton Wanderers",
+      "apps": 35,
+      "goals": 14,
+      "assists": 3
+    },
+    {
+      "rank": 12,
+      "player": "Luis Díaz",
+      "club": "Liverpool",
+      "apps": 36,
+      "goals": 13,
+      "assists": 5
+    },
+    {
+      "rank": 12,
+      "player": "Jarrod Bowen",
+      "club": "West Ham United",
+      "apps": 34,
+      "goals": 13,
+      "assists": 6
+    },
+    {
+      "rank": 14,
+      "player": "Raúl Jiménez",
+      "club": "Fulham",
+      "apps": 38,
+      "goals": 12,
+      "assists": 2
+    },
+    {
+      "rank": 14,
+      "player": "Liam Delap",
+      "club": "Ipswich Town",
+      "apps": 37,
+      "goals": 12,
+      "assists": 3
+    },
+    {
+      "rank": 14,
+      "player": "Justin Kluivert",
+      "club": "Bournemouth",
+      "apps": 34,
+      "goals": 12,
+      "assists": 4
+    },
+    {
+      "rank": 17,
+      "player": "Kevin Schade",
+      "club": "Brentford",
+      "apps": 38,
+      "goals": 11,
+      "assists": 5
+    },
+    {
+      "rank": 17,
+      "player": "Antoine Semenyo",
+      "club": "Bournemouth",
+      "apps": 37,
+      "goals": 11,
+      "assists": 4
+    },
+    {
+      "rank": 17,
+      "player": "Brennan Johnson",
+      "club": "Tottenham Hotspur",
+      "apps": 33,
+      "goals": 11,
+      "assists": 4
+    },
+    {
+      "rank": 20,
+      "player": "Kaoru Mitoma",
+      "club": "Brighton & Hove Albion",
+      "apps": 36,
+      "goals": 10,
+      "assists": 4
+    },
+    {
+      "rank": 20,
+      "player": "Cody Gakpo",
+      "club": "Liverpool",
+      "apps": 35,
+      "goals": 10,
+      "assists": 5
+    },
+    {
+      "rank": 20,
+      "player": "Evanilson",
+      "club": "Bournemouth",
+      "apps": 31,
+      "goals": 10,
+      "assists": 2
+    },
+    {
+      "rank": 20,
+      "player": "Nicolas Jackson",
+      "club": "Chelsea",
+      "apps": 30,
+      "goals": 10,
+      "assists": 3
+    },
+    {
+      "rank": 20,
+      "player": "Danny Welbeck",
+      "club": "Brighton & Hove Albion",
+      "apps": 30,
+      "goals": 10,
+      "assists": 3
+    },
+    {
+      "rank": 20,
+      "player": "João Pedro",
+      "club": "Brighton & Hove Albion",
+      "apps": 27,
+      "goals": 10,
+      "assists": 2
+    }
+  ],
+  "assists": [
+    {
+      "rank": 1,
+      "player": "Mohamed Salah",
+      "club": "Liverpool",
+      "apps": 38,
+      "assists": 18,
+      "goals": 29
+    },
+    {
+      "rank": 2,
+      "player": "Anthony Elanga",
+      "club": "Nottingham Forest",
+      "apps": 38,
+      "assists": 12,
+      "goals": 4
+    },
+    {
+      "rank": 2,
+      "player": "Jacob Murphy",
+      "club": "Newcastle United",
+      "apps": 35,
+      "assists": 12,
+      "goals": 8
+    },
+    {
+      "rank": 4,
+      "player": "Bruno Fernandes",
+      "club": "Manchester United",
+      "apps": 36,
+      "assists": 11,
+      "goals": 8
+    },
+    {
+      "rank": 5,
+      "player": "Ollie Watkins",
+      "club": "Aston Villa",
+      "apps": 38,
+      "assists": 10,
+      "goals": 16
+    },
+    {
+      "rank": 5,
+      "player": "Morgan Rogers",
+      "club": "Aston Villa",
+      "apps": 37,
+      "assists": 10,
+      "goals": 8
+    },
+    {
+      "rank": 5,
+      "player": "Antonee Robinson",
+      "club": "Fulham",
+      "apps": 36,
+      "assists": 10,
+      "goals": 2
+    },
+    {
+      "rank": 5,
+      "player": "Mikkel Damsgaard",
+      "club": "Brentford",
+      "apps": 38,
+      "assists": 10,
+      "goals": 5
+    },
+    {
+      "rank": 5,
+      "player": "Bukayo Saka",
+      "club": "Arsenal",
+      "apps": 25,
+      "assists": 10,
+      "goals": 7
+    },
+    {
+      "rank": 10,
+      "player": "Son Heung-min",
+      "club": "Tottenham Hotspur",
+      "apps": 30,
+      "assists": 9,
+      "goals": 7
+    },
+    {
+      "rank": 11,
+      "player": "Cole Palmer",
+      "club": "Chelsea",
+      "apps": 37,
+      "assists": 8,
+      "goals": 15
+    },
+    {
+      "rank": 11,
+      "player": "Adama Traoré",
+      "club": "Fulham",
+      "apps": 35,
+      "assists": 8,
+      "goals": 5
+    },
+    {
+      "rank": 11,
+      "player": "Phil Foden",
+      "club": "Manchester City",
+      "apps": 28,
+      "assists": 8,
+      "goals": 7
+    },
+    {
+      "rank": 14,
+      "player": "Trent Alexander-Arnold",
+      "club": "Liverpool",
+      "apps": 34,
+      "assists": 7,
+      "goals": 3
+    },
+    {
+      "rank": 14,
+      "player": "Noni Madueke",
+      "club": "Chelsea",
+      "apps": 32,
+      "assists": 7,
+      "goals": 7
+    },
+    {
+      "rank": 14,
+      "player": "Dejan Kulusevski",
+      "club": "Tottenham Hotspur",
+      "apps": 32,
+      "assists": 7,
+      "goals": 7
+    }
+  ],
+  "goalkeeping": [
+    {
+      "rank": 1,
+      "goalkeeper": "David Raya",
+      "club": "Arsenal",
+      "apps": 38,
+      "clean_sheets": 13,
+      "goals_conceded": 40
+    },
+    {
+      "rank": 1,
+      "goalkeeper": "Matz Sels",
+      "club": "Nottingham Forest",
+      "apps": 38,
+      "clean_sheets": 13,
+      "goals_conceded": 51
+    },
+    {
+      "rank": 3,
+      "goalkeeper": "Alisson Becker",
+      "club": "Liverpool",
+      "apps": 32,
+      "clean_sheets": 12,
+      "goals_conceded": 33
+    },
+    {
+      "rank": 4,
+      "goalkeeper": "Nick Pope",
+      "club": "Newcastle United",
+      "apps": 35,
+      "clean_sheets": 11,
+      "goals_conceded": 50
+    },
+    {
+      "rank": 5,
+      "goalkeeper": "Mark Flekken",
+      "club": "Brentford",
+      "apps": 38,
+      "clean_sheets": 10,
+      "goals_conceded": 67
+    },
+    {
+      "rank": 6,
+      "goalkeeper": "Robert Sánchez",
+      "club": "Chelsea",
+      "apps": 38,
+      "clean_sheets": 9,
+      "goals_conceded": 55
+    },
+    {
+      "rank": 7,
+      "goalkeeper": "Ederson",
+      "club": "Manchester City",
+      "apps": 33,
+      "clean_sheets": 8,
+      "goals_conceded": 53
+    },
+    {
+      "rank": 8,
+      "goalkeeper": "Neto",
+      "club": "Bournemouth",
+      "apps": 38,
+      "clean_sheets": 8,
+      "goals_conceded": 59
+    },
+    {
+      "rank": 9,
+      "goalkeeper": "Fabian Riemann",
+      "club": "Brentford",
+      "apps": 5,
+      "clean_sheets": 3,
+      "goals_conceded": 10
+    },
+    {
+      "rank": 10,
+      "goalkeeper": "Lukasz Fabianski",
+      "club": "West Ham United",
+      "apps": 30,
+      "clean_sheets": 7,
+      "goals_conceded": 72
+    }
+  ],
+  "facts": {
+    "Season dates": "16 August 2024 – 25 May 2025",
+    "Champions": "Liverpool (2nd PL title / 20th English title)",
+    "Relegated": "Leicester City, Ipswich Town, Southampton",
+    "Total matches played": "380",
+    "Total goals scored": "1115",
+    "Average goals per match": "2.93",
+    "Average attendance": "40,423",
+    "Golden Boot": "Mohamed Salah (Liverpool) — 29 goals",
+    "Playmaker Award (Assists)": "Mohamed Salah (Liverpool) — 18 assists",
+    "Golden Glove": "David Raya (Arsenal) & Matz Sels (Nottingham Forest) — 13 clean sheets each",
+    "Player of the Season": "Mohamed Salah (Liverpool)",
+    "Champions League (1–5)": "Liverpool, Arsenal, Manchester City, Chelsea, Newcastle United",
+    "Champions League (UEL winners)": "Tottenham Hotspur",
+    "Europa League (6–7)": "Aston Villa, Nottingham Forest",
+    "Conference League (FA Cup)": "Crystal Palace",
+    "Biggest home win": "Nottingham Forest 7–0 Brighton & Hove Albion (1 Feb 2025)",
+    "Biggest away win": "Ipswich Town 0–6 Manchester City (19 Jan 2025)",
+    "Highest scoring match": "Tottenham Hotspur 3–6 Liverpool (22 Dec 2024)",
+    "Longest unbeaten run": "Liverpool — 26 matches",
+    "First relegated team": "Southampton (6 Apr 2025, record earliest PL relegation)"
+  },
+  "finances": [
+    {
+      "team": "Liverpool",
+      "squad_value_m": 890,
+      "wage_bill_m": 185,
+      "famous_players": [
+        {
+          "player": "Mohamed Salah",
+          "position": "FW",
+          "weekly_k": 400
+        },
+        {
+          "player": "Virgil van Dijk",
+          "position": "CB",
+          "weekly_k": 220
+        },
+        {
+          "player": "Darwin Núñez",
+          "position": "FW",
+          "weekly_k": 140
+        },
+        {
+          "player": "Alisson Becker",
+          "position": "GK",
+          "weekly_k": 120
+        }
+      ]
+    },
+    {
+      "team": "Arsenal",
+      "squad_value_m": 850,
+      "wage_bill_m": 190,
+      "famous_players": [
+        {
+          "player": "Bukayo Saka",
+          "position": "FW",
+          "weekly_k": 300
+        },
+        {
+          "player": "Declan Rice",
+          "position": "MF",
+          "weekly_k": 200
+        },
+        {
+          "player": "Martin Ødegaard",
+          "position": "MF",
+          "weekly_k": 200
+        },
+        {
+          "player": "David Raya",
+          "position": "GK",
+          "weekly_k": 100
+        }
+      ]
+    },
+    {
+      "team": "Manchester City",
+      "squad_value_m": 950,
+      "wage_bill_m": 220,
+      "famous_players": [
+        {
+          "player": "Kevin De Bruyne",
+          "position": "MF",
+          "weekly_k": 400
+        },
+        {
+          "player": "Erling Haaland",
+          "position": "FW",
+          "weekly_k": 375
+        },
+        {
+          "player": "Jack Grealish",
+          "position": "FW",
+          "weekly_k": 300
+        },
+        {
+          "player": "Phil Foden",
+          "position": "MF",
+          "weekly_k": 200
+        }
+      ]
+    },
+    {
+      "team": "Chelsea",
+      "squad_value_m": 870,
+      "wage_bill_m": 240,
+      "famous_players": [
+        {
+          "player": "Enzo Fernández",
+          "position": "MF",
+          "weekly_k": 280
+        },
+        {
+          "player": "Reece James",
+          "position": "DF",
+          "weekly_k": 200
+        },
+        {
+          "player": "Cole Palmer",
+          "position": "MF",
+          "weekly_k": 120
+        },
+        {
+          "player": "Nicolas Jackson",
+          "position": "FW",
+          "weekly_k": 100
+        }
+      ]
+    },
+    {
+      "team": "Newcastle United",
+      "squad_value_m": 480,
+      "wage_bill_m": 130,
+      "famous_players": [
+        {
+          "player": "Bruno Guimarães",
+          "position": "MF",
+          "weekly_k": 220
+        },
+        {
+          "player": "Alexander Isak",
+          "position": "FW",
+          "weekly_k": 180
+        },
+        {
+          "player": "Nick Pope",
+          "position": "GK",
+          "weekly_k": 100
+        },
+        {
+          "player": "Jacob Murphy",
+          "position": "MF",
+          "weekly_k": 70
+        }
+      ]
+    },
+    {
+      "team": "Aston Villa",
+      "squad_value_m": 520,
+      "wage_bill_m": 140,
+      "famous_players": [
+        {
+          "player": "Emiliano Martínez",
+          "position": "GK",
+          "weekly_k": 200
+        },
+        {
+          "player": "Ollie Watkins",
+          "position": "FW",
+          "weekly_k": 120
+        },
+        {
+          "player": "Pau Torres",
+          "position": "CB",
+          "weekly_k": 100
+        },
+        {
+          "player": "Morgan Rogers",
+          "position": "MF",
+          "weekly_k": 50
+        }
+      ]
+    },
+    {
+      "team": "Nottingham Forest",
+      "squad_value_m": 400,
+      "wage_bill_m": 90,
+      "famous_players": [
+        {
+          "player": "Chris Wood",
+          "position": "FW",
+          "weekly_k": 80
+        },
+        {
+          "player": "Anthony Elanga",
+          "position": "FW",
+          "weekly_k": 70
+        },
+        {
+          "player": "Matz Sels",
+          "position": "GK",
+          "weekly_k": 60
+        },
+        {
+          "player": "Ola Aina",
+          "position": "DF",
+          "weekly_k": 50
+        }
+      ]
+    },
+    {
+      "team": "Bournemouth",
+      "squad_value_m": 290,
+      "wage_bill_m": 65,
+      "famous_players": [
+        {
+          "player": "Evanilson",
+          "position": "FW",
+          "weekly_k": 80
+        },
+        {
+          "player": "Justin Kluivert",
+          "position": "FW",
+          "weekly_k": 50
+        },
+        {
+          "player": "Antoine Semenyo",
+          "position": "FW",
+          "weekly_k": 45
+        },
+        {
+          "player": "Milos Kerkez",
+          "position": "DF",
+          "weekly_k": 50
+        }
+      ]
+    },
+    {
+      "team": "Brighton & Hove Albion",
+      "squad_value_m": 460,
+      "wage_bill_m": 100,
+      "famous_players": [
+        {
+          "player": "Kaoru Mitoma",
+          "position": "FW",
+          "weekly_k": 80
+        },
+        {
+          "player": "João Pedro",
+          "position": "FW",
+          "weekly_k": 80
+        },
+        {
+          "player": "Georginio Rutter",
+          "position": "FW",
+          "weekly_k": 80
+        },
+        {
+          "player": "Danny Welbeck",
+          "position": "FW",
+          "weekly_k": 60
+        }
+      ]
+    },
+    {
+      "team": "Tottenham Hotspur",
+      "squad_value_m": 700,
+      "wage_bill_m": 160,
+      "famous_players": [
+        {
+          "player": "Son Heung-min",
+          "position": "FW",
+          "weekly_k": 200
+        },
+        {
+          "player": "Dominic Solanke",
+          "position": "FW",
+          "weekly_k": 150
+        },
+        {
+          "player": "Dejan Kulusevski",
+          "position": "MF",
+          "weekly_k": 120
+        },
+        {
+          "player": "Brennan Johnson",
+          "position": "FW",
+          "weekly_k": 100
+        }
+      ]
+    },
+    {
+      "team": "Brentford",
+      "squad_value_m": 320,
+      "wage_bill_m": 70,
+      "famous_players": [
+        {
+          "player": "Bryan Mbeumo",
+          "position": "FW",
+          "weekly_k": 70
+        },
+        {
+          "player": "Yoane Wissa",
+          "position": "FW",
+          "weekly_k": 70
+        },
+        {
+          "player": "Mikkel Damsgaard",
+          "position": "MF",
+          "weekly_k": 60
+        },
+        {
+          "player": "Mark Flekken",
+          "position": "GK",
+          "weekly_k": 50
+        }
+      ]
+    },
+    {
+      "team": "Fulham",
+      "squad_value_m": 310,
+      "wage_bill_m": 85,
+      "famous_players": [
+        {
+          "player": "Raúl Jiménez",
+          "position": "FW",
+          "weekly_k": 75
+        },
+        {
+          "player": "Adama Traoré",
+          "position": "FW",
+          "weekly_k": 65
+        },
+        {
+          "player": "Andreas Pereira",
+          "position": "MF",
+          "weekly_k": 70
+        },
+        {
+          "player": "Antonee Robinson",
+          "position": "DF",
+          "weekly_k": 60
+        }
+      ]
+    },
+    {
+      "team": "Wolverhampton Wanderers",
+      "squad_value_m": 280,
+      "wage_bill_m": 75,
+      "famous_players": [
+        {
+          "player": "Matheus Cunha",
+          "position": "FW",
+          "weekly_k": 110
+        },
+        {
+          "player": "Jørgen Strand Larsen",
+          "position": "FW",
+          "weekly_k": 60
+        },
+        {
+          "player": "Hwang Hee-chan",
+          "position": "FW",
+          "weekly_k": 80
+        },
+        {
+          "player": "Pedro Neto",
+          "position": "FW",
+          "weekly_k": 70
+        }
+      ]
+    },
+    {
+      "team": "Manchester United",
+      "squad_value_m": 650,
+      "wage_bill_m": 200,
+      "famous_players": [
+        {
+          "player": "Marcus Rashford",
+          "position": "FW",
+          "weekly_k": 300
+        },
+        {
+          "player": "Bruno Fernandes",
+          "position": "MF",
+          "weekly_k": 240
+        },
+        {
+          "player": "Rasmus Højlund",
+          "position": "FW",
+          "weekly_k": 150
+        },
+        {
+          "player": "Kobbie Mainoo",
+          "position": "MF",
+          "weekly_k": 60
+        }
+      ]
+    },
+    {
+      "team": "West Ham United",
+      "squad_value_m": 420,
+      "wage_bill_m": 110,
+      "famous_players": [
+        {
+          "player": "Lucas Paquetá",
+          "position": "MF",
+          "weekly_k": 150
+        },
+        {
+          "player": "Jarrod Bowen",
+          "position": "FW",
+          "weekly_k": 120
+        },
+        {
+          "player": "Mohammed Kudus",
+          "position": "FW",
+          "weekly_k": 80
+        },
+        {
+          "player": "Tomáš Souček",
+          "position": "MF",
+          "weekly_k": 70
+        }
+      ]
+    },
+    {
+      "team": "Crystal Palace",
+      "squad_value_m": 270,
+      "wage_bill_m": 80,
+      "famous_players": [
+        {
+          "player": "Eberechi Eze",
+          "position": "MF",
+          "weekly_k": 130
+        },
+        {
+          "player": "Jean-Philippe Mateta",
+          "position": "FW",
+          "weekly_k": 60
+        },
+        {
+          "player": "Marc Guéhi",
+          "position": "CB",
+          "weekly_k": 80
+        },
+        {
+          "player": "Michael Olise",
+          "position": "FW",
+          "weekly_k": 80
+        }
+      ]
+    },
+    {
+      "team": "Everton",
+      "squad_value_m": 220,
+      "wage_bill_m": 90,
+      "famous_players": [
+        {
+          "player": "Jordan Pickford",
+          "position": "GK",
+          "weekly_k": 100
+        },
+        {
+          "player": "Dominic Calvert-Lewin",
+          "position": "FW",
+          "weekly_k": 140
+        },
+        {
+          "player": "Beto",
+          "position": "FW",
+          "weekly_k": 70
+        },
+        {
+          "player": "Iliman Ndiaye",
+          "position": "FW",
+          "weekly_k": 50
+        }
+      ]
+    },
+    {
+      "team": "Leicester City",
+      "squad_value_m": 200,
+      "wage_bill_m": 80,
+      "famous_players": [
+        {
+          "player": "Jamie Vardy",
+          "position": "FW",
+          "weekly_k": 130
+        },
+        {
+          "player": "Wilfred Ndidi",
+          "position": "MF",
+          "weekly_k": 80
+        },
+        {
+          "player": "Mads Hermansen",
+          "position": "GK",
+          "weekly_k": 50
+        },
+        {
+          "player": "Stephy Mavididi",
+          "position": "FW",
+          "weekly_k": 30
+        }
+      ]
+    },
+    {
+      "team": "Ipswich Town",
+      "squad_value_m": 190,
+      "wage_bill_m": 50,
+      "famous_players": [
+        {
+          "player": "Liam Delap",
+          "position": "FW",
+          "weekly_k": 40
+        },
+        {
+          "player": "Omari Hutchinson",
+          "position": "FW",
+          "weekly_k": 40
+        },
+        {
+          "player": "Sam Morsy",
+          "position": "MF",
+          "weekly_k": 25
+        },
+        {
+          "player": "Arijanet Muric",
+          "position": "GK",
+          "weekly_k": 30
+        }
+      ]
+    },
+    {
+      "team": "Southampton",
+      "squad_value_m": 180,
+      "wage_bill_m": 55,
+      "famous_players": [
+        {
+          "player": "Adam Armstrong",
+          "position": "FW",
+          "weekly_k": 60
+        },
+        {
+          "player": "Cameron Archer",
+          "position": "FW",
+          "weekly_k": 50
+        },
+        {
+          "player": "Joe Aribo",
+          "position": "MF",
+          "weekly_k": 60
+        },
+        {
+          "player": "Gavin Bazunu",
+          "position": "GK",
+          "weekly_k": 40
+        }
+      ]
+    }
+  ],
+  "players": [
+    {
+      "player": "Mohamed Salah",
+      "club": "Liverpool",
+      "position": "FW",
+      "apps": 38,
+      "mins": 3250,
+      "goals": 29,
+      "assists": 18,
+      "market_value_m": 55
+    },
+    {
+      "player": "Alexander Isak",
+      "club": "Newcastle United",
+      "position": "FW",
+      "apps": 34,
+      "mins": 2820,
+      "goals": 23,
+      "assists": 4,
+      "market_value_m": 90
+    },
+    {
+      "player": "Erling Haaland",
+      "club": "Manchester City",
+      "position": "FW",
+      "apps": 31,
+      "mins": 2570,
+      "goals": 22,
+      "assists": 4,
+      "market_value_m": 175
+    },
+    {
+      "player": "Bryan Mbeumo",
+      "club": "Brentford",
+      "position": "FW",
+      "apps": 38,
+      "mins": 3160,
+      "goals": 20,
+      "assists": 5,
+      "market_value_m": 55
+    },
+    {
+      "player": "Chris Wood",
+      "club": "Nottingham Forest",
+      "position": "FW",
+      "apps": 36,
+      "mins": 2990,
+      "goals": 20,
+      "assists": 3,
+      "market_value_m": 12
+    },
+    {
+      "player": "Yoane Wissa",
+      "club": "Brentford",
+      "position": "FW",
+      "apps": 35,
+      "mins": 2900,
+      "goals": 19,
+      "assists": 4,
+      "market_value_m": 40
+    },
+    {
+      "player": "Ollie Watkins",
+      "club": "Aston Villa",
+      "position": "FW",
+      "apps": 38,
+      "mins": 3160,
+      "goals": 16,
+      "assists": 10,
+      "market_value_m": 65
+    },
+    {
+      "player": "Cole Palmer",
+      "club": "Chelsea",
+      "position": "MF",
+      "apps": 37,
+      "mins": 3070,
+      "goals": 15,
+      "assists": 8,
+      "market_value_m": 100
+    },
+    {
+      "player": "Matheus Cunha",
+      "club": "Wolverhampton Wanderers",
+      "position": "FW",
+      "apps": 33,
+      "mins": 2740,
+      "goals": 15,
+      "assists": 5,
+      "market_value_m": 55
+    },
+    {
+      "player": "Jean-Philippe Mateta",
+      "club": "Crystal Palace",
+      "position": "FW",
+      "apps": 37,
+      "mins": 3000,
+      "goals": 14,
+      "assists": 3,
+      "market_value_m": 35
+    },
+    {
+      "player": "Jørgen Strand Larsen",
+      "club": "Wolverhampton Wanderers",
+      "position": "FW",
+      "apps": 35,
+      "mins": 2640,
+      "goals": 14,
+      "assists": 3,
+      "market_value_m": 25
+    },
+    {
+      "player": "Luis Díaz",
+      "club": "Liverpool",
+      "position": "FW",
+      "apps": 36,
+      "mins": 2990,
+      "goals": 13,
+      "assists": 5,
+      "market_value_m": 75
+    },
+    {
+      "player": "Jarrod Bowen",
+      "club": "West Ham United",
+      "position": "FW",
+      "apps": 34,
+      "mins": 2820,
+      "goals": 13,
+      "assists": 6,
+      "market_value_m": 45
+    },
+    {
+      "player": "Raúl Jiménez",
+      "club": "Fulham",
+      "position": "FW",
+      "apps": 38,
+      "mins": 3000,
+      "goals": 12,
+      "assists": 2,
+      "market_value_m": 15
+    },
+    {
+      "player": "Liam Delap",
+      "club": "Ipswich Town",
+      "position": "FW",
+      "apps": 37,
+      "mins": 2800,
+      "goals": 12,
+      "assists": 3,
+      "market_value_m": 25
+    },
+    {
+      "player": "Justin Kluivert",
+      "club": "Bournemouth",
+      "position": "FW",
+      "apps": 34,
+      "mins": 2800,
+      "goals": 12,
+      "assists": 4,
+      "market_value_m": 22
+    },
+    {
+      "player": "Kevin Schade",
+      "club": "Brentford",
+      "position": "FW",
+      "apps": 38,
+      "mins": 3000,
+      "goals": 11,
+      "assists": 5,
+      "market_value_m": 20
+    },
+    {
+      "player": "Antoine Semenyo",
+      "club": "Bournemouth",
+      "position": "FW",
+      "apps": 37,
+      "mins": 2950,
+      "goals": 11,
+      "assists": 4,
+      "market_value_m": 22
+    },
+    {
+      "player": "Brennan Johnson",
+      "club": "Tottenham Hotspur",
+      "position": "FW",
+      "apps": 33,
+      "mins": 2600,
+      "goals": 11,
+      "assists": 4,
+      "market_value_m": 35
+    },
+    {
+      "player": "Kaoru Mitoma",
+      "club": "Brighton & Hove Albion",
+      "position": "FW",
+      "apps": 36,
+      "mins": 3000,
+      "goals": 10,
+      "assists": 4,
+      "market_value_m": 55
+    },
+    {
+      "player": "Cody Gakpo",
+      "club": "Liverpool",
+      "position": "FW",
+      "apps": 35,
+      "mins": 2900,
+      "goals": 10,
+      "assists": 5,
+      "market_value_m": 45
+    },
+    {
+      "player": "Evanilson",
+      "club": "Bournemouth",
+      "position": "FW",
+      "apps": 31,
+      "mins": 2400,
+      "goals": 10,
+      "assists": 2,
+      "market_value_m": 30
+    },
+    {
+      "player": "Nicolas Jackson",
+      "club": "Chelsea",
+      "position": "FW",
+      "apps": 30,
+      "mins": 2350,
+      "goals": 10,
+      "assists": 3,
+      "market_value_m": 45
+    },
+    {
+      "player": "Danny Welbeck",
+      "club": "Brighton & Hove Albion",
+      "position": "FW",
+      "apps": 30,
+      "mins": 2250,
+      "goals": 10,
+      "assists": 3,
+      "market_value_m": 8
+    },
+    {
+      "player": "João Pedro",
+      "club": "Brighton & Hove Albion",
+      "position": "FW",
+      "apps": 27,
+      "mins": 2000,
+      "goals": 10,
+      "assists": 2,
+      "market_value_m": 35
+    },
+    {
+      "player": "Anthony Elanga",
+      "club": "Nottingham Forest",
+      "position": "FW",
+      "apps": 38,
+      "mins": 3100,
+      "goals": 4,
+      "assists": 12,
+      "market_value_m": 30
+    },
+    {
+      "player": "Jacob Murphy",
+      "club": "Newcastle United",
+      "position": "MF",
+      "apps": 35,
+      "mins": 2750,
+      "goals": 8,
+      "assists": 12,
+      "market_value_m": 18
+    },
+    {
+      "player": "Bruno Fernandes",
+      "club": "Manchester United",
+      "position": "MF",
+      "apps": 36,
+      "mins": 3000,
+      "goals": 8,
+      "assists": 11,
+      "market_value_m": 50
+    },
+    {
+      "player": "Morgan Rogers",
+      "club": "Aston Villa",
+      "position": "MF",
+      "apps": 37,
+      "mins": 2900,
+      "goals": 8,
+      "assists": 10,
+      "market_value_m": 30
+    },
+    {
+      "player": "Antonee Robinson",
+      "club": "Fulham",
+      "position": "DF",
+      "apps": 36,
+      "mins": 3000,
+      "goals": 2,
+      "assists": 10,
+      "market_value_m": 20
+    },
+    {
+      "player": "Mikkel Damsgaard",
+      "club": "Brentford",
+      "position": "MF",
+      "apps": 38,
+      "mins": 3100,
+      "goals": 5,
+      "assists": 10,
+      "market_value_m": 22
+    },
+    {
+      "player": "Bukayo Saka",
+      "club": "Arsenal",
+      "position": "FW",
+      "apps": 25,
+      "mins": 2050,
+      "goals": 7,
+      "assists": 10,
+      "market_value_m": 150
+    },
+    {
+      "player": "Son Heung-min",
+      "club": "Tottenham Hotspur",
+      "position": "FW",
+      "apps": 30,
+      "mins": 2450,
+      "goals": 7,
+      "assists": 9,
+      "market_value_m": 20
+    },
+    {
+      "player": "Adama Traoré",
+      "club": "Fulham",
+      "position": "FW",
+      "apps": 35,
+      "mins": 2800,
+      "goals": 5,
+      "assists": 8,
+      "market_value_m": 15
+    },
+    {
+      "player": "Phil Foden",
+      "club": "Manchester City",
+      "position": "MF",
+      "apps": 28,
+      "mins": 2200,
+      "goals": 7,
+      "assists": 8,
+      "market_value_m": 110
+    },
+    {
+      "player": "Trent Alexander-Arnold",
+      "club": "Liverpool",
+      "position": "DF",
+      "apps": 34,
+      "mins": 2700,
+      "goals": 3,
+      "assists": 7,
+      "market_value_m": 70
+    },
+    {
+      "player": "Noni Madueke",
+      "club": "Chelsea",
+      "position": "FW",
+      "apps": 32,
+      "mins": 2500,
+      "goals": 7,
+      "assists": 7,
+      "market_value_m": 35
+    },
+    {
+      "player": "Dejan Kulusevski",
+      "club": "Tottenham Hotspur",
+      "position": "MF",
+      "apps": 32,
+      "mins": 2600,
+      "goals": 7,
+      "assists": 7,
+      "market_value_m": 40
+    },
+    {
+      "player": "Marcus Rashford",
+      "club": "Manchester United",
+      "position": "FW",
+      "apps": 25,
+      "mins": 1600,
+      "goals": 3,
+      "assists": 3,
+      "market_value_m": 50
+    },
+    {
+      "player": "Jack Grealish",
+      "club": "Manchester City",
+      "position": "FW",
+      "apps": 22,
+      "mins": 1400,
+      "goals": 2,
+      "assists": 3,
+      "market_value_m": 60
+    },
+    {
+      "player": "Eberechi Eze",
+      "club": "Crystal Palace",
+      "position": "MF",
+      "apps": 30,
+      "mins": 2400,
+      "goals": 8,
+      "assists": 5,
+      "market_value_m": 85
+    },
+    {
+      "player": "Declan Rice",
+      "club": "Arsenal",
+      "position": "MF",
+      "apps": 35,
+      "mins": 3000,
+      "goals": 7,
+      "assists": 6,
+      "market_value_m": 100
+    }
+  ],
+  "squads": [
+    {
+      "team": "Liverpool",
+      "matches_played": 38.0,
+      "goals": 86.0,
+      "goals_against": 41.0,
+      "assists": 65.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 57.7,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 391.0,
+      "yellow_cards": 67.0,
+      "red_cards": 3.0,
+      "clean_sheets": 14.0,
+      "points": 84.0,
+      "position": 1,
+      "performance_score": 100.0
+    },
+    {
+      "team": "Arsenal",
+      "matches_played": 38.0,
+      "goals": 69.0,
+      "goals_against": 34.0,
+      "assists": 55.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 56.9,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 348.0,
+      "yellow_cards": 70.0,
+      "red_cards": 6.0,
+      "clean_sheets": 13.0,
+      "points": 74.0,
+      "position": 2,
+      "performance_score": 83.4
+    },
+    {
+      "team": "Manchester City",
+      "matches_played": 38.0,
+      "goals": 72.0,
+      "goals_against": 44.0,
+      "assists": 51.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 61.3,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 299.0,
+      "yellow_cards": 59.0,
+      "red_cards": 2.0,
+      "clean_sheets": 13.0,
+      "points": 71.0,
+      "position": 3,
+      "performance_score": 80.6
+    },
+    {
+      "team": "Chelsea",
+      "matches_played": 38.0,
+      "goals": 64.0,
+      "goals_against": 43.0,
+      "assists": 47.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 57.1,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 371.0,
+      "yellow_cards": 101.0,
+      "red_cards": 2.0,
+      "clean_sheets": 11.0,
+      "points": 69.0,
+      "position": 4,
+      "performance_score": 77.9
+    },
+    {
+      "team": "Newcastle United",
+      "matches_played": 38.0,
+      "goals": 68.0,
+      "goals_against": 47.0,
+      "assists": 50.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 51.3,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 371.0,
+      "yellow_cards": 68.0,
+      "red_cards": 1.0,
+      "clean_sheets": 13.0,
+      "points": 66.0,
+      "position": 5,
+      "performance_score": 81.6
+    },
+    {
+      "team": "Aston Villa",
+      "matches_played": 38.0,
+      "goals": 58.0,
+      "goals_against": 51.0,
+      "assists": 45.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 50.5,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 372.0,
+      "yellow_cards": 76.0,
+      "red_cards": 4.0,
+      "clean_sheets": 9.0,
+      "points": 66.0,
+      "position": 6,
+      "performance_score": 73.6
+    },
+    {
+      "team": "Nottingham Forest",
+      "matches_played": 38.0,
+      "goals": 58.0,
+      "goals_against": 46.0,
+      "assists": 42.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 41.2,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 419.0,
+      "yellow_cards": 90.0,
+      "red_cards": 2.0,
+      "clean_sheets": 13.0,
+      "points": 65.0,
+      "position": 7,
+      "performance_score": 74.6
+    },
+    {
+      "team": "Brighton & Hove Albion",
+      "matches_played": 38.0,
+      "goals": 66.0,
+      "goals_against": 59.0,
+      "assists": 41.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 52.3,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 431.0,
+      "yellow_cards": 78.0,
+      "red_cards": 3.0,
+      "clean_sheets": 8.0,
+      "points": 61.0,
+      "position": 8,
+      "performance_score": 79.2
+    },
+    {
+      "team": "Bournemouth",
+      "matches_played": 38.0,
+      "goals": 58.0,
+      "goals_against": 46.0,
+      "assists": 41.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 48.5,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 399.0,
+      "yellow_cards": 97.0,
+      "red_cards": 3.0,
+      "clean_sheets": 9.0,
+      "points": 56.0,
+      "position": 9,
+      "performance_score": 73.1
+    },
+    {
+      "team": "Brentford",
+      "matches_played": 38.0,
+      "goals": 66.0,
+      "goals_against": 57.0,
+      "assists": 44.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 47.9,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 380.0,
+      "yellow_cards": 62.0,
+      "red_cards": 1.0,
+      "clean_sheets": 8.0,
+      "points": 56.0,
+      "position": 10,
+      "performance_score": 78.0
+    },
+    {
+      "team": "Fulham",
+      "matches_played": 38.0,
+      "goals": 54.0,
+      "goals_against": 54.0,
+      "assists": 44.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 52.3,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 411.0,
+      "yellow_cards": 80.0,
+      "red_cards": 2.0,
+      "clean_sheets": 5.0,
+      "points": 54.0,
+      "position": 11,
+      "performance_score": 72.9
+    },
+    {
+      "team": "Crystal Palace",
+      "matches_played": 38.0,
+      "goals": 51.0,
+      "goals_against": 51.0,
+      "assists": 38.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 42.8,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 450.0,
+      "yellow_cards": 80.0,
+      "red_cards": 4.0,
+      "clean_sheets": 11.0,
+      "points": 53.0,
+      "position": 12,
+      "performance_score": 70.3
+    },
+    {
+      "team": "Everton",
+      "matches_played": 38.0,
+      "goals": 42.0,
+      "goals_against": 44.0,
+      "assists": 27.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 40.9,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 433.0,
+      "yellow_cards": 82.0,
+      "red_cards": 2.0,
+      "clean_sheets": 12.0,
+      "points": 48.0,
+      "position": 13,
+      "performance_score": 59.0
+    },
+    {
+      "team": "West Ham United",
+      "matches_played": 38.0,
+      "goals": 46.0,
+      "goals_against": 62.0,
+      "assists": 29.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 48.4,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 388.0,
+      "yellow_cards": 82.0,
+      "red_cards": 3.0,
+      "clean_sheets": 7.0,
+      "points": 43.0,
+      "position": 14,
+      "performance_score": 59.9
+    },
+    {
+      "team": "Manchester United",
+      "matches_played": 38.0,
+      "goals": 44.0,
+      "goals_against": 54.0,
+      "assists": 29.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 53.5,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 493.0,
+      "yellow_cards": 86.0,
+      "red_cards": 3.0,
+      "clean_sheets": 10.0,
+      "points": 42.0,
+      "position": 15,
+      "performance_score": 64.2
+    },
+    {
+      "team": "Wolverhampton Wanderers",
+      "matches_played": 38.0,
+      "goals": 54.0,
+      "goals_against": 69.0,
+      "assists": 42.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 48.1,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 471.0,
+      "yellow_cards": 79.0,
+      "red_cards": 2.0,
+      "clean_sheets": 8.0,
+      "points": 42.0,
+      "position": 16,
+      "performance_score": 75.0
+    },
+    {
+      "team": "Tottenham Hotspur",
+      "matches_played": 38.0,
+      "goals": 64.0,
+      "goals_against": 65.0,
+      "assists": 47.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 54.7,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 414.0,
+      "yellow_cards": 72.0,
+      "red_cards": 1.0,
+      "clean_sheets": 6.0,
+      "points": 38.0,
+      "position": 17,
+      "performance_score": 80.1
+    },
+    {
+      "team": "Leicester City",
+      "matches_played": 38.0,
+      "goals": 33.0,
+      "goals_against": 80.0,
+      "assists": 25.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 45.4,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 431.0,
+      "yellow_cards": 87.0,
+      "red_cards": 0.0,
+      "clean_sheets": 3.0,
+      "points": 25.0,
+      "position": 18,
+      "performance_score": 52.9
+    },
+    {
+      "team": "Ipswich Town",
+      "matches_played": 38.0,
+      "goals": 36.0,
+      "goals_against": 82.0,
+      "assists": 26.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 40.6,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 340.0,
+      "yellow_cards": 93.0,
+      "red_cards": 5.0,
+      "clean_sheets": 2.0,
+      "points": 22.0,
+      "position": 19,
+      "performance_score": 50.4
+    },
+    {
+      "team": "Southampton",
+      "matches_played": 38.0,
+      "goals": 26.0,
+      "goals_against": 86.0,
+      "assists": 16.0,
+      "xG": null,
+      "xGA": null,
+      "possession": 48.5,
+      "progressive_carries": null,
+      "progressive_passes": null,
+      "tackles": 378.0,
+      "yellow_cards": 89.0,
+      "red_cards": 3.0,
+      "clean_sheets": 3.0,
+      "points": 12.0,
+      "position": 20,
+      "performance_score": 41.9
+    }
+  ]
+}

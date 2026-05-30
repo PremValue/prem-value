@@ -86,14 +86,16 @@ function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete chart
 let DATA = {};
 let activeSection = "overview";
 
-// ── Load all JSON in parallel ─────────────────────────────────
+// ── Load generated dashboard bundle ───────────────────────────
 async function loadAll() {
-  const files = ["standings","scorers","assists","goalkeeping","facts","finances","players"];
   try {
-    const res = await Promise.all(
-      files.map(f => fetch(`data/${f}.json`).then(r => { if (!r.ok) throw new Error(f); return r.json(); }))
-    );
-    files.forEach((f, i) => DATA[f] = res[i]);
+    if (window.INLINE_DATA) {
+      DATA = window.INLINE_DATA;
+    } else {
+      const res = await fetch("data/dashboard.json");
+      if (!res.ok) throw new Error("dashboard");
+      DATA = await res.json();
+    }
     init();
   } catch (err) {
     console.error("Data load failed:", err);
@@ -562,11 +564,12 @@ function renderWageGrid() {
    VALUE FOR MONEY SECTION
    ════════════════════════════════════════════════════════════ */
 
-// Deduplicate players.json (Cole Palmer appears twice due to data entry)
+// Keep a defensive runtime dedupe in case the generated bundle is bypassed.
 function cleanPlayers() {
   const seen = new Set();
   return DATA.players.filter(p => {
-    const key = `${p.player}|${p.club}`;
+    const canonicalName = p.player.replace(/\s+\([^)]*\)$/, "");
+    const key = `${canonicalName}|${p.club}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
