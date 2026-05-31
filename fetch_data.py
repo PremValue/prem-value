@@ -17,6 +17,7 @@ import argparse
 import csv
 import gzip
 import hashlib
+import html
 import io
 import json
 import re
@@ -45,17 +46,54 @@ SOURCE_NAMES = (
     "players",
     "player_values",
     "squads",
+    "understat",
+    "exchange_rates",
 )
 
 TRANSFERMARKT_DATA_BASE = "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data"
+UNDERSTAT_LEAGUE_URL = "https://understat.com/main/getLeagueData/EPL/2024"
 PLAYER_VALUATION_CUTOFF = "2025-05-31"
 PLAYER_VALUATION_STALE_DAYS = 180
 PLAYER_EXPLORER_MINUTES = 500
 PLAYER_FEATURED_MINUTES = 900
 FINANCE_CONFIDENCE_LEVELS = {"low", "medium", "high"}
+ROLE_SCORE_VERSION = "position-aware-v1"
+SQUAD_VALUATION_DISCREPANCY_THRESHOLD = 10
+ROLE_SCORE_WEIGHTS = {
+    "FW": {
+        "goals_per90": 0.30,
+        "assists_per90": 0.20,
+        "xg_per90": 0.30,
+        "xa_per90": 0.15,
+        "defensive_actions_per90": 0.05,
+    },
+    "MF": {
+        "goals_per90": 0.15,
+        "assists_per90": 0.20,
+        "xg_per90": 0.15,
+        "xa_per90": 0.25,
+        "defensive_actions_per90": 0.20,
+        "clean_sheet_credit_per90": 0.05,
+    },
+    "DF": {
+        "goals_per90": 0.05,
+        "assists_per90": 0.08,
+        "xg_per90": 0.05,
+        "xa_per90": 0.07,
+        "defensive_actions_per90": 0.55,
+        "clean_sheet_credit_per90": 0.20,
+    },
+    "GK": {
+        "clean_sheet_credit_per90": 0.35,
+        "saves_per90": 0.45,
+        "save_pct": 0.20,
+    },
+}
 
 TEAM_ALIASES = {
     "Brighton": "Brighton & Hove Albion",
+    "Ipswich": "Ipswich Town",
+    "Leicester": "Leicester City",
     "Manchester Utd": "Manchester United",
     "Newcastle Utd": "Newcastle United",
     "Nottm Forest": "Nottingham Forest",
@@ -131,6 +169,30 @@ PLAYER_PROFILE_OVERRIDES = {
     ("Bournemouth", "neto"): 111819,
     ("Wolverhampton Wanderers", "chiquinho"): 695454,
 }
+UNDERSTAT_PLAYER_ALIASES = {
+    "Ezri Konsa": "Ezri Konsa Ngoyo",
+    "Matty Cash": "Matthew Cash",
+    "Kepa Arrizabalaga": "Kepa",
+    "Kim Jisoo": "Kim Ji-Soo",
+    "Igor Thiago": "Thiago",
+    "Yehor Yarmoliuk": "Yehor Yarmolyuk",
+    "Pervis Estupiñán": "Estupiñán",
+    "Igor": "Igor Julio",
+    "Benoît Badiashile": "Benoit Badiashile Mukinayi",
+    "Cheick Doucouré": "Cheick Oumar Doucoure",
+    "Vitaliy Mykolenko": "Vitalii Mykolenko",
+    "Jaden Philogene Bidace": "Jaden Philogene",
+    "Bobby De Cordova-Reid": "Bobby Reid",
+    "Joe Gomez": "Joseph Gomez",
+    "Stefan Ortega": "Stefan Ortega Moreno",
+    "Abdukodir Khusanov": "Abduqodir Khusanov",
+    "Chidozie Obi-Martin": "Chido Obi-Martin",
+    "Amad Diallo": "Amad Diallo Traore",
+    "Joe Aribo": "Joe Ayodele-Aribo",
+    "Lesley Ugochukwu": "Chimuanya Ugochukwu",
+    "Destiny Udogie": "Iyenoma Destiny Udogie",
+    "Pape Matar Sarr": "Pape Sarr",
+}
 
 REQUIRED_FIELDS = {
     "standings": {"position", "team", "MP", "W", "D", "L", "GF", "GA", "GD", "Pts"},
@@ -203,6 +265,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Refresh the complete player roster and end-of-season valuations.",
     )
+    parser.add_argument(
+        "--refresh-understat",
+        action="store_true",
+        help="Refresh data/understat.json from the dated EPL 2024 Understat endpoint.",
+    )
     return parser.parse_args()
 
 
@@ -233,7 +300,7 @@ def canonical_player_name(name: str) -> str:
             "\u00c6": "Ae",
         }
     )
-    normalized = unicodedata.normalize("NFKD", name.translate(replacements))
+    normalized = unicodedata.normalize("NFKD", html.unescape(name).translate(replacements))
     ascii_name = "".join(char for char in normalized if not unicodedata.combining(char))
     return " ".join(re.sub(r"[^a-z0-9]+", " ", ascii_name.lower()).split())
 
@@ -298,6 +365,320 @@ def validate_url(value: str, label: str) -> None:
     parsed = urlparse(value)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise DataValidationError(f"{label} must be an HTTP(S) URL: {value!r}")
+
+
+def validate_understat(snapshot: dict[str, Any], standings_teams: set[str]) -> None:
+    if not isinstance(snapshot, dict):
+        raise DataValidationError("data/understat.json must contain a JSON object")
+    required = {"source_url", "season", "as_of_date", "retrieved_at", "teams", "players"}
+    missing = required - snapshot.keys()
+    if missing:
+        raise DataValidationError(
+            f"data/understat.json is missing: {', '.join(sorted(missing))}"
+        )
+    validate_url(snapshot["source_url"], "Understat source_url")
+    parse_iso_date(snapshot["as_of_date"], "Understat as_of_date")
+    parse_iso_date(snapshot["retrieved_at"], "Understat retrieved_at")
+    teams = {canonical_team(row["team"]) for row in snapshot["teams"]}
+    if teams != standings_teams:
+        raise DataValidationError("data/understat.json team coverage must match standings")
+
+
+def validate_exchange_rates(snapshot: dict[str, Any]) -> None:
+    if not isinstance(snapshot, dict):
+        raise DataValidationError("data/exchange_rates.json must contain a JSON object")
+    required = {"source_url", "rate_date", "gbp_to_eur"}
+    missing = required - snapshot.keys()
+    if missing:
+        raise DataValidationError(
+            f"data/exchange_rates.json is missing: {', '.join(sorted(missing))}"
+        )
+    validate_url(snapshot["source_url"], "Exchange-rate source_url")
+    parse_iso_date(snapshot["rate_date"], "Exchange-rate rate_date")
+    if snapshot["gbp_to_eur"] <= 0:
+        raise DataValidationError("Exchange-rate gbp_to_eur must be positive")
+
+
+def percentile(value: float, values: list[float]) -> float:
+    if not values:
+        return 0.0
+    below = sum(item < value for item in values)
+    equal = sum(item == value for item in values)
+    return round((below + (equal - 1) / 2) / max(len(values) - 1, 1) * 100, 3)
+
+
+def per90(value: float | int | None, minutes: int) -> float | None:
+    if value is None or minutes <= 0:
+        return None
+    return round(float(value) / minutes * 90, 3)
+
+
+def annotate_player_scores(
+    players: list[dict[str, Any]],
+    squads: list[dict[str, Any]],
+    understat: dict[str, Any],
+    warnings: list[str],
+) -> list[dict[str, Any]]:
+    squads_by_team = {row["team"]: row for row in squads}
+    understat_by_key = {
+        (canonical_team(row["team"]), canonical_player_name(row["player"])): row
+        for row in understat["players"]
+    }
+    understat_by_name: dict[str, list[dict[str, Any]]] = {}
+    for row in understat["players"]:
+        understat_by_name.setdefault(canonical_player_name(row["player"]), []).append(row)
+    unmatched = []
+    annotated = []
+    for player in players:
+        source_names = (
+            UNDERSTAT_PLAYER_ALIASES.get(player["player"]),
+            player["player"],
+            PLAYER_NAME_ALIASES.get(player["player"]),
+        )
+        expected = None
+        for source_name in (name for name in source_names if name):
+            normalized_name = canonical_player_name(source_name)
+            expected = understat_by_key.get((player["club"], normalized_name))
+            if expected is None and len(understat_by_name.get(normalized_name, [])) == 1:
+                expected = understat_by_name[normalized_name][0]
+            if expected is not None:
+                break
+        if expected is None:
+            unmatched.append(f"{player['player']} ({player['club']})")
+        minutes = player["mins"]
+        defensive_actions = sum(
+            player.get(field) or 0
+            for field in ("tackles_won", "interceptions", "blocks", "clearances")
+        )
+        squad_clean_sheets = squads_by_team[player["club"]].get("clean_sheets")
+        if player["position"] == "GK":
+            clean_sheet_credit = player.get("clean_sheets")
+        elif player["position"] in {"DF", "MF"} and squad_clean_sheets is not None:
+            clean_sheet_credit = round(
+                squad_clean_sheets * min(minutes / (38 * 90), 1), 3
+            )
+        else:
+            clean_sheet_credit = 0
+        row = {
+            **player,
+            "xg": round(float(expected["xg"]), 3) if expected else None,
+            "xa": round(float(expected["xa"]), 3) if expected else None,
+            "defensive_actions": defensive_actions,
+            "clean_sheet_credit": clean_sheet_credit,
+        }
+        for metric, value in (
+            ("goals", row["goals"]),
+            ("assists", row["assists"]),
+            ("xg", row["xg"]),
+            ("xa", row["xa"]),
+            ("defensive_actions", row["defensive_actions"]),
+            ("clean_sheet_credit", row["clean_sheet_credit"]),
+            ("saves", row.get("saves")),
+        ):
+            row[f"{metric}_per90"] = per90(value, minutes)
+        annotated.append(row)
+
+    if unmatched:
+        warnings.append(
+            f"{len(unmatched)} players could not be joined to Understat xG/xA enrichment; "
+            f"their expected metrics remain null. Examples: {', '.join(unmatched[:5])}."
+        )
+
+    distributions: dict[tuple[str, str], list[float]] = {}
+    for player in annotated:
+        for metric in ROLE_SCORE_WEIGHTS[player["position"]]:
+            value = player.get(metric)
+            if value is not None:
+                distributions.setdefault((player["position"], metric), []).append(value)
+
+    for player in annotated:
+        weights = ROLE_SCORE_WEIGHTS[player["position"]]
+        available_weight = 0.0
+        score = 0.0
+        components = {}
+        for metric, weight in weights.items():
+            value = player.get(metric)
+            if value is None:
+                continue
+            metric_percentile = percentile(
+                value, distributions.get((player["position"], metric), [])
+            )
+            components[metric] = metric_percentile
+            available_weight += weight
+            score += metric_percentile * weight
+        player["role_score"] = (
+            round(score / available_weight, 3) if available_weight else None
+        )
+        player["role_score_completeness"] = round(
+            available_weight / sum(weights.values()) * 100, 1
+        )
+        player["role_score_version"] = ROLE_SCORE_VERSION
+        player["role_score_components"] = components
+    return annotated
+
+
+def build_squad_valuations(
+    players: list[dict[str, Any]],
+    finances: list[dict[str, Any]],
+    exchange_rates: dict[str, Any],
+    warnings: list[str],
+) -> list[dict[str, Any]]:
+    gbp_to_eur = exchange_rates["gbp_to_eur"]
+    players_by_team: dict[str, list[dict[str, Any]]] = {}
+    for player in players:
+        players_by_team.setdefault(player["club"], []).append(player)
+    rows = []
+    for finance in finances:
+        team_players = players_by_team[finance["team"]]
+        valued = [row for row in team_players if row["market_value_m"] is not None]
+        derived_value = round(sum(row["market_value_m"] for row in valued), 3)
+        external_gbp = finance["squad_value_m"]
+        external_eur = round(external_gbp * gbp_to_eur, 3)
+        difference = round(derived_value - external_eur, 3)
+        difference_pct = round(difference / external_eur * 100, 1)
+        severity = (
+            "warning"
+            if abs(difference_pct) >= SQUAD_VALUATION_DISCREPANCY_THRESHOLD
+            else "info"
+        )
+        rows.append(
+            {
+                "team": finance["team"],
+                "squad_value_eur_m": derived_value,
+                "valued_player_count": len(valued),
+                "missing_player_value_count": len(team_players) - len(valued),
+                "valuation_cutoff": PLAYER_VALUATION_CUTOFF,
+                "external_reference_gbp_m": external_gbp,
+                "external_reference_eur_m": external_eur,
+                "external_reference_source": finance["squad_value_source"],
+                "fx_rate_date": exchange_rates["rate_date"],
+                "gbp_to_eur": gbp_to_eur,
+                "difference_eur_m": difference,
+                "difference_pct": difference_pct,
+                "severity": severity,
+            }
+        )
+    flagged = [row for row in rows if row["severity"] == "warning"]
+    if flagged:
+        warnings.append(
+            f"{len(flagged)} clubs have player-derived squad values differing by at least "
+            f"{SQUAD_VALUATION_DISCREPANCY_THRESHOLD}% from converted external references."
+        )
+    return rows
+
+
+def build_health_records(
+    players: list[dict[str, Any]],
+    squads: list[dict[str, Any]],
+    finance_sources: list[dict[str, Any]],
+    squad_valuations: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    missing = [row for row in players if row["valuation_status"] == "missing"]
+    stale = [row for row in players if row["valuation_status"] == "stale"]
+    low_confidence = [row for row in finance_sources if row["confidence"] == "low"]
+    low_coverage = [
+        field
+        for field in ("xG", "xGA", "progressive_carries", "progressive_passes")
+        if sum(row.get(field) is not None for row in squads) < len(squads)
+    ]
+    discrepancies = [row for row in squad_valuations if row["severity"] == "warning"]
+    incomplete_scores = [
+        row for row in players if row["role_score_completeness"] < 100
+    ]
+    return [
+        {
+            "code": "missing-player-valuations",
+            "severity": "warning" if missing else "ok",
+            "summary": f"{len(missing)} missing player valuations",
+            "details": "Players remain visible but are excluded from value rankings.",
+            "affected_count": len(missing),
+        },
+        {
+            "code": "stale-player-valuations",
+            "severity": "warning" if stale else "ok",
+            "summary": f"{len(stale)} stale player valuations",
+            "details": f"Older than {PLAYER_VALUATION_STALE_DAYS} days at the cutoff.",
+            "affected_count": len(stale),
+        },
+        {
+            "code": "low-confidence-finance-sources",
+            "severity": "warning" if low_confidence else "ok",
+            "summary": f"{len(low_confidence)} low-confidence finance source",
+            "details": "External club totals are retained only as comparison references.",
+            "affected_count": len(low_confidence),
+        },
+        {
+            "code": "advanced-squad-coverage",
+            "severity": "warning" if low_coverage else "ok",
+            "summary": (
+                "Advanced squad coverage complete"
+                if not low_coverage
+                else f"{len(low_coverage)} squad fields have partial coverage"
+            ),
+            "details": ", ".join(low_coverage) if low_coverage else "All tracked fields populated.",
+            "affected_count": len(low_coverage),
+        },
+        {
+            "code": "squad-valuation-discrepancies",
+            "severity": "warning" if discrepancies else "ok",
+            "summary": f"{len(discrepancies)} squad valuation discrepancies",
+            "details": (
+                f"Player-derived totals differ by at least "
+                f"{SQUAD_VALUATION_DISCREPANCY_THRESHOLD}% from converted references."
+            ),
+            "affected_count": len(discrepancies),
+        },
+        {
+            "code": "incomplete-role-scores",
+            "severity": "warning" if incomplete_scores else "ok",
+            "summary": f"{len(incomplete_scores)} incomplete role score",
+            "details": "Optional source metrics were unavailable and remaining weights were rebalanced.",
+            "affected_count": len(incomplete_scores),
+        },
+    ]
+
+
+def build_enrichment_coverage(
+    players: list[dict[str, Any]], squads: list[dict[str, Any]], understat: dict[str, Any]
+) -> dict[str, Any]:
+    return {
+        "understat": {
+            "source_url": understat["source_url"],
+            "as_of_date": understat["as_of_date"],
+            "retrieved_at": understat["retrieved_at"],
+        },
+        "squads": {
+            field: {
+                "populated": sum(row.get(field) is not None for row in squads),
+                "total": len(squads),
+            }
+            for field in (
+                "xG",
+                "xGA",
+                "possession",
+                "progressive_carries",
+                "progressive_passes",
+                "tackles",
+                "clean_sheets",
+                "performance_score",
+            )
+        },
+        "players": {
+            field: {
+                "populated": sum(row.get(field) is not None for row in players),
+                "total": len(players),
+            }
+            for field in (
+                "xg",
+                "xa",
+                "interceptions",
+                "tackles_won",
+                "saves",
+                "save_pct",
+                "role_score",
+            )
+        },
+    }
 
 
 def validate_finances(
@@ -524,9 +905,17 @@ def annotate_player_valuations(
 def normalize_squads(
     squads: list[dict[str, Any]],
     standings: list[dict[str, Any]],
+    understat: dict[str, Any],
     warnings: list[str],
 ) -> list[dict[str, Any]]:
     normalized = [{**row, "team": canonical_team(row["team"])} for row in squads]
+    understat_by_team = {
+        canonical_team(row["team"]): row for row in understat["teams"]
+    }
+    for row in normalized:
+        expected = understat_by_team.get(row["team"], {})
+        row["xG"] = expected.get("xG")
+        row["xGA"] = expected.get("xGA")
     standings_by_team = {row["team"]: row for row in standings}
     squad_teams = {row["team"] for row in normalized}
     standings_teams = set(standings_by_team)
@@ -567,6 +956,40 @@ def normalize_squads(
             f"--refresh-squads. Examples: {examples}"
         )
 
+    for field in ("xG", "xGA", "progressive_carries", "progressive_passes"):
+        populated = sum(row.get(field) is not None for row in normalized)
+        if populated < len(normalized):
+            warnings.append(
+                f"Squad enrichment field {field} is populated for {populated}/{len(normalized)} clubs."
+            )
+    score_weights = {
+        "goals": 1.5,
+        "assists": 1.0,
+        "xG": 1.2,
+        "tackles": 0.8,
+        "clean_sheets": 0.8,
+        "possession": 0.4,
+    }
+    maxima = {
+        field: max((row.get(field) or 0 for row in normalized), default=0)
+        for field in score_weights
+    }
+    xga_max = max((row.get("xGA") or 0 for row in normalized), default=0)
+    raw_scores = []
+    for row in normalized:
+        score = sum(
+            ((row.get(field) or 0) / maxima[field]) * weight
+            for field, weight in score_weights.items()
+            if maxima[field]
+        )
+        if xga_max and row.get("xGA") is not None:
+            score += (1 - row["xGA"] / xga_max) * 0.8
+        raw_scores.append(score)
+    maximum_score = max(raw_scores, default=0)
+    for row, score in zip(normalized, raw_scores):
+        row["performance_score"] = (
+            round(score / maximum_score * 100, 1) if maximum_score else None
+        )
     return sorted(normalized, key=lambda row: standings_by_team[row["team"]]["position"])
 
 
@@ -589,14 +1012,17 @@ def validate_cross_file_facts(
 
 
 def build_team_metrics(
-    standings: list[dict[str, Any]], finances: list[dict[str, Any]]
+    standings: list[dict[str, Any]],
+    finances: list[dict[str, Any]],
+    squad_valuations: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     standings_by_team = {row["team"]: row for row in standings}
+    squad_values_by_team = {row["team"]: row for row in squad_valuations}
     rows = []
     for finance in finances:
         standing = standings_by_team[finance["team"]]
         wage_bill = finance["wage_bill_m"]
-        squad_value = finance["squad_value_m"]
+        squad_value = squad_values_by_team[finance["team"]]["squad_value_eur_m"]
         points = standing["Pts"]
         goals = standing["GF"]
         rows.append(
@@ -607,6 +1033,7 @@ def build_team_metrics(
                 "goals_for": goals,
                 "wage_bill_m": wage_bill,
                 "squad_value_m": squad_value,
+                "squad_value_currency": "EUR",
                 "cost_per_point": round(wage_bill / points, 3),
                 "cost_per_goal": round(wage_bill / goals, 3),
                 "squad_value_per_point": round(squad_value / points, 3),
@@ -687,7 +1114,7 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
     warnings: list[str] = []
 
     for name in SOURCE_NAMES:
-        if name != "facts":
+        if name not in {"facts", "understat", "exchange_rates"}:
             validate_rows(name, sources[name])
 
     facts = sources["facts"]
@@ -696,6 +1123,8 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
 
     standings = sources["standings"]
     standings_teams = validate_standings(standings)
+    validate_understat(sources["understat"], standings_teams)
+    validate_exchange_rates(sources["exchange_rates"])
     finances = sources["finances"]
     if {row["team"] for row in finances} != standings_teams:
         raise DataValidationError("Finance clubs must exactly match standings clubs")
@@ -711,14 +1140,22 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
     validate_player_values(players, sources["player_values"])
     players = annotate_player_valuations(players, sources["player_values"], warnings)
     validate_finances(finances, sources["finance_sources"], players, warnings)
-    squads = normalize_squads(sources["squads"], standings, warnings)
+    squads = normalize_squads(sources["squads"], standings, sources["understat"], warnings)
+    players = annotate_player_scores(players, squads, sources["understat"], warnings)
+    squad_valuations = build_squad_valuations(
+        players, finances, sources["exchange_rates"], warnings
+    )
     validate_cross_file_facts(standings, facts, warnings)
-    team_metrics = build_team_metrics(standings, finances)
+    team_metrics = build_team_metrics(standings, finances, squad_valuations)
     validate_team_metrics(team_metrics, standings_teams)
+    health_records = build_health_records(
+        players, squads, sources["finance_sources"], squad_valuations
+    )
+    enrichment_coverage = build_enrichment_coverage(players, squads, sources["understat"])
 
     bundle = {
         "_meta": {
-            "schema_version": 3,
+            "schema_version": 4,
             "season": SEASON,
             "generated_by": "fetch_data.py",
             "player_value_policy": {
@@ -729,6 +1166,12 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
             },
             "source_files": {name: source_digest(name) for name in SOURCE_NAMES},
             "warnings": warnings,
+            "health": health_records,
+            "role_score": {
+                "version": ROLE_SCORE_VERSION,
+                "weights": ROLE_SCORE_WEIGHTS,
+            },
+            "enrichment_coverage": enrichment_coverage,
         },
         "standings": standings,
         "scorers": sources["scorers"],
@@ -740,6 +1183,8 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
         "team_metrics": team_metrics,
         "players": players,
         "squads": squads,
+        "squad_valuations": squad_valuations,
+        "exchange_rates": sources["exchange_rates"],
     }
     return bundle, warnings
 
@@ -790,6 +1235,59 @@ def flatten_columns(dataframe: Any, pandas: Any) -> Any:
             for column in dataframe.columns
         ]
     return dataframe.reset_index()
+
+
+def refresh_understat() -> None:
+    try:
+        import requests
+    except ImportError as exc:
+        raise DataValidationError(
+            "Refreshing Understat enrichment requires requests. "
+            "Install it with: pip install requests"
+        ) from exc
+
+    print("Refreshing dated Understat EPL 2024-2025 enrichment...")
+    response = requests.get(
+        UNDERSTAT_LEAGUE_URL,
+        headers={
+            "User-Agent": "Mozilla/5.0 (compatible; PremValue educational data pipeline)",
+            "X-Requested-With": "XMLHttpRequest",
+        },
+        timeout=60,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    teams = []
+    for team in payload["teams"].values():
+        history = team["history"]
+        teams.append(
+            {
+                "team": canonical_team(team["title"]),
+                "xG": round(sum(float(row["xG"]) for row in history), 3),
+                "xGA": round(sum(float(row["xGA"]) for row in history), 3),
+                "npxG": round(sum(float(row["npxG"]) for row in history), 3),
+                "npxGA": round(sum(float(row["npxGA"]) for row in history), 3),
+            }
+        )
+    players = [
+        {
+            "player": row["player_name"],
+            "team": canonical_team(row["team_title"]),
+            "xg": round(float(row["xG"]), 3),
+            "xa": round(float(row["xA"]), 3),
+        }
+        for row in payload["players"]
+    ]
+    snapshot = {
+        "source_url": UNDERSTAT_LEAGUE_URL,
+        "season": SEASON,
+        "as_of_date": "2025-05-25",
+        "retrieved_at": date.today().isoformat(),
+        "teams": sorted(teams, key=lambda row: row["team"]),
+        "players": sorted(players, key=lambda row: (row["team"], row["player"])),
+    }
+    changed = write_if_changed(DATA_DIR / "understat.json", json_text(snapshot))
+    print("Updated data/understat.json." if changed else "Understat snapshot is already current.")
 
 
 def refresh_squads() -> None:
@@ -1033,11 +1531,44 @@ def refresh_players() -> None:
         ) from exc
 
     print("Refreshing complete 2024-2025 Premier League player snapshot...")
+    fbref = sd.FBref(leagues="ENG-Premier League", seasons="24-25")
     dataframe = cached_fbref_player_frame(pd)
     if dataframe is None:
         print("  Fetching standard player stats from FBRef...")
-        fbref = sd.FBref(leagues="ENG-Premier League", seasons="24-25")
         dataframe = flatten_columns(fbref.read_player_season_stats(stat_type="standard"), pd)
+    print("  Fetching supported FBRef miscellaneous and goalkeeper stats...")
+    misc_frame = flatten_columns(fbref.read_player_season_stats(stat_type="misc"), pd)
+    keeper_frame = flatten_columns(fbref.read_player_season_stats(stat_type="keeper"), pd)
+
+    def aggregate_frame(frame: Any, fields: dict[str, str]) -> dict[str, dict[str, float]]:
+        player_column = "player" if "player" in frame.columns else "Player"
+        output: dict[str, dict[str, float]] = {}
+        for field in fields.values():
+            if field in frame.columns:
+                frame[field] = pd.to_numeric(frame[field], errors="coerce").fillna(0)
+        for player_name, rows in frame.groupby(player_column, sort=True):
+            key = canonical_player_name(str(player_name))
+            output[key] = {
+                target: float(rows[source].sum()) if source in frame.columns else 0
+                for target, source in fields.items()
+            }
+        return output
+
+    misc_by_player = aggregate_frame(
+        misc_frame,
+        {
+            "interceptions": "Performance_Int",
+            "tackles_won": "Performance_TklW",
+        },
+    )
+    keeper_by_player = aggregate_frame(
+        keeper_frame,
+        {
+            "saves": "Performance_Saves",
+            "shots_on_target_against": "Performance_SoTA",
+            "clean_sheets": "Performance_CS",
+        },
+    )
 
     def column(*candidates: str) -> str:
         for candidate in candidates:
@@ -1066,6 +1597,16 @@ def refresh_players() -> None:
         raw_position = str(primary[position_col])
         age_text = str(primary[age_col]).split("-", maxsplit=1)[0]
         age = int(float(age_text)) if age_text not in {"<NA>", "nan"} else None
+        canonical_name = canonical_player_name(str(player))
+        misc = misc_by_player.get(canonical_name, {})
+        keeper = keeper_by_player.get(canonical_name, {})
+        saves = keeper.get("saves") if keeper else None
+        shots_on_target_against = keeper.get("shots_on_target_against") if keeper else None
+        save_pct = (
+            round(saves / shots_on_target_against * 100, 3)
+            if saves is not None and shots_on_target_against
+            else None
+        )
         stats_rows.append(
             {
                 "player": str(player),
@@ -1077,6 +1618,15 @@ def refresh_players() -> None:
                 "mins": int(rows[mins_col].sum()),
                 "goals": int(rows[goals_col].sum()),
                 "assists": int(rows[assists_col].sum()),
+                "interceptions": round(misc.get("interceptions", 0), 3),
+                "tackles_won": round(misc.get("tackles_won", 0), 3),
+                "blocks": None,
+                "clearances": None,
+                "saves": round(saves, 3) if saves is not None else None,
+                "save_pct": save_pct,
+                "clean_sheets": (
+                    round(keeper.get("clean_sheets", 0), 3) if keeper else None
+                ),
             }
         )
 
@@ -1181,6 +1731,8 @@ def refresh_players() -> None:
 def main() -> int:
     args = parse_args()
     try:
+        if args.refresh_understat:
+            refresh_understat()
         if args.refresh_squads:
             refresh_squads()
         if args.refresh_players:

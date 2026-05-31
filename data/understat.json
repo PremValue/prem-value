@@ -1,0 +1,3522 @@
+{
+  "source_url": "https://understat.com/main/getLeagueData/EPL/2024",
+  "season": "2024-2025",
+  "as_of_date": "2025-05-25",
+  "retrieved_at": "2026-05-31",
+  "teams": [
+    {
+      "team": "Arsenal",
+      "xG": 73.57,
+      "xGA": 39.98,
+      "npxG": 72.048,
+      "npxGA": 37.696
+    },
+    {
+      "team": "Aston Villa",
+      "xG": 66.385,
+      "xGA": 54.998,
+      "npxG": 61.711,
+      "npxGA": 52.715
+    },
+    {
+      "team": "Bournemouth",
+      "xG": 72.621,
+      "xGA": 53.994,
+      "npxG": 67.293,
+      "npxGA": 50.949
+    },
+    {
+      "team": "Brentford",
+      "xG": 67.12,
+      "xGA": 60.865,
+      "npxG": 62.553,
+      "npxGA": 60.104
+    },
+    {
+      "team": "Brighton & Hove Albion",
+      "xG": 65.277,
+      "xGA": 59.124,
+      "npxG": 59.949,
+      "npxGA": 52.273
+    },
+    {
+      "team": "Chelsea",
+      "xG": 73.117,
+      "xGA": 54.262,
+      "npxG": 69.311,
+      "npxGA": 49.695
+    },
+    {
+      "team": "Crystal Palace",
+      "xG": 67.781,
+      "xGA": 58.884,
+      "npxG": 64.736,
+      "npxGA": 57.362
+    },
+    {
+      "team": "Everton",
+      "xG": 46.869,
+      "xGA": 53.663,
+      "npxG": 45.347,
+      "npxGA": 52.141
+    },
+    {
+      "team": "Fulham",
+      "xG": 58.003,
+      "xGA": 49.233,
+      "npxG": 54.959,
+      "npxGA": 46.188
+    },
+    {
+      "team": "Ipswich Town",
+      "xG": 40.421,
+      "xGA": 83.733,
+      "npxG": 38.898,
+      "npxGA": 79.166
+    },
+    {
+      "team": "Leicester City",
+      "xG": 38.058,
+      "xGA": 85.887,
+      "npxG": 35.775,
+      "npxGA": 82.843
+    },
+    {
+      "team": "Liverpool",
+      "xG": 93.239,
+      "xGA": 42.321,
+      "npxG": 86.389,
+      "npxGA": 40.662
+    },
+    {
+      "team": "Manchester City",
+      "xG": 73.148,
+      "xGA": 52.903,
+      "npxG": 70.104,
+      "npxGA": 49.859
+    },
+    {
+      "team": "Manchester United",
+      "xG": 56.911,
+      "xGA": 60.728,
+      "npxG": 53.867,
+      "npxGA": 57.633
+    },
+    {
+      "team": "Newcastle United",
+      "xG": 71.482,
+      "xGA": 53.977,
+      "npxG": 66.915,
+      "npxGA": 52.455
+    },
+    {
+      "team": "Nottingham Forest",
+      "xG": 52.749,
+      "xGA": 55.918,
+      "npxG": 50.466,
+      "npxGA": 53.634
+    },
+    {
+      "team": "Southampton",
+      "xG": 38.631,
+      "xGA": 98.348,
+      "npxG": 36.923,
+      "npxGA": 91.39
+    },
+    {
+      "team": "Tottenham Hotspur",
+      "xG": 65.363,
+      "xGA": 68.231,
+      "npxG": 62.319,
+      "npxGA": 65.947
+    },
+    {
+      "team": "West Ham United",
+      "xG": 50.589,
+      "xGA": 68.088,
+      "npxG": 48.306,
+      "npxGA": 65.804
+    },
+    {
+      "team": "Wolverhampton Wanderers",
+      "xG": 45.371,
+      "xGA": 61.572,
+      "npxG": 45.371,
+      "npxGA": 54.722
+    }
+  ],
+  "players": [
+    {
+      "player": "Ben White",
+      "team": "Arsenal",
+      "xg": 0.434,
+      "xa": 1.45
+    },
+    {
+      "player": "Bukayo Saka",
+      "team": "Arsenal",
+      "xg": 8.943,
+      "xa": 11.584
+    },
+    {
+      "player": "David Raya",
+      "team": "Arsenal",
+      "xg": 0.0,
+      "xa": 0.094
+    },
+    {
+      "player": "Declan Rice",
+      "team": "Arsenal",
+      "xg": 3.627,
+      "xa": 9.061
+    },
+    {
+      "player": "Ethan Nwaneri",
+      "team": "Arsenal",
+      "xg": 1.776,
+      "xa": 1.162
+    },
+    {
+      "player": "Gabriel",
+      "team": "Arsenal",
+      "xg": 4.3,
+      "xa": 1.221
+    },
+    {
+      "player": "Gabriel Jesus",
+      "team": "Arsenal",
+      "xg": 3.375,
+      "xa": 0.554
+    },
+    {
+      "player": "Gabriel Martinelli",
+      "team": "Arsenal",
+      "xg": 9.213,
+      "xa": 5.264
+    },
+    {
+      "player": "Jakub Kiwior",
+      "team": "Arsenal",
+      "xg": 0.214,
+      "xa": 0.51
+    },
+    {
+      "player": "Jorginho",
+      "team": "Arsenal",
+      "xg": 0.059,
+      "xa": 0.461
+    },
+    {
+      "player": "Jurriën Timber",
+      "team": "Arsenal",
+      "xg": 1.313,
+      "xa": 1.133
+    },
+    {
+      "player": "Kai Havertz",
+      "team": "Arsenal",
+      "xg": 11.831,
+      "xa": 2.949
+    },
+    {
+      "player": "Kieran Tierney",
+      "team": "Arsenal",
+      "xg": 0.921,
+      "xa": 1.199
+    },
+    {
+      "player": "Leandro Trossard",
+      "team": "Arsenal",
+      "xg": 8.742,
+      "xa": 7.043
+    },
+    {
+      "player": "Martin Odegaard",
+      "team": "Arsenal",
+      "xg": 5.636,
+      "xa": 7.852
+    },
+    {
+      "player": "Mikel Merino",
+      "team": "Arsenal",
+      "xg": 6.865,
+      "xa": 2.165
+    },
+    {
+      "player": "Myles Lewis-Skelly",
+      "team": "Arsenal",
+      "xg": 0.254,
+      "xa": 0.499
+    },
+    {
+      "player": "Nathan Butler-Oyedeji",
+      "team": "Arsenal",
+      "xg": 0.095,
+      "xa": 0.0
+    },
+    {
+      "player": "Oleksandr Zinchenko",
+      "team": "Arsenal",
+      "xg": 0.499,
+      "xa": 0.129
+    },
+    {
+      "player": "Raheem Sterling",
+      "team": "Arsenal",
+      "xg": 0.971,
+      "xa": 0.539
+    },
+    {
+      "player": "Riccardo Calafiori",
+      "team": "Arsenal",
+      "xg": 0.775,
+      "xa": 0.406
+    },
+    {
+      "player": "Takehiro Tomiyasu",
+      "team": "Arsenal",
+      "xg": 0.167,
+      "xa": 0.0
+    },
+    {
+      "player": "Thomas Partey",
+      "team": "Arsenal",
+      "xg": 2.39,
+      "xa": 2.581
+    },
+    {
+      "player": "William Saliba",
+      "team": "Arsenal",
+      "xg": 3.196,
+      "xa": 0.751
+    },
+    {
+      "player": "Reiss Nelson",
+      "team": "Arsenal,Fulham",
+      "xg": 1.418,
+      "xa": 1.131
+    },
+    {
+      "player": "Amadou Onana",
+      "team": "Aston Villa",
+      "xg": 2.578,
+      "xa": 0.683
+    },
+    {
+      "player": "Andrés García",
+      "team": "Aston Villa",
+      "xg": 0.035,
+      "xa": 0.269
+    },
+    {
+      "player": "Boubacar Kamara",
+      "team": "Aston Villa",
+      "xg": 0.793,
+      "xa": 0.901
+    },
+    {
+      "player": "Diego Carlos",
+      "team": "Aston Villa",
+      "xg": 0.973,
+      "xa": 0.0
+    },
+    {
+      "player": "Donyell Malen",
+      "team": "Aston Villa",
+      "xg": 3.02,
+      "xa": 0.18
+    },
+    {
+      "player": "Emiliano Buendía",
+      "team": "Aston Villa",
+      "xg": 0.823,
+      "xa": 0.047
+    },
+    {
+      "player": "Emiliano Martinez",
+      "team": "Aston Villa",
+      "xg": 0.0,
+      "xa": 0.282
+    },
+    {
+      "player": "Ezri Konsa Ngoyo",
+      "team": "Aston Villa",
+      "xg": 1.103,
+      "xa": 0.411
+    },
+    {
+      "player": "Ian Maatsen",
+      "team": "Aston Villa",
+      "xg": 0.98,
+      "xa": 3.034
+    },
+    {
+      "player": "Jacob Ramsey",
+      "team": "Aston Villa",
+      "xg": 1.454,
+      "xa": 2.891
+    },
+    {
+      "player": "Jhon Durán",
+      "team": "Aston Villa",
+      "xg": 5.1,
+      "xa": 0.235
+    },
+    {
+      "player": "John McGinn",
+      "team": "Aston Villa",
+      "xg": 3.794,
+      "xa": 3.479
+    },
+    {
+      "player": "Kosta Nedeljkovic",
+      "team": "Aston Villa",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Lamare Bogarde",
+      "team": "Aston Villa",
+      "xg": 0.065,
+      "xa": 0.175
+    },
+    {
+      "player": "Leon Bailey",
+      "team": "Aston Villa",
+      "xg": 2.868,
+      "xa": 2.372
+    },
+    {
+      "player": "Lucas Digne",
+      "team": "Aston Villa",
+      "xg": 0.781,
+      "xa": 6.966
+    },
+    {
+      "player": "Marco Asensio",
+      "team": "Aston Villa",
+      "xg": 4.556,
+      "xa": 1.264
+    },
+    {
+      "player": "Matthew Cash",
+      "team": "Aston Villa",
+      "xg": 0.496,
+      "xa": 1.487
+    },
+    {
+      "player": "Morgan Rogers",
+      "team": "Aston Villa",
+      "xg": 8.217,
+      "xa": 8.146
+    },
+    {
+      "player": "Ollie Watkins",
+      "team": "Aston Villa",
+      "xg": 18.632,
+      "xa": 3.876
+    },
+    {
+      "player": "Pau Torres",
+      "team": "Aston Villa",
+      "xg": 0.387,
+      "xa": 0.145
+    },
+    {
+      "player": "Robin Olsen",
+      "team": "Aston Villa",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Ross Barkley",
+      "team": "Aston Villa",
+      "xg": 2.161,
+      "xa": 0.967
+    },
+    {
+      "player": "Tyrone Mings",
+      "team": "Aston Villa",
+      "xg": 0.799,
+      "xa": 0.18
+    },
+    {
+      "player": "Youri Tielemans",
+      "team": "Aston Villa",
+      "xg": 3.71,
+      "xa": 8.044
+    },
+    {
+      "player": "Axel Disasi",
+      "team": "Aston Villa,Chelsea",
+      "xg": 0.624,
+      "xa": 0.338
+    },
+    {
+      "player": "Jaden Philogene-Bidace",
+      "team": "Aston Villa,Ipswich",
+      "xg": 2.795,
+      "xa": 0.333
+    },
+    {
+      "player": "Marcus Rashford",
+      "team": "Aston Villa,Manchester United",
+      "xg": 4.986,
+      "xa": 4.729
+    },
+    {
+      "player": "Adam Smith",
+      "team": "Bournemouth",
+      "xg": 0.326,
+      "xa": 0.443
+    },
+    {
+      "player": "Alex Scott",
+      "team": "Bournemouth",
+      "xg": 0.7,
+      "xa": 1.216
+    },
+    {
+      "player": "Antoine Semenyo",
+      "team": "Bournemouth",
+      "xg": 14.549,
+      "xa": 6.609
+    },
+    {
+      "player": "Ben Winterburn",
+      "team": "Bournemouth",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Dango Ouattara",
+      "team": "Bournemouth",
+      "xg": 10.934,
+      "xa": 5.99
+    },
+    {
+      "player": "Daniel Jebbison",
+      "team": "Bournemouth",
+      "xg": 1.73,
+      "xa": 0.207
+    },
+    {
+      "player": "David Brooks",
+      "team": "Bournemouth",
+      "xg": 2.871,
+      "xa": 1.775
+    },
+    {
+      "player": "Dean Huijsen",
+      "team": "Bournemouth",
+      "xg": 1.573,
+      "xa": 2.332
+    },
+    {
+      "player": "Enes Ünal",
+      "team": "Bournemouth",
+      "xg": 2.017,
+      "xa": 0.545
+    },
+    {
+      "player": "Evanilson",
+      "team": "Bournemouth",
+      "xg": 13.714,
+      "xa": 1.915
+    },
+    {
+      "player": "Illia Zabarnyi",
+      "team": "Bournemouth",
+      "xg": 1.35,
+      "xa": 0.962
+    },
+    {
+      "player": "James Hill",
+      "team": "Bournemouth",
+      "xg": 0.195,
+      "xa": 0.344
+    },
+    {
+      "player": "Julio Soler",
+      "team": "Bournemouth",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Julián Araujo",
+      "team": "Bournemouth",
+      "xg": 0.0,
+      "xa": 0.063
+    },
+    {
+      "player": "Justin Kluivert",
+      "team": "Bournemouth",
+      "xg": 10.442,
+      "xa": 5.513
+    },
+    {
+      "player": "Kepa",
+      "team": "Bournemouth",
+      "xg": 0.068,
+      "xa": 0.026
+    },
+    {
+      "player": "Lewis Cook",
+      "team": "Bournemouth",
+      "xg": 0.964,
+      "xa": 4.585
+    },
+    {
+      "player": "Luis Sinisterra",
+      "team": "Bournemouth",
+      "xg": 1.723,
+      "xa": 1.763
+    },
+    {
+      "player": "Marcos Senesi",
+      "team": "Bournemouth",
+      "xg": 0.651,
+      "xa": 0.238
+    },
+    {
+      "player": "Marcus Tavernier",
+      "team": "Bournemouth",
+      "xg": 6.411,
+      "xa": 5.202
+    },
+    {
+      "player": "Mark Travers",
+      "team": "Bournemouth",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Max Aarons",
+      "team": "Bournemouth",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Milos Kerkez",
+      "team": "Bournemouth",
+      "xg": 0.743,
+      "xa": 4.914
+    },
+    {
+      "player": "Neto",
+      "team": "Bournemouth",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Philip Billing",
+      "team": "Bournemouth",
+      "xg": 0.357,
+      "xa": 1.402
+    },
+    {
+      "player": "Remy Rees-Dottin",
+      "team": "Bournemouth",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Ryan Christie",
+      "team": "Bournemouth",
+      "xg": 1.626,
+      "xa": 3.819
+    },
+    {
+      "player": "Tyler Adams",
+      "team": "Bournemouth",
+      "xg": 1.407,
+      "xa": 1.507
+    },
+    {
+      "player": "Zain Silcott-Duberry",
+      "team": "Bournemouth",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Ben Mee",
+      "team": "Brentford",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Bryan Mbeumo",
+      "team": "Brentford",
+      "xg": 13.632,
+      "xa": 10.376
+    },
+    {
+      "player": "Christian Nørgaard",
+      "team": "Brentford",
+      "xg": 5.774,
+      "xa": 1.917
+    },
+    {
+      "player": "Ethan Pinnock",
+      "team": "Brentford",
+      "xg": 0.938,
+      "xa": 1.51
+    },
+    {
+      "player": "Fabio Carvalho",
+      "team": "Brentford",
+      "xg": 2.346,
+      "xa": 0.676
+    },
+    {
+      "player": "Frank Onyeka",
+      "team": "Brentford",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Gustavo Nunes",
+      "team": "Brentford",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Hákon Valdimarsson",
+      "team": "Brentford",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Jayden Meghoma",
+      "team": "Brentford",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Keane Lewis-Potter",
+      "team": "Brentford",
+      "xg": 3.258,
+      "xa": 3.338
+    },
+    {
+      "player": "Kevin Schade",
+      "team": "Brentford",
+      "xg": 9.468,
+      "xa": 3.715
+    },
+    {
+      "player": "Kim Ji-Soo",
+      "team": "Brentford",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Kristoffer Ajer",
+      "team": "Brentford",
+      "xg": 1.142,
+      "xa": 1.472
+    },
+    {
+      "player": "Mads Roerslev",
+      "team": "Brentford",
+      "xg": 0.222,
+      "xa": 2.79
+    },
+    {
+      "player": "Mark Flekken",
+      "team": "Brentford",
+      "xg": 0.0,
+      "xa": 0.548
+    },
+    {
+      "player": "Mathias Jensen",
+      "team": "Brentford",
+      "xg": 0.269,
+      "xa": 1.988
+    },
+    {
+      "player": "Michael Kayode",
+      "team": "Brentford",
+      "xg": 0.181,
+      "xa": 0.981
+    },
+    {
+      "player": "Mikkel Damsgaard",
+      "team": "Brentford",
+      "xg": 3.477,
+      "xa": 9.246
+    },
+    {
+      "player": "Nathan Collins",
+      "team": "Brentford",
+      "xg": 2.654,
+      "xa": 1.973
+    },
+    {
+      "player": "Paris Maghoma",
+      "team": "Brentford",
+      "xg": 0.036,
+      "xa": 0.106
+    },
+    {
+      "player": "Rico Henry",
+      "team": "Brentford",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Ryan Trevitt",
+      "team": "Brentford",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Sepp van den Berg",
+      "team": "Brentford",
+      "xg": 2.148,
+      "xa": 1.03
+    },
+    {
+      "player": "Thiago",
+      "team": "Brentford",
+      "xg": 0.109,
+      "xa": 0.114
+    },
+    {
+      "player": "Vitaly Janelt",
+      "team": "Brentford",
+      "xg": 0.946,
+      "xa": 2.359
+    },
+    {
+      "player": "Yehor Yarmolyuk",
+      "team": "Brentford",
+      "xg": 0.788,
+      "xa": 1.026
+    },
+    {
+      "player": "Yoane Wissa",
+      "team": "Brentford",
+      "xg": 20.731,
+      "xa": 3.449
+    },
+    {
+      "player": "Yunus Konak",
+      "team": "Brentford",
+      "xg": 0.109,
+      "xa": 0.0
+    },
+    {
+      "player": "Adam Webster",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.376,
+      "xa": 0.382
+    },
+    {
+      "player": "Bart Verbruggen",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.0,
+      "xa": 0.053
+    },
+    {
+      "player": "Billy Gilmour",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.085,
+      "xa": 0.0
+    },
+    {
+      "player": "Brajan Gruda",
+      "team": "Brighton & Hove Albion",
+      "xg": 1.013,
+      "xa": 2.273
+    },
+    {
+      "player": "Carlos Baleba",
+      "team": "Brighton & Hove Albion",
+      "xg": 2.882,
+      "xa": 1.628
+    },
+    {
+      "player": "Danny Welbeck",
+      "team": "Brighton & Hove Albion",
+      "xg": 10.456,
+      "xa": 2.077
+    },
+    {
+      "player": "Diego Gómez",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.877,
+      "xa": 1.582
+    },
+    {
+      "player": "Eiran Cashin",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Estupiñán",
+      "team": "Brighton & Hove Albion",
+      "xg": 1.318,
+      "xa": 2.321
+    },
+    {
+      "player": "Ferdi Kadioglu",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.602,
+      "xa": 0.165
+    },
+    {
+      "player": "Georginio Rutter",
+      "team": "Brighton & Hove Albion",
+      "xg": 5.677,
+      "xa": 3.132
+    },
+    {
+      "player": "Harry Howell",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Igor Julio",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.084,
+      "xa": 0.143
+    },
+    {
+      "player": "Jack Hinshelwood",
+      "team": "Brighton & Hove Albion",
+      "xg": 3.254,
+      "xa": 1.421
+    },
+    {
+      "player": "Jakub Moder",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.0,
+      "xa": 0.204
+    },
+    {
+      "player": "James Milner",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.192,
+      "xa": 0.261
+    },
+    {
+      "player": "Jan Paul van Hecke",
+      "team": "Brighton & Hove Albion",
+      "xg": 1.0,
+      "xa": 1.559
+    },
+    {
+      "player": "Jason Steele",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Jeremy Sarmiento",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "João Pedro",
+      "team": "Brighton & Hove Albion",
+      "xg": 8.864,
+      "xa": 5.619
+    },
+    {
+      "player": "Joël Veltman",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.798,
+      "xa": 0.757
+    },
+    {
+      "player": "Kaoru Mitoma",
+      "team": "Brighton & Hove Albion",
+      "xg": 10.223,
+      "xa": 4.949
+    },
+    {
+      "player": "Lewis Dunk",
+      "team": "Brighton & Hove Albion",
+      "xg": 1.107,
+      "xa": 0.517
+    },
+    {
+      "player": "Mats Wieffer",
+      "team": "Brighton & Hove Albion",
+      "xg": 1.099,
+      "xa": 1.067
+    },
+    {
+      "player": "Matt O&#039;Riley",
+      "team": "Brighton & Hove Albion",
+      "xg": 3.061,
+      "xa": 2.415
+    },
+    {
+      "player": "Simon Adingra",
+      "team": "Brighton & Hove Albion",
+      "xg": 3.138,
+      "xa": 2.066
+    },
+    {
+      "player": "Solly March",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.051,
+      "xa": 0.234
+    },
+    {
+      "player": "Tariq Lamptey",
+      "team": "Brighton & Hove Albion",
+      "xg": 0.339,
+      "xa": 0.897
+    },
+    {
+      "player": "Yankuba Minteh",
+      "team": "Brighton & Hove Albion",
+      "xg": 5.67,
+      "xa": 4.872
+    },
+    {
+      "player": "Yasin Ayari",
+      "team": "Brighton & Hove Albion",
+      "xg": 2.234,
+      "xa": 3.115
+    },
+    {
+      "player": "Julio Enciso",
+      "team": "Brighton,Ipswich",
+      "xg": 2.74,
+      "xa": 2.228
+    },
+    {
+      "player": "Evan Ferguson",
+      "team": "Brighton,West Ham",
+      "xg": 1.481,
+      "xa": 0.793
+    },
+    {
+      "player": "Benoit Badiashile Mukinayi",
+      "team": "Chelsea",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Christopher Nkunku",
+      "team": "Chelsea",
+      "xg": 5.028,
+      "xa": 2.014
+    },
+    {
+      "player": "Cole Palmer",
+      "team": "Chelsea",
+      "xg": 15.774,
+      "xa": 12.954
+    },
+    {
+      "player": "Enzo Fernández",
+      "team": "Chelsea",
+      "xg": 6.133,
+      "xa": 7.738
+    },
+    {
+      "player": "Filip Jorgensen",
+      "team": "Chelsea",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Jadon Sancho",
+      "team": "Chelsea",
+      "xg": 2.417,
+      "xa": 4.314
+    },
+    {
+      "player": "Josh Acheampong",
+      "team": "Chelsea",
+      "xg": 0.168,
+      "xa": 0.0
+    },
+    {
+      "player": "João Félix",
+      "team": "Chelsea",
+      "xg": 2.648,
+      "xa": 0.684
+    },
+    {
+      "player": "Kiernan Dewsbury-Hall",
+      "team": "Chelsea",
+      "xg": 0.089,
+      "xa": 0.806
+    },
+    {
+      "player": "Levi Colwill",
+      "team": "Chelsea",
+      "xg": 2.486,
+      "xa": 1.066
+    },
+    {
+      "player": "Malo Gusto",
+      "team": "Chelsea",
+      "xg": 1.556,
+      "xa": 1.343
+    },
+    {
+      "player": "Marc Cucurella",
+      "team": "Chelsea",
+      "xg": 3.162,
+      "xa": 1.808
+    },
+    {
+      "player": "Marc Guiu",
+      "team": "Chelsea",
+      "xg": 0.0,
+      "xa": 0.04
+    },
+    {
+      "player": "Mathis Amougou",
+      "team": "Chelsea",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Moisés Caicedo",
+      "team": "Chelsea",
+      "xg": 0.691,
+      "xa": 2.925
+    },
+    {
+      "player": "Mykhailo Mudryk",
+      "team": "Chelsea",
+      "xg": 0.123,
+      "xa": 1.08
+    },
+    {
+      "player": "Nicolas Jackson",
+      "team": "Chelsea",
+      "xg": 13.834,
+      "xa": 3.472
+    },
+    {
+      "player": "Noni Madueke",
+      "team": "Chelsea",
+      "xg": 11.862,
+      "xa": 3.122
+    },
+    {
+      "player": "Pedro Neto",
+      "team": "Chelsea",
+      "xg": 4.421,
+      "xa": 6.566
+    },
+    {
+      "player": "Reece James",
+      "team": "Chelsea",
+      "xg": 0.581,
+      "xa": 1.324
+    },
+    {
+      "player": "Renato Veiga",
+      "team": "Chelsea",
+      "xg": 0.135,
+      "xa": 0.0
+    },
+    {
+      "player": "Robert Sánchez",
+      "team": "Chelsea",
+      "xg": 0.0,
+      "xa": 0.016
+    },
+    {
+      "player": "Romeo Lavia",
+      "team": "Chelsea",
+      "xg": 0.146,
+      "xa": 0.723
+    },
+    {
+      "player": "Shumaira Mheuka",
+      "team": "Chelsea",
+      "xg": 0.025,
+      "xa": 0.0
+    },
+    {
+      "player": "Tosin Adarabioyo",
+      "team": "Chelsea",
+      "xg": 1.186,
+      "xa": 0.334
+    },
+    {
+      "player": "Tyrique George",
+      "team": "Chelsea",
+      "xg": 0.374,
+      "xa": 1.026
+    },
+    {
+      "player": "Wesley Fofana",
+      "team": "Chelsea",
+      "xg": 0.205,
+      "xa": 0.526
+    },
+    {
+      "player": "Trevoh Chalobah",
+      "team": "Chelsea,Crystal Palace",
+      "xg": 2.548,
+      "xa": 2.152
+    },
+    {
+      "player": "Adam Wharton",
+      "team": "Crystal Palace",
+      "xg": 0.336,
+      "xa": 3.352
+    },
+    {
+      "player": "Asher Agbinone",
+      "team": "Crystal Palace",
+      "xg": 0.015,
+      "xa": 0.024
+    },
+    {
+      "player": "Ben Chilwell",
+      "team": "Crystal Palace",
+      "xg": 0.256,
+      "xa": 0.9
+    },
+    {
+      "player": "Caleb Kporha",
+      "team": "Crystal Palace",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Chadi Riad",
+      "team": "Crystal Palace",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Cheick Oumar Doucoure",
+      "team": "Crystal Palace",
+      "xg": 0.365,
+      "xa": 0.014
+    },
+    {
+      "player": "Chris Richards",
+      "team": "Crystal Palace",
+      "xg": 1.696,
+      "xa": 0.114
+    },
+    {
+      "player": "Daichi Kamada",
+      "team": "Crystal Palace",
+      "xg": 0.977,
+      "xa": 1.832
+    },
+    {
+      "player": "Daniel Muñoz",
+      "team": "Crystal Palace",
+      "xg": 5.792,
+      "xa": 5.942
+    },
+    {
+      "player": "Dean Henderson",
+      "team": "Crystal Palace",
+      "xg": 0.011,
+      "xa": 0.106
+    },
+    {
+      "player": "Eberechi Eze",
+      "team": "Crystal Palace",
+      "xg": 9.877,
+      "xa": 7.02
+    },
+    {
+      "player": "Eddie Nketiah",
+      "team": "Crystal Palace",
+      "xg": 7.153,
+      "xa": 1.386
+    },
+    {
+      "player": "Ismaila Sarr",
+      "team": "Crystal Palace",
+      "xg": 12.309,
+      "xa": 10.057
+    },
+    {
+      "player": "Jean-Philippe Mateta",
+      "team": "Crystal Palace",
+      "xg": 15.833,
+      "xa": 3.853
+    },
+    {
+      "player": "Jefferson Lerma",
+      "team": "Crystal Palace",
+      "xg": 0.899,
+      "xa": 1.388
+    },
+    {
+      "player": "Jeffrey Schlupp",
+      "team": "Crystal Palace",
+      "xg": 0.21,
+      "xa": 0.335
+    },
+    {
+      "player": "Joel Ward",
+      "team": "Crystal Palace",
+      "xg": 0.0,
+      "xa": 0.068
+    },
+    {
+      "player": "Justin Devenny",
+      "team": "Crystal Palace",
+      "xg": 1.147,
+      "xa": 0.633
+    },
+    {
+      "player": "Marc Guehi",
+      "team": "Crystal Palace",
+      "xg": 2.961,
+      "xa": 2.135
+    },
+    {
+      "player": "Matheus França",
+      "team": "Crystal Palace",
+      "xg": 0.408,
+      "xa": 0.0
+    },
+    {
+      "player": "Maxence Lacroix",
+      "team": "Crystal Palace",
+      "xg": 2.753,
+      "xa": 1.688
+    },
+    {
+      "player": "Nathaniel Clyne",
+      "team": "Crystal Palace",
+      "xg": 0.023,
+      "xa": 0.161
+    },
+    {
+      "player": "Romain Esse",
+      "team": "Crystal Palace",
+      "xg": 0.579,
+      "xa": 0.301
+    },
+    {
+      "player": "Tyrick Mitchell",
+      "team": "Crystal Palace",
+      "xg": 1.42,
+      "xa": 7.11
+    },
+    {
+      "player": "Will Hughes",
+      "team": "Crystal Palace",
+      "xg": 0.923,
+      "xa": 3.364
+    },
+    {
+      "player": "Joachim Andersen",
+      "team": "Crystal Palace,Fulham",
+      "xg": 0.885,
+      "xa": 0.281
+    },
+    {
+      "player": "Jordan Ayew",
+      "team": "Crystal Palace,Leicester",
+      "xg": 4.341,
+      "xa": 1.906
+    },
+    {
+      "player": "Odsonne Edouard",
+      "team": "Crystal Palace,Leicester",
+      "xg": 0.326,
+      "xa": 0.106
+    },
+    {
+      "player": "Abdoulaye Doucouré",
+      "team": "Everton",
+      "xg": 4.051,
+      "xa": 2.318
+    },
+    {
+      "player": "Armando Broja",
+      "team": "Everton",
+      "xg": 0.104,
+      "xa": 0.175
+    },
+    {
+      "player": "Ashley Young",
+      "team": "Everton",
+      "xg": 0.252,
+      "xa": 2.938
+    },
+    {
+      "player": "Beto",
+      "team": "Everton",
+      "xg": 9.267,
+      "xa": 1.386
+    },
+    {
+      "player": "Dominic Calvert-Lewin",
+      "team": "Everton",
+      "xg": 8.584,
+      "xa": 0.741
+    },
+    {
+      "player": "Dwight McNeil",
+      "team": "Everton",
+      "xg": 1.512,
+      "xa": 6.04
+    },
+    {
+      "player": "Harrison Armstrong",
+      "team": "Everton",
+      "xg": 0.257,
+      "xa": 0.071
+    },
+    {
+      "player": "Idrissa Gueye",
+      "team": "Everton",
+      "xg": 1.041,
+      "xa": 2.416
+    },
+    {
+      "player": "Iliman Ndiaye",
+      "team": "Everton",
+      "xg": 7.095,
+      "xa": 1.909
+    },
+    {
+      "player": "Jack Harrison",
+      "team": "Everton",
+      "xg": 3.376,
+      "xa": 3.65
+    },
+    {
+      "player": "Jake O&#039;Brien",
+      "team": "Everton",
+      "xg": 1.22,
+      "xa": 0.668
+    },
+    {
+      "player": "James Garner",
+      "team": "Everton",
+      "xg": 0.6,
+      "xa": 1.215
+    },
+    {
+      "player": "James Tarkowski",
+      "team": "Everton",
+      "xg": 1.266,
+      "xa": 2.797
+    },
+    {
+      "player": "Jarrad Branthwaite",
+      "team": "Everton",
+      "xg": 1.381,
+      "xa": 0.653
+    },
+    {
+      "player": "Jesper Lindstrom",
+      "team": "Everton",
+      "xg": 2.018,
+      "xa": 2.882
+    },
+    {
+      "player": "Jordan Pickford",
+      "team": "Everton",
+      "xg": 0.0,
+      "xa": 0.28
+    },
+    {
+      "player": "Mason Holgate",
+      "team": "Everton",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Michael Keane",
+      "team": "Everton",
+      "xg": 1.127,
+      "xa": 0.124
+    },
+    {
+      "player": "Nathan Patterson",
+      "team": "Everton",
+      "xg": 0.071,
+      "xa": 0.421
+    },
+    {
+      "player": "Orel Mangala",
+      "team": "Everton",
+      "xg": 0.714,
+      "xa": 0.495
+    },
+    {
+      "player": "Roman Dixon",
+      "team": "Everton",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Seamus Coleman",
+      "team": "Everton",
+      "xg": 0.475,
+      "xa": 0.0
+    },
+    {
+      "player": "Tim Iroegbunam",
+      "team": "Everton",
+      "xg": 0.209,
+      "xa": 0.175
+    },
+    {
+      "player": "Vitalii Mykolenko",
+      "team": "Everton",
+      "xg": 0.602,
+      "xa": 3.027
+    },
+    {
+      "player": "Youssef Chermiti",
+      "team": "Everton",
+      "xg": 0.171,
+      "xa": 0.0
+    },
+    {
+      "player": "Carlos Alcaraz",
+      "team": "Everton,Southampton",
+      "xg": 1.66,
+      "xa": 2.289
+    },
+    {
+      "player": "Adama Traoré",
+      "team": "Fulham",
+      "xg": 5.659,
+      "xa": 6.425
+    },
+    {
+      "player": "Alex Iwobi",
+      "team": "Fulham",
+      "xg": 5.022,
+      "xa": 8.459
+    },
+    {
+      "player": "Andreas Pereira",
+      "team": "Fulham",
+      "xg": 4.449,
+      "xa": 5.718
+    },
+    {
+      "player": "Antonee Robinson",
+      "team": "Fulham",
+      "xg": 1.054,
+      "xa": 4.404
+    },
+    {
+      "player": "Bernd Leno",
+      "team": "Fulham",
+      "xg": 0.0,
+      "xa": 0.319
+    },
+    {
+      "player": "Calvin Bassey",
+      "team": "Fulham",
+      "xg": 1.118,
+      "xa": 0.113
+    },
+    {
+      "player": "Carlos Vinicius",
+      "team": "Fulham",
+      "xg": 0.055,
+      "xa": 0.0
+    },
+    {
+      "player": "Emile Smith-Rowe",
+      "team": "Fulham",
+      "xg": 5.262,
+      "xa": 2.435
+    },
+    {
+      "player": "Harrison Reed",
+      "team": "Fulham",
+      "xg": 0.144,
+      "xa": 0.079
+    },
+    {
+      "player": "Harry Wilson",
+      "team": "Fulham",
+      "xg": 3.606,
+      "xa": 1.46
+    },
+    {
+      "player": "Issa Diop",
+      "team": "Fulham",
+      "xg": 0.485,
+      "xa": 0.143
+    },
+    {
+      "player": "Jay Stansfield",
+      "team": "Fulham",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Jorge Cuenca",
+      "team": "Fulham",
+      "xg": 0.016,
+      "xa": 0.0
+    },
+    {
+      "player": "Joshua King",
+      "team": "Fulham",
+      "xg": 0.588,
+      "xa": 0.753
+    },
+    {
+      "player": "Kenny Tete",
+      "team": "Fulham",
+      "xg": 1.595,
+      "xa": 0.675
+    },
+    {
+      "player": "Martial Godo",
+      "team": "Fulham",
+      "xg": 0.0,
+      "xa": 0.083
+    },
+    {
+      "player": "Raúl Jiménez",
+      "team": "Fulham",
+      "xg": 14.405,
+      "xa": 4.079
+    },
+    {
+      "player": "Rodrigo Muniz",
+      "team": "Fulham",
+      "xg": 6.838,
+      "xa": 0.781
+    },
+    {
+      "player": "Ryan Sessegnon",
+      "team": "Fulham",
+      "xg": 2.482,
+      "xa": 1.314
+    },
+    {
+      "player": "Sander Berge",
+      "team": "Fulham",
+      "xg": 0.426,
+      "xa": 0.726
+    },
+    {
+      "player": "Sasa Lukic",
+      "team": "Fulham",
+      "xg": 1.536,
+      "xa": 3.099
+    },
+    {
+      "player": "Timothy Castagne",
+      "team": "Fulham",
+      "xg": 0.361,
+      "xa": 0.874
+    },
+    {
+      "player": "Tom Cairney",
+      "team": "Fulham",
+      "xg": 0.796,
+      "xa": 1.627
+    },
+    {
+      "player": "Willian",
+      "team": "Fulham",
+      "xg": 0.256,
+      "xa": 0.296
+    },
+    {
+      "player": "Alex Palmer",
+      "team": "Ipswich Town",
+      "xg": 0.0,
+      "xa": 0.021
+    },
+    {
+      "player": "Ali Al-Hamadi",
+      "team": "Ipswich Town",
+      "xg": 0.532,
+      "xa": 0.078
+    },
+    {
+      "player": "Arijanet Muric",
+      "team": "Ipswich Town",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Axel Tuanzebe",
+      "team": "Ipswich Town",
+      "xg": 0.354,
+      "xa": 0.626
+    },
+    {
+      "player": "Ben Godfrey",
+      "team": "Ipswich Town",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Ben Johnson",
+      "team": "Ipswich Town",
+      "xg": 1.464,
+      "xa": 2.166
+    },
+    {
+      "player": "Cameron Burgess",
+      "team": "Ipswich Town",
+      "xg": 0.931,
+      "xa": 0.377
+    },
+    {
+      "player": "Chiedozie Ogbene",
+      "team": "Ipswich Town",
+      "xg": 0.0,
+      "xa": 0.073
+    },
+    {
+      "player": "Christian Walton",
+      "team": "Ipswich Town",
+      "xg": 0.0,
+      "xa": 0.017
+    },
+    {
+      "player": "Conor Chaplin",
+      "team": "Ipswich Town",
+      "xg": 1.435,
+      "xa": 0.789
+    },
+    {
+      "player": "Conor Townsend",
+      "team": "Ipswich Town",
+      "xg": 0.043,
+      "xa": 0.804
+    },
+    {
+      "player": "Dara O&#039;Shea",
+      "team": "Ipswich Town",
+      "xg": 1.565,
+      "xa": 0.703
+    },
+    {
+      "player": "George Edmundson",
+      "team": "Ipswich Town",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "George Hirst",
+      "team": "Ipswich Town",
+      "xg": 2.749,
+      "xa": 0.404
+    },
+    {
+      "player": "Harry Clarke",
+      "team": "Ipswich Town",
+      "xg": 0.057,
+      "xa": 0.065
+    },
+    {
+      "player": "Jack Clarke",
+      "team": "Ipswich Town",
+      "xg": 1.302,
+      "xa": 2.667
+    },
+    {
+      "player": "Jack Taylor",
+      "team": "Ipswich Town",
+      "xg": 0.586,
+      "xa": 0.767
+    },
+    {
+      "player": "Jacob Greaves",
+      "team": "Ipswich Town",
+      "xg": 1.436,
+      "xa": 0.226
+    },
+    {
+      "player": "Jens Cajuste",
+      "team": "Ipswich Town",
+      "xg": 0.613,
+      "xa": 0.625
+    },
+    {
+      "player": "Kalvin Phillips",
+      "team": "Ipswich Town",
+      "xg": 0.459,
+      "xa": 0.323
+    },
+    {
+      "player": "Leif Davis",
+      "team": "Ipswich Town",
+      "xg": 0.798,
+      "xa": 6.062
+    },
+    {
+      "player": "Liam Delap",
+      "team": "Ipswich Town",
+      "xg": 11.931,
+      "xa": 2.784
+    },
+    {
+      "player": "Luke Woolfenden",
+      "team": "Ipswich Town",
+      "xg": 0.058,
+      "xa": 0.0
+    },
+    {
+      "player": "Marcus Harness",
+      "team": "Ipswich Town",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Massimo Luongo",
+      "team": "Ipswich Town",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Nathan Broadhead",
+      "team": "Ipswich Town",
+      "xg": 1.828,
+      "xa": 0.839
+    },
+    {
+      "player": "Omari Hutchinson",
+      "team": "Ipswich Town",
+      "xg": 3.524,
+      "xa": 3.374
+    },
+    {
+      "player": "Sam Morsy",
+      "team": "Ipswich Town",
+      "xg": 0.296,
+      "xa": 1.417
+    },
+    {
+      "player": "Sammie Szmodics",
+      "team": "Ipswich Town",
+      "xg": 4.514,
+      "xa": 0.194
+    },
+    {
+      "player": "Wes Burns",
+      "team": "Ipswich Town",
+      "xg": 0.413,
+      "xa": 2.205
+    },
+    {
+      "player": "Abdul Fatawu",
+      "team": "Leicester City",
+      "xg": 0.466,
+      "xa": 1.472
+    },
+    {
+      "player": "Bilal El Khannouss",
+      "team": "Leicester City",
+      "xg": 1.442,
+      "xa": 4.914
+    },
+    {
+      "player": "Bobby Reid",
+      "team": "Leicester City",
+      "xg": 0.667,
+      "xa": 1.094
+    },
+    {
+      "player": "Boubakary Soumare",
+      "team": "Leicester City",
+      "xg": 0.256,
+      "xa": 0.348
+    },
+    {
+      "player": "Caleb Okoli",
+      "team": "Leicester City",
+      "xg": 0.87,
+      "xa": 0.0
+    },
+    {
+      "player": "Conor Coady",
+      "team": "Leicester City",
+      "xg": 0.642,
+      "xa": 0.07
+    },
+    {
+      "player": "Danny Ward",
+      "team": "Leicester City",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Facundo Buonanotte",
+      "team": "Leicester City",
+      "xg": 4.361,
+      "xa": 3.353
+    },
+    {
+      "player": "Hamza Choudhury",
+      "team": "Leicester City",
+      "xg": 0.0,
+      "xa": 0.399
+    },
+    {
+      "player": "Harry Winks",
+      "team": "Leicester City",
+      "xg": 0.188,
+      "xa": 1.326
+    },
+    {
+      "player": "Jake Evans",
+      "team": "Leicester City",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Jakub Stolarczyk",
+      "team": "Leicester City",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "James Justin",
+      "team": "Leicester City",
+      "xg": 2.047,
+      "xa": 0.961
+    },
+    {
+      "player": "Jamie Vardy",
+      "team": "Leicester City",
+      "xg": 12.219,
+      "xa": 3.738
+    },
+    {
+      "player": "Jannik Vestergaard",
+      "team": "Leicester City",
+      "xg": 0.112,
+      "xa": 0.072
+    },
+    {
+      "player": "Jeremy Monga",
+      "team": "Leicester City",
+      "xg": 0.207,
+      "xa": 0.019
+    },
+    {
+      "player": "Kasey McAteer",
+      "team": "Leicester City",
+      "xg": 1.446,
+      "xa": 0.905
+    },
+    {
+      "player": "Luke Thomas",
+      "team": "Leicester City",
+      "xg": 0.349,
+      "xa": 0.418
+    },
+    {
+      "player": "Mads Hermansen",
+      "team": "Leicester City",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Michael Golding",
+      "team": "Leicester City",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Olabade Aluko",
+      "team": "Leicester City",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Oliver Skipp",
+      "team": "Leicester City",
+      "xg": 0.243,
+      "xa": 0.34
+    },
+    {
+      "player": "Patson Daka",
+      "team": "Leicester City",
+      "xg": 1.768,
+      "xa": 0.026
+    },
+    {
+      "player": "Ricardo Pereira",
+      "team": "Leicester City",
+      "xg": 0.111,
+      "xa": 0.0
+    },
+    {
+      "player": "Stephy Mavididi",
+      "team": "Leicester City",
+      "xg": 3.392,
+      "xa": 2.584
+    },
+    {
+      "player": "Victor Kristiansen",
+      "team": "Leicester City",
+      "xg": 0.16,
+      "xa": 1.665
+    },
+    {
+      "player": "Wilfred Ndidi",
+      "team": "Leicester City",
+      "xg": 1.973,
+      "xa": 2.787
+    },
+    {
+      "player": "Will Alves",
+      "team": "Leicester City",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Wout Faes",
+      "team": "Leicester City",
+      "xg": 1.563,
+      "xa": 0.171
+    },
+    {
+      "player": "Woyo Coulibaly",
+      "team": "Leicester City",
+      "xg": 0.075,
+      "xa": 0.0
+    },
+    {
+      "player": "Alexis Mac Allister",
+      "team": "Liverpool",
+      "xg": 3.568,
+      "xa": 4.892
+    },
+    {
+      "player": "Alisson",
+      "team": "Liverpool",
+      "xg": 0.0,
+      "xa": 0.498
+    },
+    {
+      "player": "Andrew Robertson",
+      "team": "Liverpool",
+      "xg": 1.566,
+      "xa": 4.882
+    },
+    {
+      "player": "Caoimhin Kelleher",
+      "team": "Liverpool",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Cody Gakpo",
+      "team": "Liverpool",
+      "xg": 8.601,
+      "xa": 6.257
+    },
+    {
+      "player": "Conor Bradley",
+      "team": "Liverpool",
+      "xg": 1.136,
+      "xa": 1.916
+    },
+    {
+      "player": "Curtis Jones",
+      "team": "Liverpool",
+      "xg": 4.57,
+      "xa": 1.751
+    },
+    {
+      "player": "Darwin Núñez",
+      "team": "Liverpool",
+      "xg": 6.912,
+      "xa": 1.742
+    },
+    {
+      "player": "Diogo Jota",
+      "team": "Liverpool",
+      "xg": 10.206,
+      "xa": 1.852
+    },
+    {
+      "player": "Dominik Szoboszlai",
+      "team": "Liverpool",
+      "xg": 7.009,
+      "xa": 7.858
+    },
+    {
+      "player": "Federico Chiesa",
+      "team": "Liverpool",
+      "xg": 0.615,
+      "xa": 0.208
+    },
+    {
+      "player": "Harvey Elliott",
+      "team": "Liverpool",
+      "xg": 1.668,
+      "xa": 1.279
+    },
+    {
+      "player": "Ibrahima Konaté",
+      "team": "Liverpool",
+      "xg": 1.857,
+      "xa": 1.028
+    },
+    {
+      "player": "Jarell Quansah",
+      "team": "Liverpool",
+      "xg": 0.092,
+      "xa": 0.105
+    },
+    {
+      "player": "Jayden Danns",
+      "team": "Liverpool",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Joseph Gomez",
+      "team": "Liverpool",
+      "xg": 0.374,
+      "xa": 0.081
+    },
+    {
+      "player": "Konstantinos Tsimikas",
+      "team": "Liverpool",
+      "xg": 0.564,
+      "xa": 2.598
+    },
+    {
+      "player": "Luis Díaz",
+      "team": "Liverpool",
+      "xg": 12.356,
+      "xa": 6.245
+    },
+    {
+      "player": "Mohamed Salah",
+      "team": "Liverpool",
+      "xg": 27.706,
+      "xa": 15.858
+    },
+    {
+      "player": "Ryan Gravenberch",
+      "team": "Liverpool",
+      "xg": 1.332,
+      "xa": 2.415
+    },
+    {
+      "player": "Trent Alexander-Arnold",
+      "team": "Liverpool",
+      "xg": 1.894,
+      "xa": 8.057
+    },
+    {
+      "player": "Virgil van Dijk",
+      "team": "Liverpool",
+      "xg": 2.821,
+      "xa": 1.214
+    },
+    {
+      "player": "Vítezslav Jaros",
+      "team": "Liverpool",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Wataru Endo",
+      "team": "Liverpool",
+      "xg": 0.0,
+      "xa": 0.067
+    },
+    {
+      "player": "Abduqodir Khusanov",
+      "team": "Manchester City",
+      "xg": 0.016,
+      "xa": 0.106
+    },
+    {
+      "player": "Bernardo Silva",
+      "team": "Manchester City",
+      "xg": 4.794,
+      "xa": 5.0
+    },
+    {
+      "player": "Claudio Echeverri",
+      "team": "Manchester City",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Divin Mubama",
+      "team": "Manchester City",
+      "xg": 0.063,
+      "xa": 0.0
+    },
+    {
+      "player": "Ederson",
+      "team": "Manchester City",
+      "xg": 0.0,
+      "xa": 1.193
+    },
+    {
+      "player": "Erling Haaland",
+      "team": "Manchester City",
+      "xg": 23.955,
+      "xa": 3.581
+    },
+    {
+      "player": "Ilkay Gündogan",
+      "team": "Manchester City",
+      "xg": 3.427,
+      "xa": 3.668
+    },
+    {
+      "player": "Jack Grealish",
+      "team": "Manchester City",
+      "xg": 1.271,
+      "xa": 1.916
+    },
+    {
+      "player": "Jahmai Simpson-Pusey",
+      "team": "Manchester City",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "James McAtee",
+      "team": "Manchester City",
+      "xg": 2.567,
+      "xa": 0.854
+    },
+    {
+      "player": "John Stones",
+      "team": "Manchester City",
+      "xg": 0.666,
+      "xa": 0.084
+    },
+    {
+      "player": "Josko Gvardiol",
+      "team": "Manchester City",
+      "xg": 4.607,
+      "xa": 2.065
+    },
+    {
+      "player": "Jéremy Doku",
+      "team": "Manchester City",
+      "xg": 1.894,
+      "xa": 4.646
+    },
+    {
+      "player": "Kevin De Bruyne",
+      "team": "Manchester City",
+      "xg": 5.544,
+      "xa": 8.934
+    },
+    {
+      "player": "Kyle Walker",
+      "team": "Manchester City",
+      "xg": 0.11,
+      "xa": 0.725
+    },
+    {
+      "player": "Manuel Akanji",
+      "team": "Manchester City",
+      "xg": 1.01,
+      "xa": 0.425
+    },
+    {
+      "player": "Mateo Kovacic",
+      "team": "Manchester City",
+      "xg": 1.806,
+      "xa": 3.685
+    },
+    {
+      "player": "Matheus Nunes",
+      "team": "Manchester City",
+      "xg": 1.19,
+      "xa": 3.949
+    },
+    {
+      "player": "Nathan Aké",
+      "team": "Manchester City",
+      "xg": 0.242,
+      "xa": 0.016
+    },
+    {
+      "player": "Nico González",
+      "team": "Manchester City",
+      "xg": 0.819,
+      "xa": 0.082
+    },
+    {
+      "player": "Nico O&#039;Reilly",
+      "team": "Manchester City",
+      "xg": 1.097,
+      "xa": 0.261
+    },
+    {
+      "player": "Omar Marmoush",
+      "team": "Manchester City",
+      "xg": 5.65,
+      "xa": 2.677
+    },
+    {
+      "player": "Oscar Bobb",
+      "team": "Manchester City",
+      "xg": 0.0,
+      "xa": 0.09
+    },
+    {
+      "player": "Phil Foden",
+      "team": "Manchester City",
+      "xg": 6.184,
+      "xa": 5.382
+    },
+    {
+      "player": "Rico Lewis",
+      "team": "Manchester City",
+      "xg": 1.641,
+      "xa": 0.346
+    },
+    {
+      "player": "Rodri",
+      "team": "Manchester City",
+      "xg": 0.0,
+      "xa": 0.052
+    },
+    {
+      "player": "Rúben Dias",
+      "team": "Manchester City",
+      "xg": 1.336,
+      "xa": 0.213
+    },
+    {
+      "player": "Stefan Ortega Moreno",
+      "team": "Manchester City",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Sávio",
+      "team": "Manchester City",
+      "xg": 5.247,
+      "xa": 6.945
+    },
+    {
+      "player": "Vitor Reis",
+      "team": "Manchester City",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Alejandro Garnacho",
+      "team": "Manchester United",
+      "xg": 9.44,
+      "xa": 3.468
+    },
+    {
+      "player": "Altay Bayindir",
+      "team": "Manchester United",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Amad Diallo Traore",
+      "team": "Manchester United",
+      "xg": 4.746,
+      "xa": 4.756
+    },
+    {
+      "player": "André Onana",
+      "team": "Manchester United",
+      "xg": 0.0,
+      "xa": 0.315
+    },
+    {
+      "player": "Antony",
+      "team": "Manchester United",
+      "xg": 0.625,
+      "xa": 0.229
+    },
+    {
+      "player": "Ayden Heaven",
+      "team": "Manchester United",
+      "xg": 0.06,
+      "xa": 0.012
+    },
+    {
+      "player": "Bruno Fernandes",
+      "team": "Manchester United",
+      "xg": 9.888,
+      "xa": 10.228
+    },
+    {
+      "player": "Casemiro",
+      "team": "Manchester United",
+      "xg": 1.939,
+      "xa": 2.171
+    },
+    {
+      "player": "Chido Obi-Martin",
+      "team": "Manchester United",
+      "xg": 0.558,
+      "xa": 0.0
+    },
+    {
+      "player": "Christian Eriksen",
+      "team": "Manchester United",
+      "xg": 1.332,
+      "xa": 3.239
+    },
+    {
+      "player": "Diogo Dalot",
+      "team": "Manchester United",
+      "xg": 1.699,
+      "xa": 2.579
+    },
+    {
+      "player": "Harry Amass",
+      "team": "Manchester United",
+      "xg": 0.09,
+      "xa": 0.049
+    },
+    {
+      "player": "Harry Maguire",
+      "team": "Manchester United",
+      "xg": 2.342,
+      "xa": 0.931
+    },
+    {
+      "player": "Jonny Evans",
+      "team": "Manchester United",
+      "xg": 0.084,
+      "xa": 0.0
+    },
+    {
+      "player": "Joshua Zirkzee",
+      "team": "Manchester United",
+      "xg": 5.218,
+      "xa": 2.01
+    },
+    {
+      "player": "Kobbie Mainoo",
+      "team": "Manchester United",
+      "xg": 0.745,
+      "xa": 2.045
+    },
+    {
+      "player": "Leny Yoro",
+      "team": "Manchester United",
+      "xg": 1.126,
+      "xa": 0.054
+    },
+    {
+      "player": "Lisandro Martínez",
+      "team": "Manchester United",
+      "xg": 1.687,
+      "xa": 1.358
+    },
+    {
+      "player": "Luke Shaw",
+      "team": "Manchester United",
+      "xg": 0.031,
+      "xa": 0.561
+    },
+    {
+      "player": "Manuel Ugarte",
+      "team": "Manchester United",
+      "xg": 1.087,
+      "xa": 1.616
+    },
+    {
+      "player": "Mason Mount",
+      "team": "Manchester United",
+      "xg": 2.939,
+      "xa": 0.336
+    },
+    {
+      "player": "Matthijs de Ligt",
+      "team": "Manchester United",
+      "xg": 2.872,
+      "xa": 0.281
+    },
+    {
+      "player": "Noussair Mazraoui",
+      "team": "Manchester United",
+      "xg": 0.815,
+      "xa": 1.564
+    },
+    {
+      "player": "Patrick Dorgu",
+      "team": "Manchester United",
+      "xg": 0.395,
+      "xa": 0.969
+    },
+    {
+      "player": "Rasmus Højlund",
+      "team": "Manchester United",
+      "xg": 5.865,
+      "xa": 2.142
+    },
+    {
+      "player": "Scott McTominay",
+      "team": "Manchester United",
+      "xg": 0.126,
+      "xa": 0.0
+    },
+    {
+      "player": "Toby Collyer",
+      "team": "Manchester United",
+      "xg": 0.051,
+      "xa": 0.162
+    },
+    {
+      "player": "Tyler Fredricson",
+      "team": "Manchester United",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Tyrell Malacia",
+      "team": "Manchester United",
+      "xg": 0.0,
+      "xa": 0.062
+    },
+    {
+      "player": "Victor Lindelöf",
+      "team": "Manchester United",
+      "xg": 0.0,
+      "xa": 0.123
+    },
+    {
+      "player": "Alexander Isak",
+      "team": "Newcastle United",
+      "xg": 22.357,
+      "xa": 5.449
+    },
+    {
+      "player": "Anthony Gordon",
+      "team": "Newcastle United",
+      "xg": 9.197,
+      "xa": 4.825
+    },
+    {
+      "player": "Bruno Guimarães",
+      "team": "Newcastle United",
+      "xg": 4.702,
+      "xa": 6.579
+    },
+    {
+      "player": "Callum Wilson",
+      "team": "Newcastle United",
+      "xg": 0.751,
+      "xa": 0.189
+    },
+    {
+      "player": "Dan Burn",
+      "team": "Newcastle United",
+      "xg": 2.574,
+      "xa": 1.164
+    },
+    {
+      "player": "Emil Krafth",
+      "team": "Newcastle United",
+      "xg": 0.028,
+      "xa": 0.059
+    },
+    {
+      "player": "Fabian Schär",
+      "team": "Newcastle United",
+      "xg": 4.203,
+      "xa": 0.391
+    },
+    {
+      "player": "Harvey Barnes",
+      "team": "Newcastle United",
+      "xg": 7.695,
+      "xa": 4.352
+    },
+    {
+      "player": "Jacob Murphy",
+      "team": "Newcastle United",
+      "xg": 6.591,
+      "xa": 9.341
+    },
+    {
+      "player": "Joe Willock",
+      "team": "Newcastle United",
+      "xg": 2.018,
+      "xa": 3.113
+    },
+    {
+      "player": "Joelinton",
+      "team": "Newcastle United",
+      "xg": 4.271,
+      "xa": 2.492
+    },
+    {
+      "player": "Kieran Trippier",
+      "team": "Newcastle United",
+      "xg": 0.158,
+      "xa": 1.806
+    },
+    {
+      "player": "Lewis Hall",
+      "team": "Newcastle United",
+      "xg": 0.536,
+      "xa": 3.951
+    },
+    {
+      "player": "Lewis Miley",
+      "team": "Newcastle United",
+      "xg": 0.204,
+      "xa": 0.089
+    },
+    {
+      "player": "Lloyd Kelly",
+      "team": "Newcastle United",
+      "xg": 0.271,
+      "xa": 0.375
+    },
+    {
+      "player": "Martin Dubravka",
+      "team": "Newcastle United",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Matt Targett",
+      "team": "Newcastle United",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Miguel Almirón",
+      "team": "Newcastle United",
+      "xg": 0.483,
+      "xa": 0.166
+    },
+    {
+      "player": "Nick Pope",
+      "team": "Newcastle United",
+      "xg": 0.0,
+      "xa": 0.077
+    },
+    {
+      "player": "Sandro Tonali",
+      "team": "Newcastle United",
+      "xg": 4.238,
+      "xa": 2.179
+    },
+    {
+      "player": "Sean Longstaff",
+      "team": "Newcastle United",
+      "xg": 0.407,
+      "xa": 0.209
+    },
+    {
+      "player": "Sven Botman",
+      "team": "Newcastle United",
+      "xg": 0.796,
+      "xa": 0.654
+    },
+    {
+      "player": "Valentino Livramento",
+      "team": "Newcastle United",
+      "xg": 0.325,
+      "xa": 3.147
+    },
+    {
+      "player": "William Osula",
+      "team": "Newcastle United",
+      "xg": 0.283,
+      "xa": 0.134
+    },
+    {
+      "player": "Anthony Elanga",
+      "team": "Nottingham Forest",
+      "xg": 5.923,
+      "xa": 6.606
+    },
+    {
+      "player": "Callum Hudson-Odoi",
+      "team": "Nottingham Forest",
+      "xg": 2.511,
+      "xa": 2.947
+    },
+    {
+      "player": "Chris Wood",
+      "team": "Nottingham Forest",
+      "xg": 15.639,
+      "xa": 3.044
+    },
+    {
+      "player": "Danilo",
+      "team": "Nottingham Forest",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Elliot Anderson",
+      "team": "Nottingham Forest",
+      "xg": 2.23,
+      "xa": 4.126
+    },
+    {
+      "player": "Eric da Silva Moreira",
+      "team": "Nottingham Forest",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Harry Toffolo",
+      "team": "Nottingham Forest",
+      "xg": 0.023,
+      "xa": 0.0
+    },
+    {
+      "player": "Ibrahim Sangare",
+      "team": "Nottingham Forest",
+      "xg": 0.016,
+      "xa": 0.716
+    },
+    {
+      "player": "Jota Silva",
+      "team": "Nottingham Forest",
+      "xg": 2.739,
+      "xa": 3.355
+    },
+    {
+      "player": "Matz Sels",
+      "team": "Nottingham Forest",
+      "xg": 0.0,
+      "xa": 0.522
+    },
+    {
+      "player": "Morato",
+      "team": "Nottingham Forest",
+      "xg": 0.104,
+      "xa": 0.0
+    },
+    {
+      "player": "Morgan Gibbs-White",
+      "team": "Nottingham Forest",
+      "xg": 6.14,
+      "xa": 6.106
+    },
+    {
+      "player": "Murillo",
+      "team": "Nottingham Forest",
+      "xg": 1.95,
+      "xa": 1.391
+    },
+    {
+      "player": "Neco Williams",
+      "team": "Nottingham Forest",
+      "xg": 3.004,
+      "xa": 1.704
+    },
+    {
+      "player": "Nicolás Domínguez",
+      "team": "Nottingham Forest",
+      "xg": 1.927,
+      "xa": 1.466
+    },
+    {
+      "player": "Nikola Milenkovic",
+      "team": "Nottingham Forest",
+      "xg": 4.571,
+      "xa": 1.044
+    },
+    {
+      "player": "Ola Aina",
+      "team": "Nottingham Forest",
+      "xg": 0.461,
+      "xa": 2.045
+    },
+    {
+      "player": "Ramón Sosa",
+      "team": "Nottingham Forest",
+      "xg": 1.131,
+      "xa": 0.683
+    },
+    {
+      "player": "Ryan Yates",
+      "team": "Nottingham Forest",
+      "xg": 2.863,
+      "xa": 1.084
+    },
+    {
+      "player": "Taiwo Awoniyi",
+      "team": "Nottingham Forest",
+      "xg": 2.419,
+      "xa": 0.089
+    },
+    {
+      "player": "Willy Boly",
+      "team": "Nottingham Forest",
+      "xg": 0.083,
+      "xa": 0.0
+    },
+    {
+      "player": "Álex Moreno",
+      "team": "Nottingham Forest",
+      "xg": 0.217,
+      "xa": 1.076
+    },
+    {
+      "player": "James Ward-Prowse",
+      "team": "Nottingham Forest,West Ham",
+      "xg": 1.294,
+      "xa": 3.262
+    },
+    {
+      "player": "Aaron Ramsdale",
+      "team": "Southampton",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Adam Armstrong",
+      "team": "Southampton",
+      "xg": 3.933,
+      "xa": 2.005
+    },
+    {
+      "player": "Adam Lallana",
+      "team": "Southampton",
+      "xg": 0.152,
+      "xa": 0.553
+    },
+    {
+      "player": "Albert Grønbæk",
+      "team": "Southampton",
+      "xg": 0.06,
+      "xa": 0.031
+    },
+    {
+      "player": "Alex McCarthy",
+      "team": "Southampton",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Armel Bella Kotchap",
+      "team": "Southampton",
+      "xg": 0.267,
+      "xa": 0.0
+    },
+    {
+      "player": "Ben Brereton Díaz",
+      "team": "Southampton",
+      "xg": 1.311,
+      "xa": 0.156
+    },
+    {
+      "player": "Cameron Archer",
+      "team": "Southampton",
+      "xg": 6.928,
+      "xa": 0.473
+    },
+    {
+      "player": "Charlie Taylor",
+      "team": "Southampton",
+      "xg": 0.0,
+      "xa": 0.055
+    },
+    {
+      "player": "Chimuanya Ugochukwu",
+      "team": "Southampton",
+      "xg": 0.824,
+      "xa": 0.968
+    },
+    {
+      "player": "Flynn Downes",
+      "team": "Southampton",
+      "xg": 0.894,
+      "xa": 1.616
+    },
+    {
+      "player": "Jack Stephens",
+      "team": "Southampton",
+      "xg": 0.675,
+      "xa": 0.288
+    },
+    {
+      "player": "James Bree",
+      "team": "Southampton",
+      "xg": 0.109,
+      "xa": 1.072
+    },
+    {
+      "player": "Jan Bednarek",
+      "team": "Southampton",
+      "xg": 1.03,
+      "xa": 0.354
+    },
+    {
+      "player": "Jay Robinson",
+      "team": "Southampton",
+      "xg": 0.056,
+      "xa": 0.682
+    },
+    {
+      "player": "Joachim Kayi-Sanda",
+      "team": "Southampton",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Joe Ayodele-Aribo",
+      "team": "Southampton",
+      "xg": 2.926,
+      "xa": 1.757
+    },
+    {
+      "player": "Joe Lumley",
+      "team": "Southampton",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Kamaldeen Sulemana",
+      "team": "Southampton",
+      "xg": 1.561,
+      "xa": 1.262
+    },
+    {
+      "player": "Kyle Walker-Peters",
+      "team": "Southampton",
+      "xg": 1.161,
+      "xa": 2.797
+    },
+    {
+      "player": "Mateus Fernandes",
+      "team": "Southampton",
+      "xg": 5.011,
+      "xa": 3.847
+    },
+    {
+      "player": "Maxwel Cornet",
+      "team": "Southampton",
+      "xg": 0.075,
+      "xa": 0.0
+    },
+    {
+      "player": "Nathan Wood",
+      "team": "Southampton",
+      "xg": 0.294,
+      "xa": 0.021
+    },
+    {
+      "player": "Paul Onuachu",
+      "team": "Southampton",
+      "xg": 4.887,
+      "xa": 0.516
+    },
+    {
+      "player": "Ronnie Edwards",
+      "team": "Southampton",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Ross Stewart",
+      "team": "Southampton",
+      "xg": 0.881,
+      "xa": 0.0
+    },
+    {
+      "player": "Ryan Fraser",
+      "team": "Southampton",
+      "xg": 0.025,
+      "xa": 0.156
+    },
+    {
+      "player": "Ryan Manning",
+      "team": "Southampton",
+      "xg": 0.337,
+      "xa": 3.372
+    },
+    {
+      "player": "Samuel Amo-Ameyaw",
+      "team": "Southampton",
+      "xg": 0.033,
+      "xa": 0.039
+    },
+    {
+      "player": "Samuel Edozie",
+      "team": "Southampton",
+      "xg": 0.0,
+      "xa": 0.082
+    },
+    {
+      "player": "Taylor Harwood-Bellis",
+      "team": "Southampton",
+      "xg": 2.195,
+      "xa": 1.99
+    },
+    {
+      "player": "Tyler Dibling",
+      "team": "Southampton",
+      "xg": 3.092,
+      "xa": 1.98
+    },
+    {
+      "player": "Welington",
+      "team": "Southampton",
+      "xg": 0.043,
+      "xa": 0.072
+    },
+    {
+      "player": "William Smallbone",
+      "team": "Southampton",
+      "xg": 0.69,
+      "xa": 0.587
+    },
+    {
+      "player": "Yukinari Sugawara",
+      "team": "Southampton",
+      "xg": 0.45,
+      "xa": 3.284
+    },
+    {
+      "player": "Alfie Dorrington",
+      "team": "Tottenham Hotspur",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Antonín Kinsky",
+      "team": "Tottenham Hotspur",
+      "xg": 0.0,
+      "xa": 0.22
+    },
+    {
+      "player": "Archie Gray",
+      "team": "Tottenham Hotspur",
+      "xg": 0.029,
+      "xa": 0.153
+    },
+    {
+      "player": "Ben Davies",
+      "team": "Tottenham Hotspur",
+      "xg": 0.361,
+      "xa": 0.099
+    },
+    {
+      "player": "Brandon Austin",
+      "team": "Tottenham Hotspur",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Brennan Johnson",
+      "team": "Tottenham Hotspur",
+      "xg": 11.163,
+      "xa": 2.949
+    },
+    {
+      "player": "Cristian Romero",
+      "team": "Tottenham Hotspur",
+      "xg": 1.905,
+      "xa": 0.625
+    },
+    {
+      "player": "Dane Scarlett",
+      "team": "Tottenham Hotspur",
+      "xg": 0.269,
+      "xa": 0.076
+    },
+    {
+      "player": "Dejan Kulusevski",
+      "team": "Tottenham Hotspur",
+      "xg": 5.523,
+      "xa": 6.503
+    },
+    {
+      "player": "Djed Spence",
+      "team": "Tottenham Hotspur",
+      "xg": 0.417,
+      "xa": 1.848
+    },
+    {
+      "player": "Dominic Solanke",
+      "team": "Tottenham Hotspur",
+      "xg": 12.416,
+      "xa": 2.461
+    },
+    {
+      "player": "Fraser Forster",
+      "team": "Tottenham Hotspur",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Guglielmo Vicario",
+      "team": "Tottenham Hotspur",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Iyenoma Destiny Udogie",
+      "team": "Tottenham Hotspur",
+      "xg": 0.35,
+      "xa": 1.261
+    },
+    {
+      "player": "James Maddison",
+      "team": "Tottenham Hotspur",
+      "xg": 5.894,
+      "xa": 6.017
+    },
+    {
+      "player": "Kevin Danso",
+      "team": "Tottenham Hotspur",
+      "xg": 0.274,
+      "xa": 0.068
+    },
+    {
+      "player": "Lucas Bergvall",
+      "team": "Tottenham Hotspur",
+      "xg": 0.609,
+      "xa": 0.72
+    },
+    {
+      "player": "Mathys Tel",
+      "team": "Tottenham Hotspur",
+      "xg": 2.8,
+      "xa": 2.507
+    },
+    {
+      "player": "Micky van de Ven",
+      "team": "Tottenham Hotspur",
+      "xg": 0.771,
+      "xa": 1.178
+    },
+    {
+      "player": "Mikey Moore",
+      "team": "Tottenham Hotspur",
+      "xg": 0.164,
+      "xa": 0.674
+    },
+    {
+      "player": "Pape Sarr",
+      "team": "Tottenham Hotspur",
+      "xg": 3.994,
+      "xa": 2.015
+    },
+    {
+      "player": "Pedro Porro",
+      "team": "Tottenham Hotspur",
+      "xg": 1.837,
+      "xa": 6.576
+    },
+    {
+      "player": "Radu Dragusin",
+      "team": "Tottenham Hotspur",
+      "xg": 0.177,
+      "xa": 0.517
+    },
+    {
+      "player": "Richarlison",
+      "team": "Tottenham Hotspur",
+      "xg": 4.303,
+      "xa": 0.824
+    },
+    {
+      "player": "Rodrigo Bentancur",
+      "team": "Tottenham Hotspur",
+      "xg": 1.301,
+      "xa": 0.351
+    },
+    {
+      "player": "Sergio Reguilón",
+      "team": "Tottenham Hotspur",
+      "xg": 0.132,
+      "xa": 0.03
+    },
+    {
+      "player": "Son Heung-Min",
+      "team": "Tottenham Hotspur",
+      "xg": 7.907,
+      "xa": 9.044
+    },
+    {
+      "player": "Timo Werner",
+      "team": "Tottenham Hotspur",
+      "xg": 0.953,
+      "xa": 3.081
+    },
+    {
+      "player": "Will Lankshear",
+      "team": "Tottenham Hotspur",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Wilson Odobert",
+      "team": "Tottenham Hotspur",
+      "xg": 2.116,
+      "xa": 0.856
+    },
+    {
+      "player": "Yves Bissouma",
+      "team": "Tottenham Hotspur",
+      "xg": 0.445,
+      "xa": 0.293
+    },
+    {
+      "player": "Aaron Cresswell",
+      "team": "West Ham United",
+      "xg": 0.151,
+      "xa": 1.59
+    },
+    {
+      "player": "Aaron Wan-Bissaka",
+      "team": "West Ham United",
+      "xg": 1.352,
+      "xa": 4.089
+    },
+    {
+      "player": "Alphonse Areola",
+      "team": "West Ham United",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Andy Irving",
+      "team": "West Ham United",
+      "xg": 0.108,
+      "xa": 0.282
+    },
+    {
+      "player": "Carlos Soler",
+      "team": "West Ham United",
+      "xg": 2.292,
+      "xa": 1.089
+    },
+    {
+      "player": "Crysencio Summerville",
+      "team": "West Ham United",
+      "xg": 1.814,
+      "xa": 2.159
+    },
+    {
+      "player": "Danny Ings",
+      "team": "West Ham United",
+      "xg": 1.766,
+      "xa": 1.155
+    },
+    {
+      "player": "Edson Álvarez",
+      "team": "West Ham United",
+      "xg": 0.319,
+      "xa": 0.797
+    },
+    {
+      "player": "Emerson",
+      "team": "West Ham United",
+      "xg": 2.132,
+      "xa": 1.213
+    },
+    {
+      "player": "Guido Rodríguez",
+      "team": "West Ham United",
+      "xg": 0.163,
+      "xa": 0.219
+    },
+    {
+      "player": "Jarrod Bowen",
+      "team": "West Ham United",
+      "xg": 9.816,
+      "xa": 7.633
+    },
+    {
+      "player": "Jean-Clair Todibo",
+      "team": "West Ham United",
+      "xg": 0.278,
+      "xa": 0.03
+    },
+    {
+      "player": "Kaelan Casey",
+      "team": "West Ham United",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Konstantinos Mavropanos",
+      "team": "West Ham United",
+      "xg": 1.661,
+      "xa": 0.675
+    },
+    {
+      "player": "Lewis Orford",
+      "team": "West Ham United",
+      "xg": 0.016,
+      "xa": 0.027
+    },
+    {
+      "player": "Lucas Paquetá",
+      "team": "West Ham United",
+      "xg": 5.134,
+      "xa": 2.734
+    },
+    {
+      "player": "Luis Guilherme",
+      "team": "West Ham United",
+      "xg": 0.366,
+      "xa": 0.11
+    },
+    {
+      "player": "Lukasz Fabianski",
+      "team": "West Ham United",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Max Kilman",
+      "team": "West Ham United",
+      "xg": 1.715,
+      "xa": 0.929
+    },
+    {
+      "player": "Michail Antonio",
+      "team": "West Ham United",
+      "xg": 2.993,
+      "xa": 1.599
+    },
+    {
+      "player": "Mohammed Kudus",
+      "team": "West Ham United",
+      "xg": 7.222,
+      "xa": 3.731
+    },
+    {
+      "player": "Niclas Füllkrug",
+      "team": "West Ham United",
+      "xg": 2.164,
+      "xa": 2.083
+    },
+    {
+      "player": "Oliver Scarles",
+      "team": "West Ham United",
+      "xg": 0.137,
+      "xa": 0.116
+    },
+    {
+      "player": "Tomas Soucek",
+      "team": "West Ham United",
+      "xg": 8.069,
+      "xa": 0.947
+    },
+    {
+      "player": "Vladimir Coufal",
+      "team": "West Ham United",
+      "xg": 0.324,
+      "xa": 0.578
+    },
+    {
+      "player": "Alfie Pond",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "André",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.296,
+      "xa": 0.805
+    },
+    {
+      "player": "Boubacar Traore",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Carlos Forbs",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.146,
+      "xa": 0.035
+    },
+    {
+      "player": "Chiquinho",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.0,
+      "xa": 0.016
+    },
+    {
+      "player": "Craig Dawson",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.407,
+      "xa": 0.07
+    },
+    {
+      "player": "Daniel Bentley",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Daniel Podence",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.045,
+      "xa": 0.0
+    },
+    {
+      "player": "Emmanuel Agbadou",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.694,
+      "xa": 0.189
+    },
+    {
+      "player": "Gonçalo Guedes",
+      "team": "Wolverhampton Wanderers",
+      "xg": 3.33,
+      "xa": 1.434
+    },
+    {
+      "player": "Hee-Chan Hwang",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.799,
+      "xa": 0.285
+    },
+    {
+      "player": "Jean-Ricner Bellegarde",
+      "team": "Wolverhampton Wanderers",
+      "xg": 1.794,
+      "xa": 4.053
+    },
+    {
+      "player": "José Sá",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.0,
+      "xa": 0.065
+    },
+    {
+      "player": "João Gomes",
+      "team": "Wolverhampton Wanderers",
+      "xg": 2.872,
+      "xa": 1.2
+    },
+    {
+      "player": "Jørgen Strand Larsen",
+      "team": "Wolverhampton Wanderers",
+      "xg": 11.69,
+      "xa": 3.359
+    },
+    {
+      "player": "Mario Lemina",
+      "team": "Wolverhampton Wanderers",
+      "xg": 1.192,
+      "xa": 1.288
+    },
+    {
+      "player": "Marshall Munetsi",
+      "team": "Wolverhampton Wanderers",
+      "xg": 2.833,
+      "xa": 1.989
+    },
+    {
+      "player": "Mateus Mané",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Matheus Cunha",
+      "team": "Wolverhampton Wanderers",
+      "xg": 8.446,
+      "xa": 7.411
+    },
+    {
+      "player": "Matt Doherty",
+      "team": "Wolverhampton Wanderers",
+      "xg": 1.577,
+      "xa": 1.724
+    },
+    {
+      "player": "Nasser Djiga",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Nélson Semedo",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.995,
+      "xa": 2.185
+    },
+    {
+      "player": "Pablo Sarabia",
+      "team": "Wolverhampton Wanderers",
+      "xg": 2.177,
+      "xa": 1.962
+    },
+    {
+      "player": "Pedro Lima",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.051,
+      "xa": 0.072
+    },
+    {
+      "player": "Rayan Ait Nouri",
+      "team": "Wolverhampton Wanderers",
+      "xg": 3.612,
+      "xa": 5.461
+    },
+    {
+      "player": "Rodrigo Gomes",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.68,
+      "xa": 0.979
+    },
+    {
+      "player": "Sam Johnstone",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.0,
+      "xa": 0.049
+    },
+    {
+      "player": "Santiago Bueno",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.328,
+      "xa": 0.0
+    },
+    {
+      "player": "Tom King",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.0,
+      "xa": 0.0
+    },
+    {
+      "player": "Tommy Doyle",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.362,
+      "xa": 0.348
+    },
+    {
+      "player": "Toti",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.977,
+      "xa": 0.993
+    },
+    {
+      "player": "Yerson Mosquera",
+      "team": "Wolverhampton Wanderers",
+      "xg": 0.466,
+      "xa": 0.095
+    }
+  ]
+}

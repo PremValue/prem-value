@@ -87,6 +87,7 @@ let DATA = {};
 let activeSection = "overview";
 let selectedTeam = "";
 let financeSort = { key: "value_rank", direction: "asc" };
+let tacticsTeams = ["Liverpool", "Arsenal"];
 let playerFilters = {
   search: "", club: "all", position: "all", age: "all",
   minMinutes: 500, valuation: "all", bargainOnly: false,
@@ -107,6 +108,7 @@ const teamMetric = team => (DATA.team_metrics || []).find(metric => metric.team 
 const standingFor = team => (DATA.standings || []).find(standing => standing.team === team);
 const squadFor = team => (DATA.squads || []).find(squad => squad.team === team);
 const financeFor = team => (DATA.finances || []).find(finance => finance.team === team);
+const squadValuationFor = team => (DATA.squad_valuations || []).find(value => value.team === team);
 const fmt = (value, digits = 1) => Number(value).toFixed(digits);
 const signed = (value, digits = 1) => `${value > 0 ? "+" : ""}${fmt(value, digits)}`;
 const encodedTeam = team => encodeURIComponent(team);
@@ -114,7 +116,7 @@ const encodedTeam = team => encodeURIComponent(team);
 function readUrlState() {
   const params = new URLSearchParams(window.location.search);
   const requestedSection = params.get("section");
-  if (["overview", "attack", "defence", "standings", "finance", "value", "clubs", "xi", "facts"].includes(requestedSection)) {
+  if (["overview", "attack", "defence", "standings", "tactics", "finance", "value", "clubs", "xi", "facts"].includes(requestedSection)) {
     activeSection = requestedSection;
   }
   selectedTeam = params.get("team") || "";
@@ -207,6 +209,8 @@ function init() {
   renderWageGrid();
   renderFinanceMethodology();
   renderDataHealth();
+  renderValuationDiscrepancies();
+  renderTacticControls();
   renderTeamEfficiencyTable();
   renderPlayerControls();
   renderClubs();
@@ -292,8 +296,72 @@ function renderAllCharts() {
   if (activeSection === "overview")  { renderOverviewPts(); renderOverviewGFGA(); renderOverviewWDL(); }
   if (activeSection === "attack")    { renderAttackScorers(); renderAttackAssists(); renderAttackTeamGoals(); }
   if (activeSection === "defence")   { renderDefGA(); renderDefCS(); renderDefScatter(); }
+  if (activeSection === "tactics")   { renderTactics(); }
   if (activeSection === "finance")   { renderFinanceCharts(); }
   if (activeSection === "value")     { renderPlayerExplorer(); }
+}
+
+function renderTacticControls() {
+  const options = (DATA.standings || []).map(team => `<option value="${team.team}">${team.team}</option>`).join("");
+  const first = document.getElementById("tacticsTeamA");
+  const second = document.getElementById("tacticsTeamB");
+  if (!first || !second) return;
+  first.innerHTML = options;
+  second.innerHTML = options;
+  first.value = tacticsTeams[0];
+  second.value = tacticsTeams[1];
+}
+
+function renderTactics() {
+  const first = document.getElementById("tacticsTeamA");
+  const second = document.getElementById("tacticsTeamB");
+  const body = document.getElementById("tacticsBody");
+  if (!first || !second || !body) return;
+  tacticsTeams = [first.value, second.value];
+  const a = squadFor(first.value);
+  const b = squadFor(second.value);
+  if (!a || !b) return;
+  const fields = [
+    { key: "goals", label: "Goals", digits: 0 },
+    { key: "xG", label: "Expected goals", digits: 1 },
+    { key: "xGA", label: "Expected goals against", digits: 1, inverse: true },
+    { key: "possession", label: "Possession %", digits: 1 },
+    { key: "tackles", label: "Tackles won", digits: 0 },
+    { key: "clean_sheets", label: "Clean sheets", digits: 0 },
+    { key: "yellow_cards", label: "Yellow cards", digits: 0, inverse: true },
+    { key: "performance_score", label: "Performance score", digits: 1 },
+  ];
+  const average = key => DATA.squads.reduce((sum, row) => sum + (row[key] || 0), 0) / DATA.squads.length;
+  const maximum = key => Math.max(...DATA.squads.map(row => row[key] || 0));
+  const normalized = (row, field) => {
+    const max = maximum(field.key);
+    if (!max || row[field.key] == null) return 0;
+    const value = row[field.key] / max * 100;
+    return field.inverse ? 100 - value : value;
+  };
+  document.getElementById("tacticsHeadA").textContent = a.team;
+  document.getElementById("tacticsHeadB").textContent = b.team;
+  body.innerHTML = fields.map(field => `
+    <tr><td>${field.label}</td><td>${a[field.key] == null ? "–" : fmt(a[field.key], field.digits)}</td>
+    <td>${b[field.key] == null ? "–" : fmt(b[field.key], field.digits)}</td>
+    <td>${fmt(average(field.key), field.digits)}</td></tr>`).join("");
+  destroyChart("cTactics");
+  const ctx = document.getElementById("cTactics"); if (!ctx) return;
+  charts["cTactics"] = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels: fields.map(field => field.label),
+      datasets: [
+        { label: a.team, data: fields.map(field => normalized(a, field)), borderColor: tc(a.team), backgroundColor: tc(a.team) + "22", pointBackgroundColor: tc(a.team) },
+        { label: b.team, data: fields.map(field => normalized(b, field)), borderColor: tc(b.team), backgroundColor: tc(b.team) + "22", pointBackgroundColor: tc(b.team) },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { r: { min: 0, max: 100, ticks: { display: false }, grid: { color: "rgba(255,255,255,.12)" }, angleLines: { color: "rgba(255,255,255,.12)" } } },
+      plugins: { legend: { labels: { color: "#94a3b8" } } },
+    },
+  });
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -509,7 +577,7 @@ function renderFinanceKPIs(metrics) {
     { icon: crestImg(best.team, 32), value: sn(best.team),    label: "Best Value Team",      sub: `£${best.cpp}M per point · Index ${best.valueIndex}`, accent: `linear-gradient(90deg,${C.green},${C.cyan})` },
     { icon: crestImg(worst.team, 32),value: sn(worst.team),   label: "Worst Value Team",     sub: `£${worst.cpp}M per point · Index ${worst.valueIndex}`, accent: `linear-gradient(90deg,${C.red},${C.pink})` },
     { icon: "💷",                     value: `£${bigSpend.wage_bill_m}M`, label: `Biggest Wage Bill — ${sn(bigSpend.team)}`, sub: `${bigSpend.Pts} pts · ${bigSpend.W}W`, accent: `linear-gradient(90deg,${C.orange},${C.yellow})` },
-    { icon: "📊",                     value: `£${topVal.squad_value_m}M`, label: `Highest Squad Value — ${sn(topVal.team)}`, sub: `${topVal.Pts} pts this season`, accent: `linear-gradient(90deg,${C.purple},${C.blue})` },
+    { icon: "📊",                     value: `€${topVal.squad_value_m}M`, label: `Highest Squad Value — ${sn(topVal.team)}`, sub: `${topVal.Pts} pts this season`, accent: `linear-gradient(90deg,${C.purple},${C.blue})` },
   ].map((k, i) => `
     <div class="kpi-card" style="--kpi-accent:${k.accent};animation-delay:${i * 0.07}s">
       <div class="kpi-icon">${k.icon}</div>
@@ -532,13 +600,13 @@ function renderFinanceCharts() {
   charts["cFinSquadVal"] = new Chart(ctx1, {
     type: "bar", data: {
       labels: byVal.map(t => sn(t.team)),
-      datasets: [{ label: "Squad Value (£M)", data: byVal.map(t => t.squad_value_m),
+      datasets: [{ label: "Squad Value (€M)", data: byVal.map(t => t.squad_value_m),
         backgroundColor: byVal.map(t => tc(t.team) + "cc"), borderColor: byVal.map(t => tc(t.team)),
         borderWidth: 1.5, borderRadius: 5, borderSkipped: false }]
     },
     options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
       plugins: { legend: { display: false },
-        tooltip: { callbacks: { label: c => ` £${c.parsed.x}M squad value` } } },
+        tooltip: { callbacks: { label: c => ` €${c.parsed.x}M player aggregate` } } },
       scales: { x: { grid: { color: "rgba(255,255,255,0.05)" } }, y: { grid: { display: false }, ticks: { font: { size: 11 } } } }
     }
   });
@@ -685,7 +753,7 @@ function renderTeamEfficiencyTable() {
         <td class="num-col">${team.value_rank}</td>
         <td class="name-col sticky-col">${crestImg(team.team, 22)} ${team.team}</td>
         <td>${team.league_position}</td><td class="pts-col">${team.points}</td><td>${team.goals_for}</td>
-        <td>£${fmt(team.squad_value_m)}M</td><td>£${fmt(team.wage_bill_m)}M</td>
+        <td>€${fmt(team.squad_value_m)}M</td><td>£${fmt(team.wage_bill_m)}M</td>
         <td>£${fmt(team.cost_per_point, 2)}M</td><td>£${fmt(team.cost_per_goal, 2)}M</td>
         <td class="${indexClass}">${fmt(team.value_index, 2)}</td>
         <td class="${residualClass}">${signed(team.residual_points)}</td>
@@ -702,8 +770,8 @@ function renderFinanceMethodology() {
     <div class="method-copy">
       Wage bills use rounded Capology combined gross annual base-payroll estimates for 2024-2025.
       Capology notes that historical combined payrolls may include mid-season transfers and exclude
-      bonuses and club staff. Squad values are curated directional estimates referenced to
-      Transfermarkt and are marked low confidence because they are not a direct dated export.
+      bonuses and club staff. Canonical squad values are reproducible euro aggregates of dated
+      player valuations. Curated Transfermarkt club totals remain low-confidence comparison references.
     </div>
     <div class="method-links">
       ${sources.map(source => `
@@ -714,11 +782,31 @@ function renderFinanceMethodology() {
 }
 
 function renderDataHealth() {
-  const el = document.getElementById("dataHealth"); if (!el) return;
-  const warnings = DATA._meta?.warnings || [];
-  el.innerHTML = `
+  const health = DATA._meta?.health || [];
+  const html = `
     <div class="method-title">Data health</div>
-    <div class="method-copy">${warnings.length ? warnings.map(warning => `<div>• ${warning}</div>`).join("") : "No generated data warnings."}</div>`;
+    <div class="health-grid">${health.map(item => `
+      <div class="health-item health-${item.severity}">
+        <strong>${item.summary}</strong><span>${item.details}</span>
+      </div>`).join("")}</div>`;
+  ["overviewDataHealth", "financeDataHealth"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  });
+}
+
+function renderValuationDiscrepancies() {
+  const body = document.getElementById("valuationDiscrepancyBody"); if (!body) return;
+  body.innerHTML = [...(DATA.squad_valuations || [])]
+    .sort((a, b) => Math.abs(b.difference_pct) - Math.abs(a.difference_pct))
+    .map(row => `<tr>
+      <td class="name-col">${crestImg(row.team, 20)} ${row.team}</td>
+      <td>€${fmt(row.squad_value_eur_m)}M</td><td>£${fmt(row.external_reference_gbp_m)}M</td>
+      <td>€${fmt(row.external_reference_eur_m)}M</td><td>${signed(row.difference_eur_m)}M</td>
+      <td class="${row.severity === "warning" ? "metric-bad" : "metric-neutral"}">${signed(row.difference_pct)}%</td>
+      <td>${row.valued_player_count} valued · ${row.missing_player_value_count} missing</td>
+      <td><span class="valuation-badge ${row.severity === "warning" ? "valuation-stale" : "valuation-fresh"}">${row.severity}</span></td>
+    </tr>`).join("");
 }
 
 // ── Famous Player Wage Cards ──────────────────────────────────
@@ -728,6 +816,7 @@ function renderWageGrid() {
 
   el.innerHTML = DATA.finances.map(f => {
     const st = DATA.standings.find(s => s.team === f.team) || {};
+    const valuation = squadValuationFor(f.team);
     const squadSource = financeSource(f.squad_value_source);
     const payrollSource = financeSource(f.wage_bill_source);
     const playerWageSource = financeSource(f.famous_player_wage_source);
@@ -739,7 +828,7 @@ function renderWageGrid() {
           <div class="wage-club-name">${f.team}</div>
           <div class="wage-club-meta">
             <span class="tag-pill" style="background:${tc(f.team)}22;color:${tc(f.team)}">#${st.position || "–"}</span>
-            <span class="tag-pill">£${f.squad_value_m}M squad</span>
+            <span class="tag-pill">€${valuation?.squad_value_eur_m ?? "–"}M squad</span>
             <span class="tag-pill">£${f.wage_bill_m}M/yr wages</span>
           </div>
         </div>
@@ -790,8 +879,8 @@ function cleanPlayers() {
 
 function computeVFM(players) {
   return players.map(p => {
-    const perf90 = p.mins > 0 ? parseFloat(((p.goals + p.assists) / p.mins * 90).toFixed(3)) : 0;
-    const vfm    = p.market_value_m > 0 ? parseFloat((perf90 / p.market_value_m * 100).toFixed(3)) : 0;
+    const perf90 = p.role_score || 0;
+    const vfm    = p.market_value_m > 0 ? parseFloat((perf90 / p.market_value_m).toFixed(3)) : 0;
     return { ...p, perf90, vfm };
   });
 }
@@ -911,7 +1000,7 @@ function renderValueKPIs(players) {
       label: "Top VFM Score", sub: `VFM ${byVfm[0].vfm.toFixed(1)} · €${byVfm[0].market_value_m}M · ${byVfm[0].club}`,
       accent: `linear-gradient(90deg,${C.green},${C.cyan})` },
     { icon: "🏹", value: byPerf[0].player,
-      label: "Best Output per 90", sub: `${byPerf[0].perf90.toFixed(2)} perf/90 · ${byPerf[0].goals}G ${byPerf[0].assists}A`,
+      label: "Best Role Score", sub: `${byPerf[0].perf90.toFixed(2)} role score · ${byPerf[0].goals}G ${byPerf[0].assists}A`,
       accent: `linear-gradient(90deg,${C.purple},${C.pink})` },
     { icon: "🏷️", value: bargains.length + " Players",
       label: "Bargain Players Found", sub: `Top: ${topBargain?.player || "–"}`,
@@ -931,7 +1020,7 @@ function renderValueKPIs(players) {
 function renderValueCharts(players = filteredPlayers()) {
   renderValueKPIs(players);
 
-  // Scatter: Perf/90 vs Market Value
+  // Scatter: position-aware role score vs market value
   destroyChart("cValScatter");
   const ctx1 = document.getElementById("cValScatter"); if (!ctx1) return;
   const validP = players.filter(p => p.market_value_m > 0);
@@ -950,10 +1039,10 @@ function renderValueCharts(players = filteredPlayers()) {
     },
     options: { responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false },
-        tooltip: { callbacks: { label: c => ` ${c.raw.player} (${c.raw.club})  ${c.raw.position}  €${c.raw.x}M  Perf/90: ${c.raw.y}  ${c.raw.status} ${c.raw.date || ""}  ${c.raw.bargain ? "🏷️ Bargain" : ""}` } } },
+        tooltip: { callbacks: { label: c => ` ${c.raw.player} (${c.raw.club})  ${c.raw.position}  €${c.raw.x}M  Role score: ${c.raw.y}  ${c.raw.status} ${c.raw.date || ""}  ${c.raw.bargain ? "🏷️ Bargain" : ""}` } } },
       scales: {
         x: { title: { display: true, text: "Market Value (€M)", color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } },
-        y: { title: { display: true, text: "Performance per 90",  color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } }
+        y: { title: { display: true, text: "Position-aware role score",  color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } }
       }
     }
   });
@@ -1011,7 +1100,7 @@ function renderBargainGrid(players = filteredPlayers()) {
         <div class="bc-stats-grid">
           <div class="bc-stat"><div class="bc-stat-val">${p.goals}</div><div class="bc-stat-lbl">Goals</div></div>
           <div class="bc-stat"><div class="bc-stat-val">${p.assists}</div><div class="bc-stat-lbl">Assists</div></div>
-          <div class="bc-stat"><div class="bc-stat-val">${p.perf90.toFixed(2)}</div><div class="bc-stat-lbl">Perf/90</div></div>
+          <div class="bc-stat"><div class="bc-stat-val">${p.perf90.toFixed(2)}</div><div class="bc-stat-lbl">Role score</div></div>
           <div class="bc-stat"><div class="bc-stat-val">€${p.market_value_m}M</div><div class="bc-stat-lbl">Value</div></div>
         </div>
         <div class="bc-vfm-row">
@@ -1119,7 +1208,7 @@ function renderTeamDetail(team) {
       </div>
       <div class="detail-kpis">
         <div class="detail-kpi"><strong>£${fmt(metric.wage_bill_m)}M</strong><span>Wage bill</span>${comparison(metric.wage_bill_m, avg("wage_bill_m"))}</div>
-        <div class="detail-kpi"><strong>£${fmt(metric.squad_value_m)}M</strong><span>Squad value</span>${comparison(metric.squad_value_m, avg("squad_value_m"))}</div>
+        <div class="detail-kpi"><strong>€${fmt(metric.squad_value_m)}M</strong><span>Squad value · player aggregate</span>${comparison(metric.squad_value_m, avg("squad_value_m"))}</div>
         <div class="detail-kpi"><strong>${metric.points}</strong><span>Points</span>${comparison(metric.points, avg("points"))}</div>
         <div class="detail-kpi"><strong>£${fmt(metric.cost_per_point, 2)}M</strong><span>Cost per point</span>${comparison(metric.cost_per_point, avg("cost_per_point"), true)}</div>
         <div class="detail-kpi"><strong>£${fmt(metric.cost_per_goal, 2)}M</strong><span>Cost per goal</span>${comparison(metric.cost_per_goal, avg("cost_per_goal"), true)}</div>
@@ -1130,6 +1219,8 @@ function renderTeamDetail(team) {
         <div class="detail-panel"><h3>Squad Snapshot</h3>
           <div class="snapshot-grid">
             <span>Possession<strong>${squad?.possession == null ? "–" : `${fmt(squad.possession)}%`}</strong></span>
+            <span>xG<strong>${squad?.xG == null ? "–" : fmt(squad.xG)}</strong></span>
+            <span>xGA<strong>${squad?.xGA == null ? "–" : fmt(squad.xGA)}</strong></span>
             <span>Clean sheets<strong>${squad?.clean_sheets ?? "–"}</strong></span>
             <span>Tackles won<strong>${squad?.tackles ?? "–"}</strong></span>
             <span>Yellow cards<strong>${squad?.yellow_cards ?? "–"}</strong></span>
@@ -1141,7 +1232,7 @@ function renderTeamDetail(team) {
         </div>
       </div>
       <div class="section-hdr" style="margin-top:2rem"><h2>${team} Player Rankings</h2><p>All registered players, sorted by value-for-money score.</p></div>
-      <div class="table-wrap"><table class="stats-table"><thead><tr><th>Player</th><th>Pos</th><th>Age</th><th>Apps</th><th>Mins</th><th>Goals</th><th>Assists</th><th>Perf/90</th><th>Value (€M)</th><th>Valuation</th><th>VFM</th><th>Bargain?</th></tr></thead>
+      <div class="table-wrap"><table class="stats-table"><thead><tr><th>Player</th><th>Pos</th><th>Age</th><th>Apps</th><th>Mins</th><th>Goals</th><th>Assists</th><th>Role score</th><th>Value (€M)</th><th>Valuation</th><th>VFM</th><th>Bargain?</th></tr></thead>
       <tbody>${players.map(player => `<tr class="${player.isBargain ? "row-bargain" : ""}"><td class="name-col">${playerAvatar(player.player, player.club, 28)} ${player.player}</td><td>${player.position}</td><td>${player.age ?? "–"}</td><td>${player.apps}</td><td>${player.mins.toLocaleString()}</td><td>${player.goals}</td><td>${player.assists}</td><td>${fmt(player.perf90, 2)}</td><td>${player.market_value_m == null ? "–" : `€${player.market_value_m}M`}</td><td>${valuationBadge(player)}</td><td class="vfm-col">${fmt(player.vfm, 1)}</td><td>${player.isBargain ? "Yes" : "–"}</td></tr>`).join("")}</tbody></table></div>
     </div>`;
   renderClubComparison(metric, standing, squad);
@@ -1165,6 +1256,7 @@ function renderClubs() {
 
   el.innerHTML = DATA.standings.map(t => {
     const fin = finMap[t.team] || {};
+    const valuation = squadValuationFor(t.team);
     const squadSource = financeSource(fin.squad_value_source);
     const payrollSource = financeSource(fin.wage_bill_source);
     const col = tc(t.team);
@@ -1200,7 +1292,7 @@ function renderClubs() {
       <div class="cc-finances">
         <div class="cc-fin-row">
           <div class="cc-fin-item">
-            <div class="cc-fin-val">£${fin.squad_value_m || "–"}M</div>
+            <div class="cc-fin-val">€${valuation?.squad_value_eur_m ?? "–"}M</div>
             <div class="cc-fin-lbl">Squad Value</div>
           </div>
           <div class="cc-fin-item">

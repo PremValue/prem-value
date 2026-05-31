@@ -1,0 +1,6 @@
+{
+  "source_url": "https://data-api.ecb.europa.eu/service/data/EXR/D.GBP.EUR.SP00.A?startPeriod=2025-05-30&endPeriod=2025-05-30&format=csvdata",
+  "rate_date": "2025-05-30",
+  "gbp_to_eur": 1.1888,
+  "notes": "ECB reference rate for the last trading day before the 2025-05-31 player valuation cutoff. The published quote is 0.8412 GBP per EUR; this snapshot stores its rounded reciprocal for GBP-to-EUR comparison."
+}

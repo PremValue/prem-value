@@ -27,6 +27,7 @@
         <button class="nav-btn"         data-section="attack" onclick="showSection('attack')">Attack</button>
         <button class="nav-btn"         data-section="defence" onclick="showSection('defence')">Defence</button>
         <button class="nav-btn"         data-section="standings" onclick="showSection('standings')">Standings</button>
+        <button class="nav-btn tactics" data-section="tactics" onclick="showSection('tactics')">Tactics</button>
         <button class="nav-btn finance" data-section="finance" onclick="showSection('finance')">💰 Finance</button>
         <button class="nav-btn value"   data-section="value" onclick="showSection('value')">⚡ Value</button>
         <button class="nav-btn clubs"   data-section="clubs" onclick="showSection('clubs')">🏟️ Clubs</button>
@@ -56,6 +57,7 @@
     <!-- OVERVIEW -->
     <section class="section active" id="sectionOverview">
       <div class="section-hdr"><h2>Season Overview</h2><p>Final standings points distribution and goals for vs against across all 20 clubs</p></div>
+      <div class="data-health" id="overviewDataHealth"></div>
       <div class="chart-grid">
         <div class="chart-card wide">
           <div class="card-hdr"><h3>Final League Points — All 20 Clubs</h3><span class="badge">Ranked by points</span></div>
@@ -146,6 +148,30 @@
       </div>
     </section>
 
+    <!-- TACTICS -->
+    <section class="section" id="sectionTactics">
+      <div class="section-hdr">
+        <h2>Tactical Comparison</h2>
+        <p>Compare squad output, expected goals, possession, defensive work, and discipline.</p>
+      </div>
+      <div class="club-toolbar">
+        <label>First club<select id="tacticsTeamA" onchange="renderTactics()"></select></label>
+        <label>Second club<select id="tacticsTeamB" onchange="renderTactics()"></select></label>
+      </div>
+      <div class="chart-grid" style="margin-top:1rem">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Normalized Tactical Profile</h3><span class="badge">League max = 100</span></div>
+          <div class="chart-wrap tall"><canvas id="cTactics"></canvas></div>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:1rem">
+        <table class="stats-table">
+          <thead><tr><th>Metric</th><th id="tacticsHeadA">Club A</th><th id="tacticsHeadB">Club B</th><th>League avg</th></tr></thead>
+          <tbody id="tacticsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- FINANCE -->
     <section class="section" id="sectionFinance">
       <div class="section-hdr">
@@ -155,7 +181,7 @@
 
       <div class="finance-kpis" id="financeKpis"></div>
       <div class="finance-methodology" id="financeMethodology"></div>
-      <div class="data-health" id="dataHealth"></div>
+      <div class="data-health" id="financeDataHealth"></div>
 
       <div class="chart-grid" style="margin-top:1.5rem">
         <div class="chart-card wide">
@@ -164,7 +190,7 @@
           <p class="chart-note">Clubs above the trend line earned more points than expected for their annual wage bill. Residuals show the difference between actual and predicted points.</p>
         </div>
         <div class="chart-card wide">
-          <div class="card-hdr"><h3>Squad Market Value — All 20 Clubs</h3><span class="badge">£M · Transfermarkt estimates</span></div>
+          <div class="card-hdr"><h3>Squad Market Value — All 20 Clubs</h3><span class="badge">€M · player valuation aggregates</span></div>
           <div class="chart-wrap tall"><canvas id="cFinSquadVal"></canvas></div>
         </div>
         <div class="chart-card">
@@ -198,7 +224,7 @@
             <th><button class="sort-btn" onclick="setFinanceSort('league_position')">Pos</button></th>
             <th><button class="sort-btn" onclick="setFinanceSort('points')">Pts</button></th>
             <th><button class="sort-btn" onclick="setFinanceSort('goals_for')">Goals</button></th>
-            <th><button class="sort-btn" onclick="setFinanceSort('squad_value_m')">Squad £M</button></th>
+            <th><button class="sort-btn" onclick="setFinanceSort('squad_value_m')">Squad €M</button></th>
             <th><button class="sort-btn" onclick="setFinanceSort('wage_bill_m')">Wages £M</button></th>
             <th><button class="sort-btn" onclick="setFinanceSort('cost_per_point')">£M/Pt</button></th>
             <th><button class="sort-btn" onclick="setFinanceSort('cost_per_goal')">£M/Goal</button></th>
@@ -207,6 +233,17 @@
             <th>Detail</th>
           </tr></thead>
           <tbody id="efficiencyBody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-hdr" style="margin-top:2.5rem">
+        <h2>Squad Valuation Discrepancy Report</h2>
+        <p>Player-derived euro totals compared with converted external GBP references using the dated ECB exchange-rate snapshot.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="stats-table">
+          <thead><tr><th>Club</th><th>Derived €M</th><th>Reference £M</th><th>Converted €M</th><th>Difference €M</th><th>Difference %</th><th>Coverage</th><th>Status</th></tr></thead>
+          <tbody id="valuationDiscrepancyBody"></tbody>
         </table>
       </div>
 
@@ -222,15 +259,15 @@
     <section class="section" id="sectionValue">
       <div class="section-hdr">
         <h2>⚡ Player Value for Money</h2>
-        <p>Performance per 90 minutes divided by market value — who gives the most for their price tag?</p>
+        <p>Position-aware role score divided by market value — who gives the most for their price tag?</p>
       </div>
 
       <div class="value-kpis" id="valueKpis"></div>
 
       <div class="metric-legend">
-        <div class="metric-item"><span class="dot green"></span><strong>Perf/90</strong> = (Goals + Assists) ÷ Minutes × 90</div>
-        <div class="metric-item"><span class="dot cyan"></span><strong>VFM Score</strong> = Perf/90 ÷ Market Value (€M) × 100</div>
-        <div class="metric-item"><span class="dot yellow"></span><strong>Bargain</strong> = Fresh value · Minutes ≥ 900 · Perf/90 ≥ position median · Value ≤ position median</div>
+        <div class="metric-item"><span class="dot green"></span><strong>Role score</strong> = Position-weighted percentile score using output, expected output, defence, clean sheets, and saves</div>
+        <div class="metric-item"><span class="dot cyan"></span><strong>VFM Score</strong> = Role score ÷ Market Value (€M)</div>
+        <div class="metric-item"><span class="dot yellow"></span><strong>Bargain</strong> = Fresh value · Minutes ≥ 900 · Role score ≥ position median · Value ≤ position median</div>
         <div class="metric-item"><span class="dot orange"></span><strong>Stale value</strong> = Older than 180 days at the 2025-05-31 cutoff · visible but not featured</div>
       </div>
 
@@ -256,7 +293,7 @@
 
       <div class="chart-grid" style="margin-top:1.5rem">
         <div class="chart-card wide">
-          <div class="card-hdr"><h3>Performance per 90 vs Market Value</h3><span class="badge">Scatter · top-right = best value</span></div>
+          <div class="card-hdr"><h3>Role Score vs Market Value</h3><span class="badge">Position-aware score</span></div>
           <div class="chart-wrap tall"><canvas id="cValScatter"></canvas></div>
         </div>
         <div class="chart-card wide">
@@ -282,7 +319,7 @@
           <thead><tr>
             <th>Rank</th><th>Player</th><th>Club</th><th>Pos</th>
             <th>Age</th><th>Apps</th><th>Mins</th><th>Goals</th><th>Assists</th>
-            <th>Perf/90</th><th>Value (€M)</th><th>Valuation</th><th>VFM Score</th><th>Bargain?</th>
+            <th>Role score</th><th>Value (€M)</th><th>Valuation</th><th>VFM Score</th><th>Bargain?</th>
           </tr></thead>
           <tbody id="vfmBody"></tbody>
         </table>
@@ -327,7 +364,7 @@
       <div class="section-hdr" style="margin-top:2rem"><h2>Lineup Table</h2><p>Selected players and the explicit metrics behind the lineup.</p></div>
       <div class="table-wrap">
         <table class="stats-table">
-          <thead><tr><th>Slot</th><th>Player</th><th>Club</th><th>Pos</th><th>Mins</th><th>Goals</th><th>Assists</th><th>Perf/90</th><th>Value (€M)</th><th>VFM</th></tr></thead>
+          <thead><tr><th>Slot</th><th>Player</th><th>Club</th><th>Pos</th><th>Mins</th><th>Goals</th><th>Assists</th><th>Role score</th><th>Value (€M)</th><th>VFM</th></tr></thead>
           <tbody id="xiBody"></tbody>
         </table>
       </div>

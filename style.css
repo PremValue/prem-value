@@ -340,6 +340,12 @@ body::before {
   margin-top:.75rem;padding:.9rem 1.1rem;background:rgba(34,211,238,.04);
   border:1px solid rgba(34,211,238,.18);border-radius:var(--r-md);
 }
+.health-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.55rem }
+.health-item { display:flex;flex-direction:column;gap:.2rem;padding:.6rem;border-radius:6px;background:rgba(0,0,0,.16) }
+.health-item strong { color:var(--t1);font-size:.76rem }
+.health-item span { color:var(--t3);font-size:.68rem;line-height:1.4 }
+.health-warning { border-left:3px solid var(--orange) }
+.health-ok { border-left:3px solid var(--green) }
 
 /* ── VALUE FOR MONEY SECTION ─────────────────────────────────── */
 
