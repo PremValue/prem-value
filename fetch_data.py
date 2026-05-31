@@ -22,8 +22,10 @@ import json
 import re
 import sys
 import unicodedata
+from datetime import date
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 
 ROOT = Path(__file__).resolve().parent
@@ -39,6 +41,7 @@ SOURCE_NAMES = (
     "goalkeeping",
     "facts",
     "finances",
+    "finance_sources",
     "players",
     "player_values",
     "squads",
@@ -46,6 +49,10 @@ SOURCE_NAMES = (
 
 TRANSFERMARKT_DATA_BASE = "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data"
 PLAYER_VALUATION_CUTOFF = "2025-05-31"
+PLAYER_VALUATION_STALE_DAYS = 180
+PLAYER_EXPLORER_MINUTES = 500
+PLAYER_FEATURED_MINUTES = 900
+FINANCE_CONFIDENCE_LEVELS = {"low", "medium", "high"}
 
 TEAM_ALIASES = {
     "Brighton": "Brighton & Hove Albion",
@@ -130,7 +137,26 @@ REQUIRED_FIELDS = {
     "scorers": {"rank", "player", "club", "apps", "goals", "assists"},
     "assists": {"rank", "player", "club", "apps", "goals", "assists"},
     "goalkeeping": {"rank", "goalkeeper", "club", "apps", "clean_sheets", "goals_conceded"},
-    "finances": {"team", "squad_value_m", "wage_bill_m", "famous_players"},
+    "finances": {
+        "team",
+        "squad_value_m",
+        "squad_value_source",
+        "wage_bill_m",
+        "wage_bill_source",
+        "famous_player_wage_source",
+        "famous_players",
+    },
+    "finance_sources": {
+        "id",
+        "kind",
+        "source_name",
+        "source_url",
+        "season",
+        "as_of_date",
+        "retrieved_at",
+        "confidence",
+        "notes",
+    },
     "players": {
         "player",
         "club",
@@ -261,6 +287,99 @@ def validate_club_references(
         )
 
 
+def parse_iso_date(value: str, label: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except (TypeError, ValueError) as exc:
+        raise DataValidationError(f"{label} must be an ISO date: {value!r}") from exc
+
+
+def validate_url(value: str, label: str) -> None:
+    parsed = urlparse(value)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise DataValidationError(f"{label} must be an HTTP(S) URL: {value!r}")
+
+
+def validate_finances(
+    finances: list[dict[str, Any]],
+    finance_sources: list[dict[str, Any]],
+    players: list[dict[str, Any]],
+    warnings: list[str],
+) -> None:
+    source_ids = {row["id"] for row in finance_sources}
+    if len(source_ids) != len(finance_sources):
+        raise DataValidationError("data/finance_sources.json IDs must be unique")
+
+    for source in finance_sources:
+        label = f"Finance source '{source['id']}'"
+        if source["kind"] not in {"squad_value", "wage_bill", "player_wage"}:
+            raise DataValidationError(f"{label} has unknown kind: {source['kind']}")
+        if source["season"] != SEASON:
+            raise DataValidationError(f"{label} must use season {SEASON}")
+        if source["confidence"] not in FINANCE_CONFIDENCE_LEVELS:
+            raise DataValidationError(
+                f"{label} confidence must be one of: "
+                f"{', '.join(sorted(FINANCE_CONFIDENCE_LEVELS))}"
+            )
+        validate_url(source["source_url"], f"{label} source_url")
+        as_of_date = parse_iso_date(source["as_of_date"], f"{label} as_of_date")
+        retrieved_at = parse_iso_date(source["retrieved_at"], f"{label} retrieved_at")
+        if as_of_date > retrieved_at:
+            raise DataValidationError(f"{label} has an as_of_date after retrieved_at")
+
+    low_confidence = [source for source in finance_sources if source["confidence"] == "low"]
+    if low_confidence:
+        warnings.append(
+            f"{len(low_confidence)} finance source has low confidence: "
+            f"{', '.join(source['source_name'] for source in low_confidence)}."
+        )
+
+    sources_by_id = {source["id"]: source for source in finance_sources}
+    expected_sources = {
+        "squad_value_source": "squad_value",
+        "wage_bill_source": "wage_bill",
+        "famous_player_wage_source": "player_wage",
+    }
+    player_keys = {
+        (canonical_player_name(row["player"]), row["club"])
+        for row in players
+    }
+    for finance in finances:
+        team = finance["team"]
+        for field, expected_kind in expected_sources.items():
+            if finance[field] not in source_ids:
+                raise DataValidationError(
+                    f"Finance row for {team} references unknown source: {finance[field]}"
+                )
+            if sources_by_id[finance[field]]["kind"] != expected_kind:
+                raise DataValidationError(
+                    f"Finance row for {team} field {field} must reference "
+                    f"a {expected_kind} source"
+                )
+        if finance["squad_value_m"] <= 0 or finance["wage_bill_m"] <= 0:
+            raise DataValidationError(f"Finance values must be positive for {team}")
+        if not finance["famous_players"]:
+            raise DataValidationError(f"Finance row for {team} must list notable players")
+        for player in finance["famous_players"]:
+            missing = {"player", "position", "weekly_k"} - player.keys()
+            if missing:
+                raise DataValidationError(
+                    f"Finance notable player for {team} is missing: "
+                    f"{', '.join(sorted(missing))}"
+                )
+            if player["weekly_k"] <= 0:
+                raise DataValidationError(
+                    f"Finance notable player wage must be positive: "
+                    f"{player['player']} ({team})"
+                )
+            key = (canonical_player_name(player["player"]), team)
+            if key not in player_keys:
+                raise DataValidationError(
+                    f"Finance notable player is not in the {SEASON} snapshot: "
+                    f"{player['player']} ({team})"
+                )
+
+
 def dedupe_players(
     players: list[dict[str, Any]], warnings: list[str]
 ) -> list[dict[str, Any]]:
@@ -331,6 +450,75 @@ def validate_player_values(
     value_keys = {(row["player"], row["club"]) for row in player_values}
     if player_keys != value_keys:
         raise DataValidationError("data/player_values.json must match data/players.json")
+
+
+def annotate_player_valuations(
+    players: list[dict[str, Any]],
+    player_values: list[dict[str, Any]],
+    warnings: list[str],
+) -> list[dict[str, Any]]:
+    cutoff = parse_iso_date(PLAYER_VALUATION_CUTOFF, "PLAYER_VALUATION_CUTOFF")
+    values_by_key = {
+        (row["player"], row["club"]): row
+        for row in player_values
+    }
+    annotated = []
+    stale = []
+
+    for player in players:
+        value = values_by_key[(player["player"], player["club"])]
+        if player["market_value_m"] != value["market_value_m"]:
+            raise DataValidationError(
+                f"Player valuation mismatch for {player['player']} ({player['club']})"
+            )
+        if player["valuation_date"] != value["valuation_date"]:
+            raise DataValidationError(
+                f"Player valuation date mismatch for {player['player']} ({player['club']})"
+            )
+        validate_url(value["source_url"], f"Player source URL for {player['player']}")
+
+        valuation_age_days = None
+        valuation_status = "missing"
+        if player["valuation_date"]:
+            valuation_date = parse_iso_date(
+                player["valuation_date"],
+                f"Valuation date for {player['player']}",
+            )
+            valuation_age_days = (cutoff - valuation_date).days
+            if valuation_age_days < 0:
+                raise DataValidationError(
+                    f"Valuation date exceeds cutoff for {player['player']}: "
+                    f"{player['valuation_date']}"
+                )
+            valuation_status = (
+                "stale"
+                if valuation_age_days > PLAYER_VALUATION_STALE_DAYS
+                else "fresh"
+            )
+        if valuation_status == "stale":
+            stale.append(player)
+
+        annotated.append(
+            {
+                **player,
+                "valuation_age_days": valuation_age_days,
+                "valuation_status": valuation_status,
+                "valuation_source_url": value["source_url"],
+            }
+        )
+
+    if stale:
+        examples = ", ".join(
+            f"{row['player']} ({row['club']})"
+            for row in sorted(stale, key=lambda row: row["valuation_date"] or "")[:5]
+        )
+        warnings.append(
+            f"{len(stale)} players have Transfermarkt valuations older than "
+            f"{PLAYER_VALUATION_STALE_DAYS} days at the {PLAYER_VALUATION_CUTOFF} cutoff; "
+            f"they are excluded from featured rankings. Examples: {examples}."
+        )
+
+    return annotated
 
 
 def normalize_squads(
@@ -432,14 +620,22 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
     players = dedupe_players(sources["players"], warnings)
     validate_players(players, standings_teams, warnings)
     validate_player_values(players, sources["player_values"])
+    players = annotate_player_valuations(players, sources["player_values"], warnings)
+    validate_finances(finances, sources["finance_sources"], players, warnings)
     squads = normalize_squads(sources["squads"], standings, warnings)
     validate_cross_file_facts(standings, facts, warnings)
 
     bundle = {
         "_meta": {
-            "schema_version": 1,
+            "schema_version": 2,
             "season": SEASON,
             "generated_by": "fetch_data.py",
+            "player_value_policy": {
+                "valuation_cutoff": PLAYER_VALUATION_CUTOFF,
+                "valuation_stale_days": PLAYER_VALUATION_STALE_DAYS,
+                "explorer_min_minutes": PLAYER_EXPLORER_MINUTES,
+                "featured_min_minutes": PLAYER_FEATURED_MINUTES,
+            },
             "source_files": {name: source_digest(name) for name in SOURCE_NAMES},
             "warnings": warnings,
         },
@@ -449,6 +645,7 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
         "goalkeeping": sources["goalkeeping"],
         "facts": facts,
         "finances": finances,
+        "finance_sources": sources["finance_sources"],
         "players": players,
         "squads": squads,
     }

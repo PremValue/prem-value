@@ -85,6 +85,38 @@ function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete chart
 // ── State ─────────────────────────────────────────────────────
 let DATA = {};
 let activeSection = "overview";
+const DEFAULT_VALUE_POLICY = {
+  explorer_min_minutes: 500,
+  featured_min_minutes: 900,
+  valuation_stale_days: 180,
+};
+
+const valuePolicy = () => ({ ...DEFAULT_VALUE_POLICY, ...(DATA._meta?.player_value_policy || {}) });
+const financeSource = id => (DATA.finance_sources || []).find(source => source.id === id);
+const hasFreshValue = p => p.market_value_m > 0 && p.valuation_status === "fresh";
+const isExplorerEligible = p => p.mins >= valuePolicy().explorer_min_minutes && p.market_value_m > 0;
+const isFeaturedEligible = p => p.mins >= valuePolicy().featured_min_minutes && hasFreshValue(p);
+
+function confidenceBadge(source) {
+  if (!source) return "";
+  return `<span class="confidence-badge confidence-${source.confidence}" title="${source.notes}">
+    ${source.confidence} confidence
+  </span>`;
+}
+
+function sourceLink(source, label) {
+  if (!source) return "";
+  return `<a class="source-link" href="${source.source_url}" target="_blank"
+    rel="noopener noreferrer" title="${source.notes}">${label || source.source_name}</a>`;
+}
+
+function valuationBadge(player) {
+  const status = player.valuation_status || "missing";
+  const title = player.valuation_date
+    ? `${player.valuation_date} · ${player.valuation_age_days} days before cutoff`
+    : "No published valuation date";
+  return `<span class="valuation-badge valuation-${status}" title="${title}">${status}</span>`;
+}
 
 // ── Load generated dashboard bundle ───────────────────────────
 async function loadAll() {
@@ -117,6 +149,7 @@ function init() {
   renderFacts();
   // Pre-render data-only sections
   renderWageGrid();
+  renderFinanceMethodology();
   renderClubs();
   renderVFMTable();
   renderBargainGrid();
@@ -518,6 +551,25 @@ function renderFinanceCharts() {
   });
 }
 
+function renderFinanceMethodology() {
+  const el = document.getElementById("financeMethodology"); if (!el) return;
+  const sources = DATA.finance_sources || [];
+  el.innerHTML = `
+    <div class="method-title">Finance data methodology</div>
+    <div class="method-copy">
+      Wage bills use rounded Capology combined gross annual base-payroll estimates for 2024-2025.
+      Capology notes that historical combined payrolls may include mid-season transfers and exclude
+      bonuses and club staff. Squad values are curated directional estimates referenced to
+      Transfermarkt and are marked low confidence because they are not a direct dated export.
+    </div>
+    <div class="method-links">
+      ${sources.map(source => `
+        ${sourceLink(source)}
+        ${confidenceBadge(source)}
+      `).join("")}
+    </div>`;
+}
+
 // ── Famous Player Wage Cards ──────────────────────────────────
 function renderWageGrid() {
   const el = document.getElementById("wageGrid"); if (!el) return;
@@ -525,6 +577,9 @@ function renderWageGrid() {
 
   el.innerHTML = DATA.finances.map(f => {
     const st = DATA.standings.find(s => s.team === f.team) || {};
+    const squadSource = financeSource(f.squad_value_source);
+    const payrollSource = financeSource(f.wage_bill_source);
+    const playerWageSource = financeSource(f.famous_player_wage_source);
     return `
     <div class="wage-card">
       <div class="wage-card-header" style="background:linear-gradient(135deg,${tbg(f.team)},${tc(f.team)}22)">
@@ -556,6 +611,12 @@ function renderWageGrid() {
             </div>
           </div>`).join("")}
       </div>
+      <div class="wage-provenance">
+        <span>Sources:</span>
+        ${sourceLink(squadSource, "squad value")} ${confidenceBadge(squadSource)}
+        ${sourceLink(payrollSource, "payroll")} ${confidenceBadge(payrollSource)}
+        ${sourceLink(playerWageSource, "player wages")} ${confidenceBadge(playerWageSource)}
+      </div>
     </div>`;
   }).join("");
 }
@@ -586,7 +647,7 @@ function computeVFM(players) {
 
 function computeBargains(players) {
   const groups = {};
-  players.forEach(p => {
+  players.filter(p => isExplorerEligible(p) && hasFreshValue(p)).forEach(p => {
     const pos = p.position === "CB" ? "DF" : p.position;
     if (p.market_value_m > 0) {
       if (!groups[pos]) groups[pos] = [];
@@ -611,7 +672,7 @@ function computeBargains(players) {
   return players.map(p => {
     const pos = p.position === "CB" ? "DF" : p.position;
     const med = medians[pos] || { perf90: 0, value: 99 };
-    const isBargain = p.mins >= 900
+    const isBargain = isFeaturedEligible(p)
       && p.perf90 >= med.perf90
       && p.market_value_m <= med.value;
     return { ...p, isBargain, medians: med };
@@ -619,10 +680,12 @@ function computeBargains(players) {
 }
 
 function renderValueKPIs(players) {
-  const byVfm  = [...players].sort((a, b) => b.vfm  - a.vfm);
-  const byPerf = [...players].sort((a, b) => b.perf90 - a.perf90);
+  const featured = players.filter(isFeaturedEligible);
+  const byVfm  = [...featured].sort((a, b) => b.vfm  - a.vfm);
+  const byPerf = [...featured].sort((a, b) => b.perf90 - a.perf90);
   const bargains = players.filter(p => p.isBargain);
   const topBargain = [...bargains].sort((a, b) => b.vfm - a.vfm)[0] || byVfm[0];
+  if (!byVfm.length || !byPerf.length) return;
 
   document.getElementById("valueKpis").innerHTML = [
     { icon: crestImg(byVfm[0].club, 32), value: byVfm[0].player,
@@ -656,22 +719,22 @@ function renderValueCharts() {
   // Scatter: Perf/90 vs Market Value
   destroyChart("cValScatter");
   const ctx1 = document.getElementById("cValScatter"); if (!ctx1) return;
-  const validP = players.filter(p => p.mins >= 500 && p.market_value_m > 0);
+  const validP = players.filter(isExplorerEligible);
   charts["cValScatter"] = new Chart(ctx1, {
     type: "scatter", data: {
       datasets: [{
         label: "Players",
-        data: validP.map(p => ({ x: p.market_value_m, y: p.perf90, player: p.player, club: p.club, bargain: p.isBargain })),
-        backgroundColor: validP.map(p => p.isBargain ? C.green + "ee" : tc(p.club) + "bb"),
-        borderColor:     validP.map(p => p.isBargain ? C.green         : tc(p.club)),
-        borderWidth: validP.map(p => p.isBargain ? 2 : 1),
-        pointRadius: validP.map(p => p.isBargain ? 9 : 6),
+        data: validP.map(p => ({ x: p.market_value_m, y: p.perf90, player: p.player, club: p.club, bargain: p.isBargain, status: p.valuation_status, date: p.valuation_date })),
+        backgroundColor: validP.map(p => p.isBargain ? C.green + "ee" : p.valuation_status === "stale" ? C.orange + "cc" : tc(p.club) + "bb"),
+        borderColor:     validP.map(p => p.isBargain ? C.green         : p.valuation_status === "stale" ? C.orange       : tc(p.club)),
+        borderWidth: validP.map(p => p.isBargain || p.valuation_status === "stale" ? 2 : 1),
+        pointRadius: validP.map(p => p.isBargain ? 9 : p.valuation_status === "stale" ? 7 : 6),
         pointHoverRadius: 12,
       }]
     },
     options: { responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false },
-        tooltip: { callbacks: { label: c => ` ${c.raw.player} (${c.raw.club})  €${c.raw.x}M  Perf/90: ${c.raw.y}  ${c.raw.bargain ? "🏷️ Bargain" : ""}` } } },
+        tooltip: { callbacks: { label: c => ` ${c.raw.player} (${c.raw.club})  €${c.raw.x}M  Perf/90: ${c.raw.y}  ${c.raw.status} ${c.raw.date || ""}  ${c.raw.bargain ? "🏷️ Bargain" : ""}` } } },
       scales: {
         x: { title: { display: true, text: "Market Value (€M)", color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } },
         y: { title: { display: true, text: "Performance per 90",  color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } }
@@ -682,7 +745,7 @@ function renderValueCharts() {
   // VFM Bar chart — top 25
   destroyChart("cValRanking");
   const ctx2 = document.getElementById("cValRanking"); if (!ctx2) return;
-  const top25 = [...players].filter(p => p.mins >= 900 && p.market_value_m > 0).sort((a, b) => b.vfm - a.vfm).slice(0, 25);
+  const top25 = [...players].filter(isFeaturedEligible).sort((a, b) => b.vfm - a.vfm).slice(0, 25);
   charts["cValRanking"] = new Chart(ctx2, {
     type: "bar", data: {
       labels: top25.map(p => p.player),
@@ -753,7 +816,8 @@ function renderVFMTable() {
   const raw     = cleanPlayers();
   const withVfm = computeVFM(raw);
   const players = computeBargains(withVfm);
-  const sorted  = [...players].filter(p => p.mins >= 500).sort((a, b) => b.vfm - a.vfm);
+  const sorted  = [...players].filter(p => p.mins >= valuePolicy().explorer_min_minutes)
+    .sort((a, b) => Number(hasFreshValue(b)) - Number(hasFreshValue(a)) || b.vfm - a.vfm);
 
   body.innerHTML = sorted.map((p, i) => `
     <tr class="${p.isBargain ? "row-bargain" : ""}">
@@ -766,6 +830,7 @@ function renderVFMTable() {
       <td style="color:var(--cyan)">${p.assists}</td>
       <td style="color:var(--green);font-weight:600">${p.perf90.toFixed(2)}</td>
       <td>${p.market_value_m == null ? "–" : `€${p.market_value_m}M`}</td>
+      <td>${valuationBadge(p)} ${p.valuation_source_url ? sourceLink({ source_url: p.valuation_source_url, notes: `Transfermarkt valuation dated ${p.valuation_date || "unknown"}` }, p.valuation_date || "source") : ""}</td>
       <td class="vfm-col">${p.vfm.toFixed(1)}</td>
       <td>${p.isBargain ? '<span class="bargain-tag">🏷️ Yes</span>' : '<span style="color:var(--t3)">–</span>'}</td>
     </tr>`).join("");
@@ -781,6 +846,8 @@ function renderClubs() {
 
   el.innerHTML = DATA.standings.map(t => {
     const fin = finMap[t.team] || {};
+    const squadSource = financeSource(fin.squad_value_source);
+    const payrollSource = financeSource(fin.wage_bill_source);
     const col = tc(t.team);
     const pos = t.position;
     const badge = pos === 1 ? "🏆 Champions"
@@ -843,6 +910,10 @@ function renderClubs() {
               <div class="cc-wage-lbl">per week</div>
             </div>
           </div>`).join("")}
+      </div>
+      <div class="cc-source-row">
+        ${sourceLink(squadSource, "squad value source")} ${confidenceBadge(squadSource)}
+        ${sourceLink(payrollSource, "payroll source")} ${confidenceBadge(payrollSource)}
       </div>
     </div>`;
   }).join("");

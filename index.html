@@ -153,6 +153,7 @@
       </div>
 
       <div class="finance-kpis" id="financeKpis"></div>
+      <div class="finance-methodology" id="financeMethodology"></div>
 
       <div class="chart-grid" style="margin-top:1.5rem">
         <div class="chart-card wide">
@@ -198,7 +199,8 @@
       <div class="metric-legend">
         <div class="metric-item"><span class="dot green"></span><strong>Perf/90</strong> = (Goals + Assists) ÷ Minutes × 90</div>
         <div class="metric-item"><span class="dot cyan"></span><strong>VFM Score</strong> = Perf/90 ÷ Market Value (€M) × 100</div>
-        <div class="metric-item"><span class="dot yellow"></span><strong>Bargain</strong> = Minutes ≥ 900 · Perf/90 ≥ position median · Value ≤ position median</div>
+        <div class="metric-item"><span class="dot yellow"></span><strong>Bargain</strong> = Fresh value · Minutes ≥ 900 · Perf/90 ≥ position median · Value ≤ position median</div>
+        <div class="metric-item"><span class="dot orange"></span><strong>Stale value</strong> = Older than 180 days at the 2025-05-31 cutoff · visible but not featured</div>
       </div>
 
       <div class="chart-grid" style="margin-top:1.5rem">
@@ -207,7 +209,7 @@
           <div class="chart-wrap tall"><canvas id="cValScatter"></canvas></div>
         </div>
         <div class="chart-card wide">
-          <div class="card-hdr"><h3>Top 25 — Value for Money Score</h3><span class="badge">Higher = better value</span></div>
+          <div class="card-hdr"><h3>Top 25 — Value for Money Score</h3><span class="badge">900+ mins · fresh values</span></div>
           <div class="chart-wrap tall"><canvas id="cValRanking"></canvas></div>
         </div>
       </div>
@@ -215,21 +217,21 @@
       <!-- Bargain Players Feature Cards -->
       <div class="section-hdr" style="margin-top:2.5rem">
         <h2>🏷️ Bargain Players</h2>
-        <p>Players meeting all three bargain criteria: 900+ minutes · above-median output · below-median market value</p>
+        <p>Players with fresh valuations meeting all three bargain criteria: 900+ minutes · above-median output · below-median market value</p>
       </div>
       <div class="bargain-grid" id="bargainGrid"></div>
 
       <!-- Full Player Rankings Table -->
       <div class="section-hdr" style="margin-top:2.5rem">
         <h2>Full Player Rankings</h2>
-        <p>All analysed players sorted by Value for Money Score</p>
+        <p>Players with 500+ minutes. Stale valuations remain visible for transparency but are excluded from featured rankings.</p>
       </div>
       <div class="table-wrap">
         <table class="stats-table" id="vfmTable">
           <thead><tr>
             <th>Rank</th><th>Player</th><th>Club</th><th>Pos</th>
             <th>Mins</th><th>Goals</th><th>Assists</th>
-            <th>Perf/90</th><th>Value (€M)</th><th>VFM Score</th><th>Bargain?</th>
+            <th>Perf/90</th><th>Value (€M)</th><th>Valuation</th><th>VFM Score</th><th>Bargain?</th>
           </tr></thead>
           <tbody id="vfmBody"></tbody>
         </table>

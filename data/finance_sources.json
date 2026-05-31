@@ -1,0 +1,35 @@
+[
+  {
+    "id": "transfermarkt_club_values_reference",
+    "kind": "squad_value",
+    "source_name": "Transfermarkt Premier League club market values",
+    "source_url": "https://www.transfermarkt.co.uk/premier-league/marktwerteverein/wettbewerb/GB1",
+    "season": "2024-2025",
+    "as_of_date": "2025-05-31",
+    "retrieved_at": "2026-05-31",
+    "confidence": "low",
+    "notes": "Curated directional estimates in GBP millions retained from the dashboard snapshot. These are not a direct dated Transfermarkt export and should not be treated as audited point-in-time valuations."
+  },
+  {
+    "id": "capology_payrolls_2024_2025",
+    "kind": "wage_bill",
+    "source_name": "Capology Premier League payrolls",
+    "source_url": "https://www.capology.com/uk/premier-league/payrolls/2024-2025/",
+    "season": "2024-2025",
+    "as_of_date": "2025-05-31",
+    "retrieved_at": "2026-05-31",
+    "confidence": "medium",
+    "notes": "Rounded GBP millions from Capology combined gross annual base-payroll estimates. Combined historical payrolls include summer and winter rosters, may include mid-season transfers, and exclude bonuses and club staff."
+  },
+  {
+    "id": "capology_salaries_2024_2025",
+    "kind": "player_wage",
+    "source_name": "Capology Premier League salaries",
+    "source_url": "https://www.capology.com/uk/premier-league/salaries/2024-2025/",
+    "season": "2024-2025",
+    "as_of_date": "2025-05-31",
+    "retrieved_at": "2026-05-31",
+    "confidence": "medium",
+    "notes": "Curated notable-player weekly gross base-salary estimates. Capology states that salary figures are estimates, may have limited coverage, and exclude bonuses and incentives."
+  }
+]

@@ -1,15 +1,17 @@
 [
   {
-    "team": "Liverpool", "squad_value_m": 890, "wage_bill_m": 185,
+    "team": "Liverpool", "squad_value_m": 890, "wage_bill_m": 152.7,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Mohamed Salah",    "position": "FW", "weekly_k": 400},
       {"player": "Virgil van Dijk",  "position": "CB", "weekly_k": 220},
       {"player": "Darwin Núñez",     "position": "FW", "weekly_k": 140},
-      {"player": "Alisson Becker",   "position": "GK", "weekly_k": 120}
+      {"player": "Alisson",          "position": "GK", "weekly_k": 120}
     ]
   },
   {
-    "team": "Arsenal", "squad_value_m": 850, "wage_bill_m": 190,
+    "team": "Arsenal", "squad_value_m": 850, "wage_bill_m": 169.9,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Bukayo Saka",      "position": "FW", "weekly_k": 300},
       {"player": "Declan Rice",      "position": "MF", "weekly_k": 200},
@@ -18,7 +20,8 @@
     ]
   },
   {
-    "team": "Manchester City", "squad_value_m": 950, "wage_bill_m": 220,
+    "team": "Manchester City", "squad_value_m": 950, "wage_bill_m": 226.3,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Kevin De Bruyne",  "position": "MF", "weekly_k": 400},
       {"player": "Erling Haaland",   "position": "FW", "weekly_k": 375},
@@ -27,7 +30,8 @@
     ]
   },
   {
-    "team": "Chelsea", "squad_value_m": 870, "wage_bill_m": 240,
+    "team": "Chelsea", "squad_value_m": 870, "wage_bill_m": 171.0,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Enzo Fernández",   "position": "MF", "weekly_k": 280},
       {"player": "Reece James",      "position": "DF", "weekly_k": 200},
@@ -36,7 +40,8 @@
     ]
   },
   {
-    "team": "Newcastle United", "squad_value_m": 480, "wage_bill_m": 130,
+    "team": "Newcastle United", "squad_value_m": 480, "wage_bill_m": 99.2,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Bruno Guimarães",  "position": "MF", "weekly_k": 220},
       {"player": "Alexander Isak",   "position": "FW", "weekly_k": 180},
@@ -45,7 +50,8 @@
     ]
   },
   {
-    "team": "Aston Villa", "squad_value_m": 520, "wage_bill_m": 140,
+    "team": "Aston Villa", "squad_value_m": 520, "wage_bill_m": 129.2,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Emiliano Martínez","position": "GK", "weekly_k": 200},
       {"player": "Ollie Watkins",    "position": "FW", "weekly_k": 120},
@@ -54,7 +60,8 @@
     ]
   },
   {
-    "team": "Nottingham Forest", "squad_value_m": 400, "wage_bill_m": 90,
+    "team": "Nottingham Forest", "squad_value_m": 400, "wage_bill_m": 59.8,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Chris Wood",       "position": "FW", "weekly_k": 80},
       {"player": "Anthony Elanga",   "position": "FW", "weekly_k": 70},
@@ -63,7 +70,8 @@
     ]
   },
   {
-    "team": "Bournemouth", "squad_value_m": 290, "wage_bill_m": 65,
+    "team": "Bournemouth", "squad_value_m": 290, "wage_bill_m": 53.9,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Evanilson",        "position": "FW", "weekly_k": 80},
       {"player": "Justin Kluivert",  "position": "FW", "weekly_k": 50},
@@ -72,7 +80,8 @@
     ]
   },
   {
-    "team": "Brighton & Hove Albion", "squad_value_m": 460, "wage_bill_m": 100,
+    "team": "Brighton & Hove Albion", "squad_value_m": 460, "wage_bill_m": 64.3,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Kaoru Mitoma",     "position": "FW", "weekly_k": 80},
       {"player": "João Pedro",       "position": "FW", "weekly_k": 80},
@@ -81,7 +90,8 @@
     ]
   },
   {
-    "team": "Tottenham Hotspur", "squad_value_m": 700, "wage_bill_m": 160,
+    "team": "Tottenham Hotspur", "squad_value_m": 700, "wage_bill_m": 121.1,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Son Heung-min",    "position": "FW", "weekly_k": 200},
       {"player": "Dominic Solanke",  "position": "FW", "weekly_k": 150},
@@ -90,7 +100,8 @@
     ]
   },
   {
-    "team": "Brentford", "squad_value_m": 320, "wage_bill_m": 70,
+    "team": "Brentford", "squad_value_m": 320, "wage_bill_m": 44.9,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Bryan Mbeumo",     "position": "FW", "weekly_k": 70},
       {"player": "Yoane Wissa",      "position": "FW", "weekly_k": 70},
@@ -99,7 +110,8 @@
     ]
   },
   {
-    "team": "Fulham", "squad_value_m": 310, "wage_bill_m": 85,
+    "team": "Fulham", "squad_value_m": 310, "wage_bill_m": 71.5,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Raúl Jiménez",     "position": "FW", "weekly_k": 75},
       {"player": "Adama Traoré",     "position": "FW", "weekly_k": 65},
@@ -108,16 +120,18 @@
     ]
   },
   {
-    "team": "Wolverhampton Wanderers", "squad_value_m": 280, "wage_bill_m": 75,
+    "team": "Wolverhampton Wanderers", "squad_value_m": 280, "wage_bill_m": 79.3,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Matheus Cunha",         "position": "FW", "weekly_k": 110},
       {"player": "Jørgen Strand Larsen",  "position": "FW", "weekly_k": 60},
       {"player": "Hwang Hee-chan",         "position": "FW", "weekly_k": 80},
-      {"player": "Pedro Neto",            "position": "FW", "weekly_k": 70}
+      {"player": "Rayan Aït-Nouri",       "position": "MF", "weekly_k": 30}
     ]
   },
   {
-    "team": "Manchester United", "squad_value_m": 650, "wage_bill_m": 200,
+    "team": "Manchester United", "squad_value_m": 650, "wage_bill_m": 171.2,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Marcus Rashford",  "position": "FW", "weekly_k": 300},
       {"player": "Bruno Fernandes",  "position": "MF", "weekly_k": 240},
@@ -126,7 +140,8 @@
     ]
   },
   {
-    "team": "West Ham United", "squad_value_m": 420, "wage_bill_m": 110,
+    "team": "West Ham United", "squad_value_m": 420, "wage_bill_m": 103.2,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Lucas Paquetá",    "position": "MF", "weekly_k": 150},
       {"player": "Jarrod Bowen",     "position": "FW", "weekly_k": 120},
@@ -135,16 +150,18 @@
     ]
   },
   {
-    "team": "Crystal Palace", "squad_value_m": 270, "wage_bill_m": 80,
+    "team": "Crystal Palace", "squad_value_m": 270, "wage_bill_m": 73.7,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Eberechi Eze",          "position": "MF", "weekly_k": 130},
       {"player": "Jean-Philippe Mateta",  "position": "FW", "weekly_k": 60},
       {"player": "Marc Guéhi",            "position": "CB", "weekly_k": 80},
-      {"player": "Michael Olise",         "position": "FW", "weekly_k": 80}
+      {"player": "Ismaila Sarr",          "position": "MF", "weekly_k": 70}
     ]
   },
   {
-    "team": "Everton", "squad_value_m": 220, "wage_bill_m": 90,
+    "team": "Everton", "squad_value_m": 220, "wage_bill_m": 73.8,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Jordan Pickford",          "position": "GK", "weekly_k": 100},
       {"player": "Dominic Calvert-Lewin",    "position": "FW", "weekly_k": 140},
@@ -153,7 +170,8 @@
     ]
   },
   {
-    "team": "Leicester City", "squad_value_m": 200, "wage_bill_m": 80,
+    "team": "Leicester City", "squad_value_m": 200, "wage_bill_m": 66.7,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Jamie Vardy",        "position": "FW", "weekly_k": 130},
       {"player": "Wilfred Ndidi",      "position": "MF", "weekly_k": 80},
@@ -162,7 +180,8 @@
     ]
   },
   {
-    "team": "Ipswich Town", "squad_value_m": 190, "wage_bill_m": 50,
+    "team": "Ipswich Town", "squad_value_m": 190, "wage_bill_m": 40.8,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Liam Delap",         "position": "FW", "weekly_k": 40},
       {"player": "Omari Hutchinson",   "position": "FW", "weekly_k": 40},
@@ -171,12 +190,13 @@
     ]
   },
   {
-    "team": "Southampton", "squad_value_m": 180, "wage_bill_m": 55,
+    "team": "Southampton", "squad_value_m": 180, "wage_bill_m": 50.5,
+    "squad_value_source": "transfermarkt_club_values_reference", "wage_bill_source": "capology_payrolls_2024_2025", "famous_player_wage_source": "capology_salaries_2024_2025",
     "famous_players": [
       {"player": "Adam Armstrong",     "position": "FW", "weekly_k": 60},
       {"player": "Cameron Archer",     "position": "FW", "weekly_k": 50},
       {"player": "Joe Aribo",          "position": "MF", "weekly_k": 60},
-      {"player": "Gavin Bazunu",       "position": "GK", "weekly_k": 40}
+      {"player": "Aaron Ramsdale",     "position": "GK", "weekly_k": 120}
     ]
   }
 ]
