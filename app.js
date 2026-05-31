@@ -135,7 +135,7 @@ function renderKPIs() {
   const kpis = [
     {
       icon: crestImg(champ.team, 32), value: sn(champ.team),
-      label: "2024–25 Champions", sub: `${champ.Pts} points · ${champ.W}W ${champ.D}D ${champ.L}L`,
+      label: "2024–2025 Champions", sub: `${champ.Pts} points · ${champ.W}W ${champ.D}D ${champ.L}L`,
       accent: `linear-gradient(90deg,${C.yellow},${C.green})`
     },
     {

@@ -1,6 +1,6 @@
 # PremValue
 
-PremValue is a static Premier League 2024-25 value-for-money dashboard.
+PremValue is a static Premier League 2024-2025 value-for-money dashboard.
 
 ## Data Pipeline
 
@@ -45,7 +45,7 @@ or current FBRef team tables do not expose them.
 
 ## Optional Player Refresh
 
-`data/players.json` contains the complete 2024-25 Premier League player roster.
+`data/players.json` contains the complete 2024-2025 Premier League player roster.
 Its performance data comes from FBRef and its end-of-season market values use
 the latest Transfermarkt record on or before `2025-05-31` from the CC0
 [`dcaribou/transfermarkt-datasets`](https://github.com/dcaribou/transfermarkt-datasets)
@@ -60,7 +60,7 @@ pip install pandas requests lxml soccerdata
 python fetch_data.py --refresh-players
 ```
 
-Because the dashboard is locked to the completed 2024-25 season, the refresh
+Because the dashboard is locked to the completed 2024-2025 season, the refresh
 reuses soccerdata's cached FBRef standard player table when it is available.
 If the cache is absent, soccerdata fetches it before building the snapshot.
 Players without a published Transfermarkt record remain in the roster with a

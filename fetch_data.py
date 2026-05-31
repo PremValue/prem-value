@@ -1,5 +1,5 @@
 """
-Build the reproducible 2024-25 PremValue dashboard data bundle.
+Build the reproducible 2024-2025 PremValue dashboard data bundle.
 
 The checked-in JSON files in data/ are curated source snapshots. Running this
 script validates them, performs small deterministic cleanups, and writes the
@@ -31,7 +31,7 @@ DATA_DIR = ROOT / "data"
 DASHBOARD_FILE = DATA_DIR / "dashboard.json"
 STANDALONE_FILE = ROOT / "prem-value-for-money.html"
 
-SEASON = "2024-25"
+SEASON = "2024-2025"
 SOURCE_NAMES = (
     "standings",
     "scorers",
@@ -513,7 +513,7 @@ def refresh_squads() -> None:
             "Install them with: pip install pandas soccerdata"
         ) from exc
 
-    print("Refreshing optional FBRef squad enrichment for ENG-Premier League 24-25...")
+    print("Refreshing optional FBRef squad enrichment for ENG-Premier League 2024-2025...")
     fbref = sd.FBref(leagues="ENG-Premier League", seasons="24-25")
     def fetch_frame(stat_type: str, *, opponent_stats: bool = False) -> Any:
         suffix = " against" if opponent_stats else ""
@@ -743,7 +743,7 @@ def refresh_players() -> None:
             "Install them with: pip install pandas requests lxml soccerdata"
         ) from exc
 
-    print("Refreshing complete 2024-25 Premier League player snapshot...")
+    print("Refreshing complete 2024-2025 Premier League player snapshot...")
     dataframe = cached_fbref_player_frame(pd)
     if dataframe is None:
         print("  Fetching standard player stats from FBRef...")
