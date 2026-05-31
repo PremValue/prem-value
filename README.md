@@ -2,6 +2,10 @@
 
 PremValue is a static Premier League 2024-2025 value-for-money dashboard.
 
+The dashboard includes a wage-based team efficiency table and spending trend
+line, linked club drill-down views, a filterable player explorer, and a
+formation-aware Best Value XI builder with optional budget and per-club limits.
+
 ## Data Pipeline
 
 The checked-in JSON files under `data/` are curated source snapshots. The
@@ -21,6 +25,8 @@ validated data.
 The build performs deterministic cleanup and validation:
 
 - validates required fields and the 20-club standings table;
+- generates and validates team efficiency metrics, value ranks, regression
+  predictions, and spending residuals;
 - verifies club references across finance, player, scorer, assist, goalkeeper,
   and squad-enrichment snapshots;
 - validates finance source URLs, dates, confidence levels, and notable-player

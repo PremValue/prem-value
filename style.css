@@ -210,6 +210,7 @@ body::before {
 }
 .chart-wrap      { position:relative;height:290px }
 .chart-wrap.tall { height:420px }
+.chart-note      { color:var(--t3);font-size:.75rem;line-height:1.55;margin-top:.8rem }
 
 /* ── TABLES ──────────────────────────────────────────────────── */
 .table-wrap {
@@ -232,6 +233,24 @@ body::before {
 .stats-table td.goals-col { color:var(--purple-lt);font-weight:600 }
 .stats-table td.num-col   { color:var(--t1);font-weight:500 }
 .stats-table td.vfm-col   { color:var(--green);font-weight:700;font-size:.9rem }
+.sticky-col { position:sticky;left:0;background:#0d0d1c!important;z-index:1 }
+.sort-btn {
+  color:inherit;background:transparent;border:0;font:inherit;text-transform:inherit;
+  letter-spacing:inherit;cursor:pointer;
+}
+.sort-btn:hover { color:var(--cyan) }
+.table-action,
+.action-btn {
+  border:1px solid rgba(139,92,246,.35);background:rgba(139,92,246,.14);
+  color:var(--purple-lt);padding:.38rem .7rem;border-radius:8px;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:.74rem;font-weight:600;
+}
+.table-action:hover,
+.action-btn:hover { color:#fff;border-color:var(--purple);background:rgba(139,92,246,.3) }
+.metric-good { color:var(--green)!important;font-weight:700 }
+.metric-bad { color:var(--red)!important;font-weight:700 }
+.metric-neutral { color:var(--yellow)!important;font-weight:700 }
+.empty-state { color:var(--t2);padding:1rem;background:var(--glass);border:1px solid var(--border);border-radius:var(--r-md) }
 
 /* Row highlights */
 .row-champion td { background:rgba(16,185,129,.07)!important }
@@ -317,6 +336,10 @@ body::before {
 .wage-amount      { font-size:.85rem;font-weight:700;color:var(--green);margin-bottom:.3rem }
 .wage-bar-wrap  { width:80px;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden }
 .wage-bar-fill  { height:100%;border-radius:2px;transition:width .5s ease }
+.data-health {
+  margin-top:.75rem;padding:.9rem 1.1rem;background:rgba(34,211,238,.04);
+  border:1px solid rgba(34,211,238,.18);border-radius:var(--r-md);
+}
 
 /* ── VALUE FOR MONEY SECTION ─────────────────────────────────── */
 
@@ -334,6 +357,32 @@ body::before {
 .dot.cyan   { background:var(--cyan) }
 .dot.yellow { background:var(--yellow) }
 .dot.orange { background:var(--orange) }
+
+.explorer-controls,
+.xi-controls,
+.club-toolbar {
+  display:flex;align-items:end;gap:.75rem;flex-wrap:wrap;
+  padding:1rem;margin-top:1rem;background:var(--glass);
+  border:1px solid var(--border);border-radius:var(--r-md);
+}
+.explorer-controls label,
+.xi-controls label,
+.club-toolbar label {
+  display:flex;flex-direction:column;gap:.3rem;color:var(--t3);
+  font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+}
+.explorer-controls input,
+.explorer-controls select,
+.xi-controls input,
+.xi-controls select,
+.club-toolbar select {
+  min-width:130px;background:rgba(0,0,0,.25);border:1px solid var(--border);
+  color:var(--t1);padding:.48rem .55rem;border-radius:8px;font:inherit;
+  text-transform:none;letter-spacing:normal;
+}
+.explorer-controls .check-label { flex-direction:row;align-items:center;padding:.48rem 0;text-transform:none }
+.explorer-controls .check-label input { min-width:auto }
+.result-count { color:var(--cyan);font-size:.78rem;margin:.75rem 0 0 }
 
 /* Bargain grid */
 .bargain-grid {
@@ -455,6 +504,55 @@ body::before {
 .cc-wage-num     { font-size:.88rem;font-weight:700;color:var(--green) }
 .cc-wage-lbl     { font-size:.65rem;color:var(--t3) }
 
+.team-detail { margin-bottom:1.5rem }
+.team-detail-header {
+  display:flex;align-items:center;gap:1rem;margin-top:1rem;padding:1.35rem;
+  border:1px solid var(--border);border-radius:var(--r-lg);
+}
+.team-detail-header h2 { font-family:'Outfit',sans-serif;font-size:1.8rem;margin-bottom:.25rem }
+.team-detail-header p { color:var(--t2);font-size:.82rem;margin-bottom:.55rem }
+.detail-kpis {
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.75rem;margin:1rem 0;
+}
+.detail-kpi {
+  display:flex;flex-direction:column;gap:.2rem;padding:.85rem;background:var(--glass);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+}
+.detail-kpi strong { font-family:'Outfit',sans-serif;font-size:1.2rem }
+.detail-kpi span { color:var(--t3);font-size:.7rem }
+.detail-grid { margin-top:1rem }
+.detail-panel {
+  padding:1.2rem;background:var(--glass);border:1px solid var(--border);
+  border-radius:var(--r-md);box-shadow:var(--shadow);
+}
+.detail-panel h3 { font-size:.88rem;margin-bottom:.75rem;color:var(--purple-lt) }
+.snapshot-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem;margin-bottom:1.2rem }
+.snapshot-grid span {
+  display:flex;justify-content:space-between;gap:.5rem;padding:.5rem;
+  color:var(--t3);font-size:.72rem;background:rgba(0,0,0,.18);border-radius:6px;
+}
+.snapshot-grid strong { color:var(--t1) }
+
+/* ── BEST XI ─────────────────────────────────────────────────── */
+.xi-summary { margin-top:1rem }
+.pitch {
+  display:flex;flex-direction:column;justify-content:space-around;gap:1rem;
+  min-height:700px;margin-top:1rem;padding:2rem 1rem;
+  background:
+    linear-gradient(90deg,transparent 49.7%,rgba(255,255,255,.22) 49.7%,rgba(255,255,255,.22) 50.3%,transparent 50.3%),
+    repeating-linear-gradient(0deg,rgba(16,110,75,.82) 0,rgba(16,110,75,.82) 85px,rgba(20,125,84,.82) 85px,rgba(20,125,84,.82) 170px);
+  border:3px solid rgba(255,255,255,.28);border-radius:var(--r-md);box-shadow:var(--shadow);
+}
+.pitch-row { display:flex;justify-content:space-around;gap:.7rem;flex-wrap:wrap }
+.xi-player-card {
+  width:150px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:.2rem;
+  padding:.65rem .45rem;background:rgba(7,7,15,.88);border:1px solid var(--club-color);
+  border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.3);
+}
+.xi-player-card strong { font-size:.75rem;color:var(--t1) }
+.xi-player-card span { color:var(--t2);font-size:.67rem }
+.xi-player-card small { color:var(--cyan);font-size:.61rem }
+
 /* ── FACTS GRID ─────────────────────────────────────────────── */
 .facts-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.1rem }
 .fact-card {
@@ -527,9 +625,15 @@ body::before {
   .kpi-grid    { grid-template-columns:1fr 1fr }
 }
 @media (max-width:720px) {
+  .header-inner { height:auto;min-height:66px;flex-wrap:wrap;gap:.45rem;padding:.6rem 1rem }
+  .logo { width:100% }
+  .nav { width:100%;margin-left:0;flex-wrap:nowrap;overflow-x:auto;padding-bottom:.2rem;scrollbar-width:none }
+  .nav::-webkit-scrollbar { display:none }
   .clubs-grid  { grid-template-columns:1fr }
   .wage-grid   { grid-template-columns:1fr }
   .bargain-grid{ grid-template-columns:repeat(2,1fr) }
+  .pitch       { min-height:620px;padding:.75rem .35rem }
+  .xi-player-card { width:105px;padding:.45rem .3rem }
   .finance-kpis,
   .value-kpis  { grid-template-columns:1fr 1fr }
 }
@@ -540,4 +644,12 @@ body::before {
   .nav-btn     { padding:.35rem .65rem;font-size:.73rem }
   .bargain-grid{ grid-template-columns:1fr }
   .metric-legend { flex-direction:column }
+  .explorer-controls label,
+  .xi-controls label { flex:1 1 135px }
+  .explorer-controls input,
+  .explorer-controls select,
+  .xi-controls input,
+  .xi-controls select { width:100%;min-width:0 }
+  .xi-player-card { width:92px }
+  .xi-player-card .p-avatar { display:none }
 }

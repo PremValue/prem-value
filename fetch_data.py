@@ -588,6 +588,95 @@ def validate_cross_file_facts(
         )
 
 
+def build_team_metrics(
+    standings: list[dict[str, Any]], finances: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    standings_by_team = {row["team"]: row for row in standings}
+    rows = []
+    for finance in finances:
+        standing = standings_by_team[finance["team"]]
+        wage_bill = finance["wage_bill_m"]
+        squad_value = finance["squad_value_m"]
+        points = standing["Pts"]
+        goals = standing["GF"]
+        rows.append(
+            {
+                "team": finance["team"],
+                "league_position": standing["position"],
+                "points": points,
+                "goals_for": goals,
+                "wage_bill_m": wage_bill,
+                "squad_value_m": squad_value,
+                "cost_per_point": round(wage_bill / points, 3),
+                "cost_per_goal": round(wage_bill / goals, 3),
+                "squad_value_per_point": round(squad_value / points, 3),
+                "squad_value_per_goal": round(squad_value / goals, 3),
+                "squad_value_source": finance["squad_value_source"],
+                "wage_bill_source": finance["wage_bill_source"],
+            }
+        )
+
+    avg_cost_per_point = sum(row["cost_per_point"] for row in rows) / len(rows)
+    mean_wages = sum(row["wage_bill_m"] for row in rows) / len(rows)
+    mean_points = sum(row["points"] for row in rows) / len(rows)
+    denominator = sum((row["wage_bill_m"] - mean_wages) ** 2 for row in rows)
+    slope = (
+        sum(
+            (row["wage_bill_m"] - mean_wages) * (row["points"] - mean_points)
+            for row in rows
+        )
+        / denominator
+        if denominator
+        else 0
+    )
+    intercept = mean_points - slope * mean_wages
+
+    for row in rows:
+        predicted_points = intercept + slope * row["wage_bill_m"]
+        residual = row["points"] - predicted_points
+        row["value_index"] = round(row["cost_per_point"] / avg_cost_per_point, 3)
+        row["predicted_points"] = round(predicted_points, 2)
+        row["residual_points"] = round(residual, 2)
+        row["performance_class"] = (
+            "overperforming"
+            if residual > 3
+            else "underperforming"
+            if residual < -3
+            else "near_expected"
+        )
+
+    for rank, row in enumerate(
+        sorted(rows, key=lambda item: (item["cost_per_point"], item["team"])), start=1
+    ):
+        row["value_rank"] = rank
+    return sorted(rows, key=lambda row: row["league_position"])
+
+
+def validate_team_metrics(
+    team_metrics: list[dict[str, Any]], standings_teams: set[str]
+) -> None:
+    if len(team_metrics) != 20 or {row["team"] for row in team_metrics} != standings_teams:
+        raise DataValidationError("Team metrics must exactly cover the 20 standings clubs")
+    if {row["value_rank"] for row in team_metrics} != set(range(1, 21)):
+        raise DataValidationError("Team metric value ranks must be the numbers 1 through 20")
+    for row in team_metrics:
+        for field in (
+            "points",
+            "goals_for",
+            "wage_bill_m",
+            "squad_value_m",
+            "cost_per_point",
+            "cost_per_goal",
+            "squad_value_per_point",
+            "squad_value_per_goal",
+            "value_index",
+        ):
+            if row[field] <= 0:
+                raise DataValidationError(
+                    f"Team metric {field} must be positive for {row['team']}"
+                )
+
+
 def source_digest(name: str) -> str:
     digest = hashlib.sha256((DATA_DIR / f"{name}.json").read_bytes()).hexdigest()
     return f"sha256:{digest}"
@@ -624,10 +713,12 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
     validate_finances(finances, sources["finance_sources"], players, warnings)
     squads = normalize_squads(sources["squads"], standings, warnings)
     validate_cross_file_facts(standings, facts, warnings)
+    team_metrics = build_team_metrics(standings, finances)
+    validate_team_metrics(team_metrics, standings_teams)
 
     bundle = {
         "_meta": {
-            "schema_version": 2,
+            "schema_version": 3,
             "season": SEASON,
             "generated_by": "fetch_data.py",
             "player_value_policy": {
@@ -646,6 +737,7 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
         "facts": facts,
         "finances": finances,
         "finance_sources": sources["finance_sources"],
+        "team_metrics": team_metrics,
         "players": players,
         "squads": squads,
     }

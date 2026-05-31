@@ -23,14 +23,15 @@
         </div>
       </div>
       <nav class="nav" id="mainNav">
-        <button class="nav-btn active"  onclick="showSection('overview')">Overview</button>
-        <button class="nav-btn"         onclick="showSection('attack')">Attack</button>
-        <button class="nav-btn"         onclick="showSection('defence')">Defence</button>
-        <button class="nav-btn"         onclick="showSection('standings')">Standings</button>
-        <button class="nav-btn finance" onclick="showSection('finance')">💰 Finance</button>
-        <button class="nav-btn value"   onclick="showSection('value')">⚡ Value</button>
-        <button class="nav-btn clubs"   onclick="showSection('clubs')">🏟️ Clubs</button>
-        <button class="nav-btn"         onclick="showSection('facts')">Season Facts</button>
+        <button class="nav-btn active"  data-section="overview" onclick="showSection('overview')">Overview</button>
+        <button class="nav-btn"         data-section="attack" onclick="showSection('attack')">Attack</button>
+        <button class="nav-btn"         data-section="defence" onclick="showSection('defence')">Defence</button>
+        <button class="nav-btn"         data-section="standings" onclick="showSection('standings')">Standings</button>
+        <button class="nav-btn finance" data-section="finance" onclick="showSection('finance')">💰 Finance</button>
+        <button class="nav-btn value"   data-section="value" onclick="showSection('value')">⚡ Value</button>
+        <button class="nav-btn clubs"   data-section="clubs" onclick="showSection('clubs')">🏟️ Clubs</button>
+        <button class="nav-btn value"   data-section="xi" onclick="showSection('xi')">📋 Best XI</button>
+        <button class="nav-btn"         data-section="facts" onclick="showSection('facts')">Season Facts</button>
       </nav>
     </div>
   </header>
@@ -154,8 +155,14 @@
 
       <div class="finance-kpis" id="financeKpis"></div>
       <div class="finance-methodology" id="financeMethodology"></div>
+      <div class="data-health" id="dataHealth"></div>
 
       <div class="chart-grid" style="margin-top:1.5rem">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Spending vs League Points</h3><span class="badge">Wage bill · trend line · click a club</span></div>
+          <div class="chart-wrap tall"><canvas id="cFinSpendPoints"></canvas></div>
+          <p class="chart-note">Clubs above the trend line earned more points than expected for their annual wage bill. Residuals show the difference between actual and predicted points.</p>
+        </div>
         <div class="chart-card wide">
           <div class="card-hdr"><h3>Squad Market Value — All 20 Clubs</h3><span class="badge">£M · Transfermarkt estimates</span></div>
           <div class="chart-wrap tall"><canvas id="cFinSquadVal"></canvas></div>
@@ -177,6 +184,30 @@
           <span class="badge">Cost per pt ÷ league avg · &lt;1 = overperforming</span>
         </div>
         <div class="chart-wrap tall"><canvas id="cFinValueIndex"></canvas></div>
+      </div>
+
+      <div class="section-hdr" style="margin-top:2.5rem">
+        <h2>Team Efficiency Table</h2>
+        <p>Wage-based spending efficiency, ranked best to worst. Select a club to open its detail view.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="stats-table efficiency-table" id="efficiencyTable">
+          <thead><tr>
+            <th><button class="sort-btn" onclick="setFinanceSort('value_rank')">Rank</button></th>
+            <th class="sticky-col">Club</th>
+            <th><button class="sort-btn" onclick="setFinanceSort('league_position')">Pos</button></th>
+            <th><button class="sort-btn" onclick="setFinanceSort('points')">Pts</button></th>
+            <th><button class="sort-btn" onclick="setFinanceSort('goals_for')">Goals</button></th>
+            <th><button class="sort-btn" onclick="setFinanceSort('squad_value_m')">Squad £M</button></th>
+            <th><button class="sort-btn" onclick="setFinanceSort('wage_bill_m')">Wages £M</button></th>
+            <th><button class="sort-btn" onclick="setFinanceSort('cost_per_point')">£M/Pt</button></th>
+            <th><button class="sort-btn" onclick="setFinanceSort('cost_per_goal')">£M/Goal</button></th>
+            <th><button class="sort-btn" onclick="setFinanceSort('value_index')">Index</button></th>
+            <th><button class="sort-btn" onclick="setFinanceSort('residual_points')">Residual</button></th>
+            <th>Detail</th>
+          </tr></thead>
+          <tbody id="efficiencyBody"></tbody>
+        </table>
       </div>
 
       <!-- Famous player wages per club -->
@@ -202,6 +233,26 @@
         <div class="metric-item"><span class="dot yellow"></span><strong>Bargain</strong> = Fresh value · Minutes ≥ 900 · Perf/90 ≥ position median · Value ≤ position median</div>
         <div class="metric-item"><span class="dot orange"></span><strong>Stale value</strong> = Older than 180 days at the 2025-05-31 cutoff · visible but not featured</div>
       </div>
+
+      <div class="explorer-controls">
+        <label>Search<input id="playerSearch" type="search" placeholder="Player name" oninput="updatePlayerFilter('search',this.value)" /></label>
+        <label>Club<select id="playerClubFilter" onchange="updatePlayerFilter('club',this.value)"></select></label>
+        <label>Position<select id="playerPositionFilter" onchange="updatePlayerFilter('position',this.value)">
+          <option value="all">All positions</option><option value="GK">Goalkeeper</option><option value="DF">Defender</option><option value="MF">Midfielder</option><option value="FW">Forward</option>
+        </select></label>
+        <label>Age<select id="playerAgeFilter" onchange="updatePlayerFilter('age',this.value)">
+          <option value="all">All ages</option><option value="u21">Under 21</option><option value="21-24">21–24</option><option value="25-29">25–29</option><option value="30+">30+</option>
+        </select></label>
+        <label>Minimum minutes<select id="playerMinutesFilter" onchange="updatePlayerFilter('minMinutes',this.value)">
+          <option value="0">Any minutes</option><option value="500">500+</option><option value="900">900+</option><option value="1800">1,800+</option>
+        </select></label>
+        <label>Valuation<select id="playerValuationFilter" onchange="updatePlayerFilter('valuation',this.value)">
+          <option value="all">All statuses</option><option value="fresh">Fresh</option><option value="stale">Stale</option><option value="missing">Missing</option>
+        </select></label>
+        <label class="check-label"><input id="playerBargainFilter" type="checkbox" onchange="updatePlayerFilter('bargainOnly',this.checked)" /> Bargains only</label>
+        <button class="action-btn" onclick="resetPlayerFilters()">Reset filters</button>
+      </div>
+      <div class="result-count" id="playerResultCount"></div>
 
       <div class="chart-grid" style="margin-top:1.5rem">
         <div class="chart-card wide">
@@ -230,7 +281,7 @@
         <table class="stats-table" id="vfmTable">
           <thead><tr>
             <th>Rank</th><th>Player</th><th>Club</th><th>Pos</th>
-            <th>Mins</th><th>Goals</th><th>Assists</th>
+            <th>Age</th><th>Apps</th><th>Mins</th><th>Goals</th><th>Assists</th>
             <th>Perf/90</th><th>Value (€M)</th><th>Valuation</th><th>VFM Score</th><th>Bargain?</th>
           </tr></thead>
           <tbody id="vfmBody"></tbody>
@@ -242,9 +293,44 @@
     <section class="section" id="sectionClubs">
       <div class="section-hdr">
         <h2>🏟️ Club Profiles</h2>
-        <p>All 20 Premier League clubs — squad finances, position, and star player wages</p>
+        <p>Browse all clubs or open a focused team view with league comparisons and player rankings.</p>
       </div>
+      <div class="club-toolbar">
+        <label>Open team<select id="clubSelector" onchange="openTeamDetail(this.value)"></select></label>
+        <button class="action-btn" id="allClubsButton" onclick="showAllClubs()">All clubs</button>
+      </div>
+      <div id="clubDetail"></div>
       <div class="clubs-grid" id="clubsGrid"></div>
+    </section>
+
+    <!-- BEST VALUE XI -->
+    <section class="section" id="sectionXi">
+      <div class="section-hdr">
+        <h2>📋 Best Value XI</h2>
+        <p>Build a reproducible lineup from fresh player valuations. Broad FBRef position groups are used because the source snapshot does not reliably distinguish detailed roles.</p>
+      </div>
+      <div class="xi-controls">
+        <label>Formation<select id="xiFormation" onchange="updateXiSetting('formation',this.value)">
+          <option value="4-3-3">4-3-3</option><option value="4-4-2">4-4-2</option><option value="3-5-2">3-5-2</option>
+        </select></label>
+        <label>Minimum minutes<select id="xiMinutes" onchange="updateXiSetting('minMinutes',this.value)">
+          <option value="900">900+</option><option value="1800">1,800+</option><option value="500">500+</option>
+        </select></label>
+        <label>Maximum value (€M)<input id="xiBudget" type="number" min="0" step="5" placeholder="No limit" oninput="updateXiSetting('maxValue',this.value)" /></label>
+        <label>Max per club<select id="xiClubLimit" onchange="updateXiSetting('maxPerClub',this.value)">
+          <option value="3">3</option><option value="2">2</option><option value="1">1</option><option value="11">No limit</option>
+        </select></label>
+        <button class="action-btn" onclick="resetXiSettings()">Reset lineup</button>
+      </div>
+      <div class="xi-summary" id="xiSummary"></div>
+      <div class="pitch" id="xiPitch"></div>
+      <div class="section-hdr" style="margin-top:2rem"><h2>Lineup Table</h2><p>Selected players and the explicit metrics behind the lineup.</p></div>
+      <div class="table-wrap">
+        <table class="stats-table">
+          <thead><tr><th>Slot</th><th>Player</th><th>Club</th><th>Pos</th><th>Mins</th><th>Goals</th><th>Assists</th><th>Perf/90</th><th>Value (€M)</th><th>VFM</th></tr></thead>
+          <tbody id="xiBody"></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- FACTS -->
