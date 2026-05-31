@@ -14,10 +14,14 @@ uses only the Python standard library.
 from __future__ import annotations
 
 import argparse
+import csv
+import gzip
 import hashlib
+import io
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -36,8 +40,12 @@ SOURCE_NAMES = (
     "facts",
     "finances",
     "players",
+    "player_values",
     "squads",
 )
+
+TRANSFERMARKT_DATA_BASE = "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data"
+PLAYER_VALUATION_CUTOFF = "2025-05-31"
 
 TEAM_ALIASES = {
     "Brighton": "Brighton & Hove Albion",
@@ -49,13 +57,101 @@ TEAM_ALIASES = {
     "Wolves": "Wolverhampton Wanderers",
 }
 
+TRANSFERMARKT_CLUB_IDS = {
+    "Arsenal": 11,
+    "Liverpool": 31,
+    "Manchester City": 281,
+    "Chelsea": 631,
+    "Manchester United": 985,
+    "Tottenham Hotspur": 148,
+    "Aston Villa": 405,
+    "Newcastle United": 762,
+    "Brighton & Hove Albion": 1237,
+    "Crystal Palace": 873,
+    "Bournemouth": 989,
+    "Nottingham Forest": 703,
+    "Wolverhampton Wanderers": 543,
+    "Brentford": 1148,
+    "West Ham United": 379,
+    "Everton": 29,
+    "Fulham": 931,
+    "Southampton": 180,
+    "Ipswich Town": 677,
+    "Leicester City": 1003,
+}
+
+PLAYER_NAME_ALIASES = {
+    "Joshua Acheampong": "Josh Acheampong",
+    "Victor Bernth Kristiansen": "Victor Kristiansen",
+    "Ben Brereton": "Ben Brereton D\u00edaz",
+    "Emi Buend\u00eda": "Emiliano Buend\u00eda",
+    "J\u00e1der Dur\u00e1n": "Jhon Dur\u00e1n",
+    "Yunus Emre Konak": "Yunus Konak",
+    "\u0141ukasz Fabia\u0144ski": "Lukasz Fabianski",
+    "Abdul Fatawu Issahaku": "Abdul Fatawu",
+    "Idrissa Gana Gueye": "Idrissa Gueye",
+    "Toti Gomes": "Toti",
+    "Nicol\u00e1s Gonz\u00e1lez": "Nico Gonz\u00e1lez",
+    "Albert Gr\u00f8nbaek": "Albert Gr\u00f8nb\u00e6k",
+    "Hwang Hee-chan": "Hee-chan Hwang",
+    "Son Heung-min": "Heung-min Son",
+    "Andy Irving": "Andrew Irving",
+    "Kim Jisoo": "Ji-soo Kim",
+    "Ferdi Kadioglu": "Ferdi Kad\u0131o\u011flu",
+    "Max Kilman": "Maximilian Kilman",
+    "Valentino Livramento": "Tino Livramento",
+    "Gabriel Magalh\u00e3es": "Gabriel",
+    "Edmond-Paris Maghoma": "Paris Maghoma",
+    "Mykhailo Mudryk": "Mykhaylo Mudryk",
+    "Chidozie Obi-Martin": "Chido Obi",
+    "Emerson Palmieri": "Emerson",
+    "Jaden Philogene Bidace": "Jaden Philogene",
+    "Danilo Santos": "Danilo",
+    "William Smallbone": "Will Smallbone",
+    "Kostas Tsimikas": "Konstantinos Tsimikas",
+    "Nathan Wood-Gordon": "Nathan Wood",
+    "Yehor Yarmoliuk": "Yegor Yarmolyuk",
+    "Illia Zabarnyi": "Ilya Zabarnyi",
+}
+
+# These short names refer to multiple Transfermarkt profiles. Keep the choice
+# explicit so a new profile with the same display name cannot change the join.
+PLAYER_PROFILE_OVERRIDES = {
+    ("Aston Villa", "jader duran"): 649317,
+    ("Arsenal", "gabriel magalhaes"): 435338,
+    ("Nottingham Forest", "danilo santos"): 808509,
+    ("West Ham United", "emerson palmieri"): 181778,
+    ("Bournemouth", "neto"): 111819,
+    ("Wolverhampton Wanderers", "chiquinho"): 695454,
+}
+
 REQUIRED_FIELDS = {
     "standings": {"position", "team", "MP", "W", "D", "L", "GF", "GA", "GD", "Pts"},
     "scorers": {"rank", "player", "club", "apps", "goals", "assists"},
     "assists": {"rank", "player", "club", "apps", "goals", "assists"},
     "goalkeeping": {"rank", "goalkeeper", "club", "apps", "clean_sheets", "goals_conceded"},
     "finances": {"team", "squad_value_m", "wage_bill_m", "famous_players"},
-    "players": {"player", "club", "position", "apps", "mins", "goals", "assists", "market_value_m"},
+    "players": {
+        "player",
+        "club",
+        "position",
+        "raw_position",
+        "age",
+        "apps",
+        "mins",
+        "goals",
+        "assists",
+        "market_value_m",
+        "valuation_date",
+    },
+    "player_values": {
+        "player",
+        "club",
+        "transfermarkt_id",
+        "market_value_m",
+        "valuation_date",
+        "source_url",
+    },
     "squads": {"team"},
 }
 
@@ -76,6 +172,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Refresh data/squads.json from FBRef before building.",
     )
+    parser.add_argument(
+        "--refresh-players",
+        action="store_true",
+        help="Refresh the complete player roster and end-of-season valuations.",
+    )
     return parser.parse_args()
 
 
@@ -92,6 +193,23 @@ def read_json(path: Path) -> Any:
 
 def canonical_team(name: str) -> str:
     return TEAM_ALIASES.get(name, name)
+
+
+def canonical_player_name(name: str) -> str:
+    replacements = str.maketrans(
+        {
+            "\u00f8": "o",
+            "\u00d8": "O",
+            "\u0142": "l",
+            "\u0141": "L",
+            "\u0131": "i",
+            "\u00e6": "ae",
+            "\u00c6": "Ae",
+        }
+    )
+    normalized = unicodedata.normalize("NFKD", name.translate(replacements))
+    ascii_name = "".join(char for char in normalized if not unicodedata.combining(char))
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", ascii_name.lower()).split())
 
 
 def validate_rows(name: str, rows: Any) -> None:
@@ -171,6 +289,48 @@ def dedupe_players(
         cleaned.append(player)
 
     return cleaned
+
+
+def validate_players(
+    players: list[dict[str, Any]], standings_teams: set[str], warnings: list[str]
+) -> None:
+    if len(players) < 400:
+        raise DataValidationError(
+            f"Expected a league-wide player snapshot, found only {len(players)} rows"
+        )
+
+    player_teams = {row["club"] for row in players}
+    if player_teams != standings_teams:
+        missing = sorted(standings_teams - player_teams)
+        unknown = sorted(player_teams - standings_teams)
+        raise DataValidationError(
+            "Player club coverage mismatch "
+            f"(missing: {', '.join(missing) or 'none'}; "
+            f"unknown: {', '.join(unknown) or 'none'})"
+        )
+
+    positions = {row["position"] for row in players}
+    expected_positions = {"GK", "DF", "MF", "FW"}
+    if not expected_positions <= positions:
+        raise DataValidationError(
+            "Player snapshot must include goalkeepers, defenders, midfielders, and forwards"
+        )
+
+    missing_values = [row for row in players if row["market_value_m"] is None]
+    if missing_values:
+        warnings.append(
+            f"{len(missing_values)} players have no published Transfermarkt valuation; "
+            "their market value remains null."
+        )
+
+
+def validate_player_values(
+    players: list[dict[str, Any]], player_values: list[dict[str, Any]]
+) -> None:
+    player_keys = {(row["player"], row["club"]) for row in players}
+    value_keys = {(row["player"], row["club"]) for row in player_values}
+    if player_keys != value_keys:
+        raise DataValidationError("data/player_values.json must match data/players.json")
 
 
 def normalize_squads(
@@ -267,8 +427,11 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
     validate_club_references("assists", sources["assists"], "club", standings_teams)
     validate_club_references("goalkeeping", sources["goalkeeping"], "club", standings_teams)
     validate_club_references("players", sources["players"], "club", standings_teams)
+    validate_club_references("player_values", sources["player_values"], "club", standings_teams)
 
     players = dedupe_players(sources["players"], warnings)
+    validate_players(players, standings_teams, warnings)
+    validate_player_values(players, sources["player_values"])
     squads = normalize_squads(sources["squads"], standings, warnings)
     validate_cross_file_facts(standings, facts, warnings)
 
@@ -511,11 +674,228 @@ def refresh_squads() -> None:
         print("FBRef snapshots are already current.")
 
 
+def cached_fbref_player_frame(pandas: Any) -> Any | None:
+    cache_path = (
+        Path.home()
+        / "soccerdata"
+        / "data"
+        / "FBref"
+        / "players_ENG-Premier League_2425_standard.html"
+    )
+    if not cache_path.exists():
+        return None
+
+    from lxml import etree, html
+    from soccerdata.fbref import _parse_table
+
+    print(f"  Reading cached FBRef player stats from {cache_path}...")
+    tree = html.parse(str(cache_path))
+    comments = tree.xpath("//comment()[contains(.,'div_stats_standard')]")
+    if not comments:
+        raise DataValidationError(f"Cached FBRef file has no player table: {cache_path}")
+    parser = etree.HTMLParser(recover=True)
+    tables = etree.fromstring(comments[0].text, parser).xpath(
+        "//table[contains(@id, 'stats_standard')]"
+    )
+    if not tables:
+        raise DataValidationError(f"Cached FBRef file has no player table: {cache_path}")
+    dataframe = _parse_table(tables[0])
+    if isinstance(dataframe.columns, pandas.MultiIndex):
+        dataframe.columns = [
+            "_".join(
+                str(part)
+                for part in column
+                if part and not str(part).startswith("Unnamed:")
+            ).strip()
+            for column in dataframe.columns
+        ]
+    return dataframe.reset_index()
+
+
+def download_transfermarkt_csv(requests: Any, filename: str) -> list[dict[str, str]]:
+    print(f"  Downloading {filename}...")
+    response = requests.get(
+        f"{TRANSFERMARKT_DATA_BASE}/{filename}",
+        headers={"User-Agent": "Mozilla/5.0 (compatible; PremValue educational data pipeline)"},
+        timeout=60,
+    )
+    response.raise_for_status()
+    with gzip.GzipFile(fileobj=io.BytesIO(response.content)) as compressed:
+        text = io.TextIOWrapper(compressed, encoding="utf-8")
+        return list(csv.DictReader(text))
+
+
+def normalized_position(raw_position: str) -> str:
+    positions = raw_position.split(",")
+    if positions and positions[0] in {"GK", "DF", "MF", "FW"}:
+        return positions[0]
+    return "FW"
+
+
+def refresh_players() -> None:
+    try:
+        import pandas as pd
+        import requests
+        import soccerdata as sd
+    except ImportError as exc:
+        raise DataValidationError(
+            "Refreshing players requires pandas, requests, lxml, and soccerdata. "
+            "Install them with: pip install pandas requests lxml soccerdata"
+        ) from exc
+
+    print("Refreshing complete 2024-25 Premier League player snapshot...")
+    dataframe = cached_fbref_player_frame(pd)
+    if dataframe is None:
+        print("  Fetching standard player stats from FBRef...")
+        fbref = sd.FBref(leagues="ENG-Premier League", seasons="24-25")
+        dataframe = flatten_columns(fbref.read_player_season_stats(stat_type="standard"), pd)
+
+    def column(*candidates: str) -> str:
+        for candidate in candidates:
+            if candidate in dataframe.columns:
+                return candidate
+        raise DataValidationError(
+            f"FBRef player table is missing expected columns: {', '.join(candidates)}"
+        )
+
+    player_col = column("player", "Player")
+    team_col = column("team", "Squad")
+    position_col = column("pos", "Pos")
+    age_col = column("age", "Age")
+    apps_col = column("Playing Time_MP")
+    mins_col = column("Playing Time_Min")
+    goals_col = column("Performance_Gls")
+    assists_col = column("Performance_Ast")
+
+    dataframe = dataframe[dataframe[player_col] != "Player"].copy()
+    for numeric_col in (apps_col, mins_col, goals_col, assists_col):
+        dataframe[numeric_col] = pd.to_numeric(dataframe[numeric_col], errors="coerce").fillna(0)
+
+    stats_rows = []
+    for player, rows in dataframe.groupby(player_col, sort=True):
+        primary = rows.sort_values(mins_col, ascending=False).iloc[0]
+        raw_position = str(primary[position_col])
+        age_text = str(primary[age_col]).split("-", maxsplit=1)[0]
+        age = int(float(age_text)) if age_text not in {"<NA>", "nan"} else None
+        stats_rows.append(
+            {
+                "player": str(player),
+                "club": canonical_team(str(primary[team_col])),
+                "position": normalized_position(raw_position),
+                "raw_position": raw_position,
+                "age": age,
+                "apps": int(rows[apps_col].sum()),
+                "mins": int(rows[mins_col].sum()),
+                "goals": int(rows[goals_col].sum()),
+                "assists": int(rows[assists_col].sum()),
+            }
+        )
+
+    profiles = download_transfermarkt_csv(requests, "players.csv.gz")
+    valuations = download_transfermarkt_csv(requests, "player_valuations.csv.gz")
+    profiles_by_id = {int(row["player_id"]): row for row in profiles}
+    profiles_by_name: dict[str, list[dict[str, str]]] = {}
+    for profile in profiles:
+        profiles_by_name.setdefault(canonical_player_name(profile["name"]), []).append(profile)
+
+    latest_valuations: dict[int, dict[str, str]] = {}
+    for valuation in valuations:
+        valuation_date = valuation["date"]
+        if not valuation_date or valuation_date > PLAYER_VALUATION_CUTOFF:
+            continue
+        player_id = int(valuation["player_id"])
+        previous = latest_valuations.get(player_id)
+        if previous is None or valuation_date > previous["date"]:
+            latest_valuations[player_id] = valuation
+
+    player_values = []
+    unresolved = []
+    for player in stats_rows:
+        player_name = player["player"]
+        club = player["club"]
+        normalized_name = canonical_player_name(player_name)
+        player_id = PLAYER_PROFILE_OVERRIDES.get((club, normalized_name))
+
+        if player_id is None:
+            transfermarkt_name = PLAYER_NAME_ALIASES.get(player_name, player_name)
+            candidates = profiles_by_name.get(canonical_player_name(transfermarkt_name), [])
+            matching_club = [
+                profile
+                for profile in candidates
+                if (
+                    latest_valuations.get(int(profile["player_id"]), {}).get("current_club_id")
+                    == str(TRANSFERMARKT_CLUB_IDS[club])
+                )
+            ]
+            if len(matching_club) == 1:
+                player_id = int(matching_club[0]["player_id"])
+            elif len(candidates) == 1:
+                player_id = int(candidates[0]["player_id"])
+            else:
+                unresolved.append(f"{player_name} ({club})")
+                continue
+
+        profile = profiles_by_id.get(player_id)
+        if profile is None:
+            unresolved.append(f"{player_name} ({club})")
+            continue
+        valuation = latest_valuations.get(player_id)
+        market_value_m = (
+            round(int(valuation["market_value_in_eur"]) / 1_000_000, 3)
+            if valuation and valuation["market_value_in_eur"]
+            else None
+        )
+        player["market_value_m"] = market_value_m
+        player["valuation_date"] = valuation["date"] if valuation else None
+        player_values.append(
+            {
+                "player": player_name,
+                "club": club,
+                "transfermarkt_id": player_id,
+                "market_value_m": market_value_m,
+                "valuation_date": valuation["date"] if valuation else None,
+                "source_url": profile["url"],
+            }
+        )
+
+    if unresolved:
+        examples = ", ".join(unresolved[:8])
+        raise DataValidationError(
+            f"Could not resolve {len(unresolved)} FBRef players to Transfermarkt profiles. "
+            f"Add explicit aliases or overrides. Examples: {examples}"
+        )
+
+    stats_rows.sort(key=lambda row: (row["club"], row["position"], -row["mins"], row["player"]))
+    player_values.sort(key=lambda row: (row["club"], row["player"]))
+    missing_values = sum(row["market_value_m"] is None for row in player_values)
+
+    updated = [
+        path.relative_to(ROOT)
+        for path, content in (
+            (DATA_DIR / "players.json", json_text(stats_rows)),
+            (DATA_DIR / "player_values.json", json_text(player_values)),
+        )
+        if write_if_changed(path, content)
+    ]
+    if updated:
+        print("Updated player snapshots:")
+        for path in updated:
+            print(f"  - {path}")
+    else:
+        print("Player snapshots are already current.")
+    print(
+        f"  Resolved {len(stats_rows)} players; "
+        f"{missing_values} have no published valuation record."
+    )
+
+
 def main() -> int:
     args = parse_args()
     try:
         if args.refresh_squads:
             refresh_squads()
+        if args.refresh_players:
+            refresh_players()
 
         bundle, warnings = build_bundle()
         dashboard_text = json_text(bundle)

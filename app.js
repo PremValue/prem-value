@@ -588,8 +588,10 @@ function computeBargains(players) {
   const groups = {};
   players.forEach(p => {
     const pos = p.position === "CB" ? "DF" : p.position;
-    if (!groups[pos]) groups[pos] = [];
-    groups[pos].push(p);
+    if (p.market_value_m > 0) {
+      if (!groups[pos]) groups[pos] = [];
+      groups[pos].push(p);
+    }
   });
 
   const medianOf = arr => {
@@ -624,7 +626,7 @@ function renderValueKPIs(players) {
 
   document.getElementById("valueKpis").innerHTML = [
     { icon: crestImg(byVfm[0].club, 32), value: byVfm[0].player,
-      label: "Top VFM Score", sub: `VFM ${byVfm[0].vfm.toFixed(1)} · £${byVfm[0].market_value_m}M · ${byVfm[0].club}`,
+      label: "Top VFM Score", sub: `VFM ${byVfm[0].vfm.toFixed(1)} · €${byVfm[0].market_value_m}M · ${byVfm[0].club}`,
       accent: `linear-gradient(90deg,${C.green},${C.cyan})` },
     { icon: "🏹", value: byPerf[0].player,
       label: "Best Output per 90", sub: `${byPerf[0].perf90.toFixed(2)} perf/90 · ${byPerf[0].goals}G ${byPerf[0].assists}A`,
@@ -633,7 +635,7 @@ function renderValueKPIs(players) {
       label: "Bargain Players Found", sub: `Top: ${topBargain?.player || "–"}`,
       accent: `linear-gradient(90deg,${C.yellow},${C.orange})` },
     { icon: "💎", value: topBargain?.player || "–",
-      label: "Best Bargain", sub: `£${topBargain?.market_value_m}M · ${topBargain?.goals}G ${topBargain?.assists}A`,
+      label: "Best Bargain", sub: `€${topBargain?.market_value_m}M · ${topBargain?.goals}G ${topBargain?.assists}A`,
       accent: `linear-gradient(90deg,${C.cyan},${C.blue})` },
   ].map((k, i) => `
     <div class="kpi-card" style="--kpi-accent:${k.accent};animation-delay:${i * 0.07}s">
@@ -654,7 +656,7 @@ function renderValueCharts() {
   // Scatter: Perf/90 vs Market Value
   destroyChart("cValScatter");
   const ctx1 = document.getElementById("cValScatter"); if (!ctx1) return;
-  const validP = players.filter(p => p.mins >= 500);
+  const validP = players.filter(p => p.mins >= 500 && p.market_value_m > 0);
   charts["cValScatter"] = new Chart(ctx1, {
     type: "scatter", data: {
       datasets: [{
@@ -669,9 +671,9 @@ function renderValueCharts() {
     },
     options: { responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false },
-        tooltip: { callbacks: { label: c => ` ${c.raw.player} (${c.raw.club})  £${c.raw.x}M  Perf/90: ${c.raw.y}  ${c.raw.bargain ? "🏷️ Bargain" : ""}` } } },
+        tooltip: { callbacks: { label: c => ` ${c.raw.player} (${c.raw.club})  €${c.raw.x}M  Perf/90: ${c.raw.y}  ${c.raw.bargain ? "🏷️ Bargain" : ""}` } } },
       scales: {
-        x: { title: { display: true, text: "Market Value (£M)", color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } },
+        x: { title: { display: true, text: "Market Value (€M)", color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } },
         y: { title: { display: true, text: "Performance per 90",  color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } }
       }
     }
@@ -680,7 +682,7 @@ function renderValueCharts() {
   // VFM Bar chart — top 25
   destroyChart("cValRanking");
   const ctx2 = document.getElementById("cValRanking"); if (!ctx2) return;
-  const top25 = [...players].filter(p => p.mins >= 900).sort((a, b) => b.vfm - a.vfm).slice(0, 25);
+  const top25 = [...players].filter(p => p.mins >= 900 && p.market_value_m > 0).sort((a, b) => b.vfm - a.vfm).slice(0, 25);
   charts["cValRanking"] = new Chart(ctx2, {
     type: "bar", data: {
       labels: top25.map(p => p.player),
@@ -693,7 +695,7 @@ function renderValueCharts() {
       plugins: { legend: { display: false },
         tooltip: { callbacks: { label: c => {
           const p = top25[c.dataIndex];
-          return ` VFM: ${c.parsed.x.toFixed(1)}  |  £${p.market_value_m}M  |  ${p.goals}G ${p.assists}A  ${p.isBargain ? "🏷️" : ""}`;
+          return ` VFM: ${c.parsed.x.toFixed(1)}  |  €${p.market_value_m}M  |  ${p.goals}G ${p.assists}A  ${p.isBargain ? "🏷️" : ""}`;
         }}}},
       scales: { x: { grid: { color: "rgba(255,255,255,0.05)" } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } }
     }
@@ -734,7 +736,7 @@ function renderBargainGrid() {
           <div class="bc-stat"><div class="bc-stat-val">${p.goals}</div><div class="bc-stat-lbl">Goals</div></div>
           <div class="bc-stat"><div class="bc-stat-val">${p.assists}</div><div class="bc-stat-lbl">Assists</div></div>
           <div class="bc-stat"><div class="bc-stat-val">${p.perf90.toFixed(2)}</div><div class="bc-stat-lbl">Perf/90</div></div>
-          <div class="bc-stat"><div class="bc-stat-val">£${p.market_value_m}M</div><div class="bc-stat-lbl">Value</div></div>
+          <div class="bc-stat"><div class="bc-stat-val">€${p.market_value_m}M</div><div class="bc-stat-lbl">Value</div></div>
         </div>
         <div class="bc-vfm-row">
           <span class="bc-vfm-label">VFM Score</span>
@@ -763,7 +765,7 @@ function renderVFMTable() {
       <td class="goals-col">${p.goals}</td>
       <td style="color:var(--cyan)">${p.assists}</td>
       <td style="color:var(--green);font-weight:600">${p.perf90.toFixed(2)}</td>
-      <td>£${p.market_value_m}M</td>
+      <td>${p.market_value_m == null ? "–" : `€${p.market_value_m}M`}</td>
       <td class="vfm-col">${p.vfm.toFixed(1)}</td>
       <td>${p.isBargain ? '<span class="bargain-tag">🏷️ Yes</span>' : '<span style="color:var(--t3)">–</span>'}</td>
     </tr>`).join("");
