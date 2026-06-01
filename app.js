@@ -63,12 +63,35 @@ function crestImg(team, size = 24) {
     <span style="display:none;font-size:${size * 0.5}px">${te(team)}</span>`;
 }
 
-// Player initials avatar
+// Normalize a name for fuzzy matching (lowercase, strip diacritics, strip non-alpha)
+const normName = s => s.toLowerCase()
+  .normalize("NFD").replace(/[̀-ͯ]/g, "")
+  .replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+
+// Fallback: replace failed photo with an initials circle
+function avatarFallback(img) {
+  const d = img.parentNode;
+  d.innerHTML = d.dataset.init;
+  d.className = "p-avatar";
+  d.style.background = d.dataset.bg;
+  d.style.color = d.dataset.col;
+  d.style.fontSize = (d.dataset.size * 0.35) + "px";
+}
+
+// Player avatar — FPL headshot when available, initials circle fallback
 function playerAvatar(name, club, size = 48) {
   const parts = name.split(" ");
   const init  = (parts[0][0] + (parts[parts.length - 1][0] || "")).toUpperCase();
   const col   = tc(club);
   const bg    = col + "33";
+  const code  = PLAYER_PHOTO_IDS[name];
+  if (code) {
+    const url = `https://resources.premierleague.com/premierleague/photos/players/110x140/p${code}.png`;
+    return `<div class="p-avatar p-avatar-img" style="width:${size}px;height:${size}px;border:2px solid ${col}"
+      data-init="${init}" data-col="${col}" data-bg="${bg}" data-size="${size}">
+      <img src="${url}" alt="${name}" onerror="avatarFallback(this)">
+    </div>`;
+  }
   return `<div class="p-avatar" style="width:${size}px;height:${size}px;background:${bg};border:2px solid ${col};font-size:${size * 0.35}px;color:${col}">${init}</div>`;
 }
 
@@ -93,6 +116,7 @@ let playerFilters = {
   minMinutes: 500, valuation: "all", bargainOnly: false,
 };
 let xiSettings = { formation: "4-3-3", minMinutes: 900, maxValue: "", maxPerClub: 3 };
+let PLAYER_PHOTO_IDS = {};
 const DEFAULT_VALUE_POLICY = {
   explorer_min_minutes: 500,
   featured_min_minutes: 900,
@@ -116,7 +140,7 @@ const encodedTeam = team => encodeURIComponent(team);
 function readUrlState() {
   const params = new URLSearchParams(window.location.search);
   const requestedSection = params.get("section");
-  if (["overview", "attack", "defence", "standings", "tactics", "finance", "value", "clubs", "xi", "facts"].includes(requestedSection)) {
+  if (["overview", "attack", "defence", "standings", "tactics", "finance", "value", "clubs", "xi", "compare", "xg", "timeline", "transfers", "facts"].includes(requestedSection)) {
     activeSection = requestedSection;
   }
   selectedTeam = params.get("team") || "";
@@ -216,7 +240,56 @@ function init() {
   renderClubs();
   renderXiControls();
   renderXi();
+  renderCompareControls();
+  renderTransferControls();
   showSection(activeSection, { scroll: false });
+  loadFplPhotos(); // async — patches PLAYER_PHOTO_IDS then re-renders
+}
+
+/* ════════════════════════════════════════════════════════════
+   FPL PLAYER PHOTOS
+   Single fetch to the official FPL API; matches player names via
+   normalised string comparison; photos served from Premier League CDN.
+   ════════════════════════════════════════════════════════════ */
+async function loadFplPhotos() {
+  try {
+    const res = await fetch("https://fantasy.premierleague.com/api/bootstrap-static/");
+    if (!res.ok) return;
+    const fpl = await res.json();
+
+    // Build lookups: normalised full name → code, normalised web_name → code
+    const byFull = {}, byWeb = {};
+    for (const el of fpl.elements) {
+      const full = normName(el.first_name + " " + el.second_name);
+      const web  = normName(el.web_name);
+      byFull[full] = el.code;
+      byWeb[web]   = el.code;
+    }
+
+    const match = name => {
+      const n  = normName(name);
+      const ws = n.split(" ");
+      const last  = ws[ws.length - 1];
+      const after = ws.slice(1).join(" ");
+      return byFull[n] || byWeb[last] || byFull[after] || byWeb[after] || null;
+    };
+
+    PLAYER_PHOTO_IDS = {};
+    // All outfield players
+    for (const p of DATA.players || [])     { const c = match(p.player);      if (c) PLAYER_PHOTO_IDS[p.player]      = c; }
+    // Goalkeepers table uses different name field
+    for (const g of DATA.goalkeeping || []) { const c = match(g.goalkeeper);  if (c) PLAYER_PHOTO_IDS[g.goalkeeper]  = c; }
+    // Scorers / assists lists
+    for (const p of DATA.scorers || [])     { const c = match(p.player);      if (c) PLAYER_PHOTO_IDS[p.player]      = c; }
+    for (const p of DATA.assists || [])     { const c = match(p.player);      if (c) PLAYER_PHOTO_IDS[p.player]      = c; }
+
+    // Re-render everywhere player avatars appear
+    renderScorersTable();
+    renderGKTable();
+    renderWageGrid();
+    renderXi();
+    renderAllCharts();
+  } catch (_) { /* FPL API unreachable — keep initials */ }
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -293,12 +366,16 @@ function showSection(name, { scroll = true } = {}) {
 }
 
 function renderAllCharts() {
-  if (activeSection === "overview")  { renderOverviewPts(); renderOverviewGFGA(); renderOverviewWDL(); }
-  if (activeSection === "attack")    { renderAttackScorers(); renderAttackAssists(); renderAttackTeamGoals(); }
-  if (activeSection === "defence")   { renderDefGA(); renderDefCS(); renderDefScatter(); }
-  if (activeSection === "tactics")   { renderTactics(); }
-  if (activeSection === "finance")   { renderFinanceCharts(); }
-  if (activeSection === "value")     { renderPlayerExplorer(); }
+  if (activeSection === "overview")   { renderOverviewPts(); renderOverviewGFGA(); renderOverviewWDL(); }
+  if (activeSection === "attack")     { renderAttackScorers(); renderAttackAssists(); renderAttackTeamGoals(); }
+  if (activeSection === "defence")    { renderDefGA(); renderDefCS(); renderDefScatter(); }
+  if (activeSection === "tactics")    { renderTactics(); }
+  if (activeSection === "finance")    { renderFinanceCharts(); }
+  if (activeSection === "value")      { renderPlayerExplorer(); }
+  if (activeSection === "compare")    { renderCompare(); }
+  if (activeSection === "xg")         { renderXg(); }
+  if (activeSection === "timeline")   { renderTimeline(); }
+  if (activeSection === "transfers")  { renderTransfers(); }
 }
 
 function renderTacticControls() {
@@ -1334,9 +1411,27 @@ function renderClubs() {
    BEST VALUE XI
    ════════════════════════════════════════════════════════════ */
 const FORMATIONS = {
-  "4-3-3": ["GK", "DF", "DF", "DF", "DF", "MF", "MF", "MF", "FW", "FW", "FW"],
-  "4-4-2": ["GK", "DF", "DF", "DF", "DF", "MF", "MF", "MF", "MF", "FW", "FW"],
-  "3-5-2": ["GK", "DF", "DF", "DF", "MF", "MF", "MF", "MF", "MF", "FW", "FW"],
+  // 4 defenders
+  "4-3-3":   ["GK","DF","DF","DF","DF","MF","MF","MF","FW","FW","FW"],
+  "4-4-2":   ["GK","DF","DF","DF","DF","MF","MF","MF","MF","FW","FW"],
+  "4-4-1-1": ["GK","DF","DF","DF","DF","MF","MF","MF","MF","FW","FW"],
+  "4-2-3-1": ["GK","DF","DF","DF","DF","MF","MF","MF","MF","MF","FW"],
+  "4-1-4-1": ["GK","DF","DF","DF","DF","MF","MF","MF","MF","MF","FW"],
+  "4-5-1":   ["GK","DF","DF","DF","DF","MF","MF","MF","MF","MF","FW"],
+  "4-3-2-1": ["GK","DF","DF","DF","DF","MF","MF","MF","MF","MF","FW"],
+  "4-2-4":   ["GK","DF","DF","DF","DF","MF","MF","FW","FW","FW","FW"],
+  // 3 defenders
+  "3-5-2":   ["GK","DF","DF","DF","MF","MF","MF","MF","MF","FW","FW"],
+  "3-4-3":   ["GK","DF","DF","DF","MF","MF","MF","MF","FW","FW","FW"],
+  "3-4-2-1": ["GK","DF","DF","DF","MF","MF","MF","MF","MF","MF","FW"],
+  "3-6-1":   ["GK","DF","DF","DF","MF","MF","MF","MF","MF","MF","FW"],
+  "3-3-4":   ["GK","DF","DF","DF","MF","MF","MF","FW","FW","FW","FW"],
+  // 5 defenders (3 CB + 2 WB)
+  "5-3-2":   ["GK","DF","DF","DF","DF","DF","MF","MF","MF","FW","FW"],
+  "5-4-1":   ["GK","DF","DF","DF","DF","DF","MF","MF","MF","MF","FW"],
+  "5-2-3":   ["GK","DF","DF","DF","DF","DF","MF","MF","FW","FW","FW"],
+  // classic / historic
+  "2-3-5":   ["GK","DF","DF","MF","MF","MF","FW","FW","FW","FW","FW"],
 };
 
 function renderXiControls() {
@@ -1533,6 +1628,469 @@ function renderFacts() {
           <div class="fact-val">${i.val}</div>
         </div>`).join("")}
     </div>`).join("");
+}
+
+/* ════════════════════════════════════════════════════════════
+   CLUB COMPARISON
+   ════════════════════════════════════════════════════════════ */
+function renderCompareControls() {
+  const options = (DATA.standings || []).map(t => `<option value="${t.team}">${t.team}</option>`).join("");
+  const a = document.getElementById("compareTeamA");
+  const b = document.getElementById("compareTeamB");
+  if (!a || !b) return;
+  a.innerHTML = options;
+  b.innerHTML = options;
+  const teams = (DATA.standings || []).map(t => t.team);
+  a.value = teams[0] || "";
+  b.value = teams[1] || "";
+}
+
+const _cmpCharts = {};
+function renderCompare() {
+  const teamA = document.getElementById("compareTeamA")?.value;
+  const teamB = document.getElementById("compareTeamB")?.value;
+  if (!teamA || !teamB) return;
+
+  const sA = standingFor(teamA), sB = standingFor(teamB);
+  const qA = squadFor(teamA),    qB = squadFor(teamB);
+  const mA = teamMetric(teamA),  mB = teamMetric(teamB);
+  if (!sA || !sB) return;
+
+  // ── KPI strip ──
+  const kpiDefs = [
+    { label: "Points",      a: sA.Pts,             b: sB.Pts,             fmt: v => v,           hi: "high" },
+    { label: "Goals For",   a: sA.GF,              b: sB.GF,              fmt: v => v,           hi: "high" },
+    { label: "Goals Ag.",   a: sA.GA,              b: sB.GA,              fmt: v => v,           hi: "low"  },
+    { label: "xG",          a: qA?.xG,             b: qB?.xG,             fmt: v => fmt(v,1),    hi: "high" },
+    { label: "xGA",         a: qA?.xGA,            b: qB?.xGA,            fmt: v => fmt(v,1),    hi: "low"  },
+    { label: "Possession",  a: qA?.possession,     b: qB?.possession,     fmt: v => `${fmt(v,1)}%`, hi: "high" },
+    { label: "Clean Sheets",a: qA?.clean_sheets,   b: qB?.clean_sheets,   fmt: v => v,           hi: "high" },
+    { label: "Squad €M",    a: mA?.squad_value_m,  b: mB?.squad_value_m,  fmt: v => `€${fmt(v)}M`, hi: "none" },
+    { label: "Wages £M",    a: mA?.wage_bill_m,    b: mB?.wage_bill_m,    fmt: v => `£${fmt(v)}M`, hi: "none" },
+    { label: "£M/Point",    a: mA?.cost_per_point, b: mB?.cost_per_point, fmt: v => `£${fmt(v,2)}M`, hi: "low" },
+  ];
+  document.getElementById("compareHeadA").textContent = sn(teamA);
+  document.getElementById("compareHeadB").textContent = sn(teamB);
+
+  const winner = (a, b, hi) => {
+    if (hi === "none" || a == null || b == null) return ["", ""];
+    if (hi === "high") return a > b ? ["win", "lose"] : a < b ? ["lose", "win"] : ["draw", "draw"];
+    return a < b ? ["win", "lose"] : a > b ? ["lose", "win"] : ["draw", "draw"];
+  };
+
+  document.getElementById("compareKpis").innerHTML = kpiDefs.map(k => {
+    const [wA, wB] = winner(k.a, k.b, k.hi);
+    const va = k.a != null ? k.fmt(k.a) : "–";
+    const vb = k.b != null ? k.fmt(k.b) : "–";
+    return `<div class="cmp-kpi">
+      <div class="cmp-kpi-label">${k.label}</div>
+      <div class="cmp-kpi-vals">
+        <span class="cmp-val cmp-${wA}" style="color:${tc(teamA)}">${va}</span>
+        <span class="cmp-vs">vs</span>
+        <span class="cmp-val cmp-${wB}" style="color:${tc(teamB)}">${vb}</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  // ── Radar ──
+  const radarFields = [
+    { key: "points",       label: "Points",       src: "standing" },
+    { key: "GF",           label: "Goals",        src: "standing" },
+    { key: "xG",           label: "xG",           src: "squad"    },
+    { key: "xGAinv",       label: "Def (−xGA)",   src: "derived"  },
+    { key: "possession",   label: "Possession",   src: "squad"    },
+    { key: "tackles",      label: "Tackles",      src: "squad"    },
+    { key: "clean_sheets", label: "Clean Sheets", src: "squad"    },
+  ];
+  const allSquads = DATA.squads || [];
+  const maxOf = key => Math.max(...allSquads.map(s => s[key] || 0));
+  const maxPts = Math.max(...(DATA.standings || []).map(s => s.Pts));
+  const maxGF  = Math.max(...(DATA.standings || []).map(s => s.GF));
+  const maxXGA = Math.max(...allSquads.map(s => s.xGA || 0));
+
+  const normalize = (val, max) => max > 0 ? Math.round((val / max) * 100) : 0;
+  const radarVal = (team, sq, st) => radarFields.map(f => {
+    if (f.key === "points")   return normalize(st.Pts, maxPts);
+    if (f.key === "GF")       return normalize(st.GF, maxGF);
+    if (f.key === "xGAinv")   return sq?.xGA != null ? Math.round(100 - normalize(sq.xGA, maxXGA)) : 50;
+    if (f.src === "squad")    return normalize(sq?.[f.key] || 0, maxOf(f.key));
+    return 0;
+  });
+
+  const ctx = document.getElementById("cCompareRadar");
+  if (!ctx) return;
+  if (_cmpCharts.radar) _cmpCharts.radar.destroy();
+  _cmpCharts.radar = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels: radarFields.map(f => f.label),
+      datasets: [
+        { label: sn(teamA), data: radarVal(teamA, qA, sA), borderColor: tc(teamA), backgroundColor: tc(teamA) + "33", pointBackgroundColor: tc(teamA) },
+        { label: sn(teamB), data: radarVal(teamB, qB, sB), borderColor: tc(teamB), backgroundColor: tc(teamB) + "33", pointBackgroundColor: tc(teamB) },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { r: { beginAtZero: true, max: 100, ticks: { display: false }, grid: { color: "rgba(255,255,255,.08)" }, pointLabels: { color: "#94a3b8", font: { size: 13 } } } },
+      plugins: { legend: { labels: { color: "#e2e8f0" } } },
+    },
+  });
+
+  // ── Stats table ──
+  const tableRows = [
+    { label: "League Position", a: sA.position, b: sB.position },
+    { label: "Matches Played",  a: sA.MP, b: sB.MP },
+    { label: "Won",             a: sA.W, b: sB.W },
+    { label: "Drawn",           a: sA.D, b: sB.D },
+    { label: "Lost",            a: sA.L, b: sB.L },
+    { label: "Goals For",       a: sA.GF, b: sB.GF },
+    { label: "Goals Against",   a: sA.GA, b: sB.GA },
+    { label: "Goal Difference", a: sA.GD, b: sB.GD },
+    { label: "Points",          a: sA.Pts, b: sB.Pts },
+    { label: "xG",              a: qA?.xG   != null ? fmt(qA.xG,1)   : "–", b: qB?.xG   != null ? fmt(qB.xG,1)   : "–" },
+    { label: "xGA",             a: qA?.xGA  != null ? fmt(qA.xGA,1)  : "–", b: qB?.xGA  != null ? fmt(qB.xGA,1)  : "–" },
+    { label: "Possession %",    a: qA?.possession != null ? fmt(qA.possession,1) : "–", b: qB?.possession != null ? fmt(qB.possession,1) : "–" },
+    { label: "Tackles",         a: qA?.tackles  ?? "–", b: qB?.tackles  ?? "–" },
+    { label: "Yellow Cards",    a: qA?.yellow_cards ?? "–", b: qB?.yellow_cards ?? "–" },
+    { label: "Red Cards",       a: qA?.red_cards ?? "–", b: qB?.red_cards ?? "–" },
+    { label: "Clean Sheets",    a: qA?.clean_sheets ?? "–", b: qB?.clean_sheets ?? "–" },
+    { label: "Squad Value €M",  a: mA?.squad_value_m != null ? `€${fmt(mA.squad_value_m)}M` : "–", b: mB?.squad_value_m != null ? `€${fmt(mB.squad_value_m)}M` : "–" },
+    { label: "Wage Bill £M",    a: mA?.wage_bill_m   != null ? `£${fmt(mA.wage_bill_m)}M`   : "–", b: mB?.wage_bill_m   != null ? `£${fmt(mB.wage_bill_m)}M`   : "–" },
+    { label: "Cost per Point",  a: mA?.cost_per_point != null ? `£${fmt(mA.cost_per_point,2)}M` : "–", b: mB?.cost_per_point != null ? `£${fmt(mB.cost_per_point,2)}M` : "–" },
+    { label: "Value Index",     a: mA?.value_index != null ? fmt(mA.value_index,2) : "–", b: mB?.value_index != null ? fmt(mB.value_index,2) : "–" },
+  ];
+  document.getElementById("compareTableBody").innerHTML = tableRows.map(r => `
+    <tr><td>${r.label}</td><td style="color:${tc(teamA)}">${r.a}</td><td style="color:${tc(teamB)}">${r.b}</td></tr>`).join("");
+
+  // ── Top players ──
+  const topFor = team => allComputedPlayers()
+    .filter(p => p.club === team && p.mins >= 500 && p.market_value_m > 0)
+    .sort((a, b) => b.vfm - a.vfm).slice(0, 8);
+  const playerRow = p => `
+    <div class="cmp-player">
+      ${playerAvatar(p.player, p.club, 36)}
+      <div class="cmp-player-info">
+        <strong>${p.player}</strong>
+        <span>${p.position} · ${p.mins.toLocaleString()} mins · VFM ${fmt(p.vfm,1)}</span>
+      </div>
+    </div>`;
+  document.getElementById("comparePlayers").innerHTML = `
+    <div class="compare-player-cols">
+      <div class="cmp-col">
+        <div class="cmp-col-header" style="border-color:${tc(teamA)};color:${tc(teamA)}">${crestImg(teamA,24)} ${sn(teamA)} — Top VFM Players</div>
+        ${topFor(teamA).map(playerRow).join("")}
+      </div>
+      <div class="cmp-col">
+        <div class="cmp-col-header" style="border-color:${tc(teamB)};color:${tc(teamB)}">${crestImg(teamB,24)} ${sn(teamB)} — Top VFM Players</div>
+        ${topFor(teamB).map(playerRow).join("")}
+      </div>
+    </div>`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   EXPECTED GOALS (xG)
+   ════════════════════════════════════════════════════════════ */
+const _xgCharts = {};
+function renderXg() {
+  const squads    = DATA.squads || [];
+  const standings = DATA.standings || [];
+  const players   = allComputedPlayers().filter(p => p.mins >= 900 && p.xg_per90 != null);
+
+  // merge standing pos into squads for convenience
+  const merged = squads.map(s => {
+    const st = standings.find(t => t.team === s.team) || {};
+    return { ...s, goals: st.GF || 0, goals_against: st.GA || 0, pts: st.Pts || 0, pos: st.position || 99 };
+  }).filter(s => s.xG != null).sort((a, b) => b.xG - a.xG);
+
+  // Chart 1: xG vs Actual Goals (grouped bar, sorted by xG)
+  const c1 = document.getElementById("cXgVsGoals");
+  if (c1) {
+    if (_xgCharts.vsGoals) _xgCharts.vsGoals.destroy();
+    _xgCharts.vsGoals = new Chart(c1, {
+      type: "bar",
+      data: {
+        labels: merged.map(s => sn(s.team)),
+        datasets: [
+          { label: "Actual Goals", data: merged.map(s => s.goals), backgroundColor: merged.map(s => tc(s.team) + "cc") },
+          { label: "xG", data: merged.map(s => +fmt(s.xG,1)), backgroundColor: merged.map(s => tc(s.team) + "55"), borderColor: merged.map(s => tc(s.team)), borderWidth: 1 },
+        ],
+      },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+        plugins: { legend: { labels: { color: "#94a3b8" } } },
+        scales: { x: { ticks: { color: "#64748b" }, grid: { color: "rgba(255,255,255,.04)" } }, y: { ticks: { color: "#94a3b8" } } },
+      },
+    });
+  }
+
+  // Chart 2: xG vs xGA scatter (bubble size = points)
+  const c2 = document.getElementById("cXgScatter");
+  if (c2) {
+    if (_xgCharts.scatter) _xgCharts.scatter.destroy();
+    _xgCharts.scatter = new Chart(c2, {
+      type: "bubble",
+      data: {
+        datasets: merged.map(s => ({
+          label: sn(s.team),
+          data: [{ x: +fmt(s.xG,1), y: +fmt(s.xGA,1), r: Math.max(4, s.pts / 8) }],
+          backgroundColor: tc(s.team) + "88",
+          borderColor: tc(s.team),
+        })),
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label} — xG ${ctx.parsed.x} · xGA ${ctx.parsed.y} · ${Math.round(ctx.raw.r * 8)} pts` } } },
+        scales: {
+          x: { title: { display: true, text: "xG (attack)", color: "#94a3b8" }, ticks: { color: "#64748b" }, grid: { color: "rgba(255,255,255,.04)" } },
+          y: { title: { display: true, text: "xGA (lower = better defence)", color: "#94a3b8" }, ticks: { color: "#64748b" }, grid: { color: "rgba(255,255,255,.04)" } },
+        },
+      },
+    });
+  }
+
+  // Chart 3: xG overperformance (goals - xG), horizontal bar
+  const overperf = [...merged].sort((a, b) => (b.goals - b.xG) - (a.goals - a.xG));
+  const c3 = document.getElementById("cXgOverperf");
+  if (c3) {
+    if (_xgCharts.overperf) _xgCharts.overperf.destroy();
+    _xgCharts.overperf = new Chart(c3, {
+      type: "bar",
+      data: {
+        labels: overperf.map(s => sn(s.team)),
+        datasets: [{
+          label: "Goals − xG",
+          data: overperf.map(s => +(s.goals - s.xG).toFixed(1)),
+          backgroundColor: overperf.map(s => s.goals - s.xG >= 0 ? C.green + "cc" : C.red + "cc"),
+          borderColor:     overperf.map(s => s.goals - s.xG >= 0 ? C.green : C.red),
+          borderWidth: 1,
+        }],
+      },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+        plugins: { legend: { display: false } },
+        scales: { x: { ticks: { color: "#64748b" }, grid: { color: "rgba(255,255,255,.04)" } }, y: { ticks: { color: "#94a3b8" } } },
+      },
+    });
+  }
+
+  // Chart 4: Top xG/90 players
+  const topXg = [...players].sort((a, b) => b.xg_per90 - a.xg_per90).slice(0, 20);
+  const c4 = document.getElementById("cXgPlayers");
+  if (c4) {
+    if (_xgCharts.players) _xgCharts.players.destroy();
+    _xgCharts.players = new Chart(c4, {
+      type: "bar",
+      data: {
+        labels: topXg.map(p => p.player),
+        datasets: [{ label: "xG per 90", data: topXg.map(p => +fmt(p.xg_per90,2)), backgroundColor: topXg.map(p => tc(p.club) + "cc"), borderColor: topXg.map(p => tc(p.club)), borderWidth: 1 }],
+      },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${topXg[ctx.dataIndex].club} — xG/90: ${ctx.parsed.x}` } } },
+        scales: { x: { ticks: { color: "#64748b" }, grid: { color: "rgba(255,255,255,.04)" } }, y: { ticks: { color: "#94a3b8", font: { size: 11 } } } },
+      },
+    });
+  }
+
+  // Chart 5: Top xA/90 players
+  const topXa = [...players].filter(p => p.xa_per90 != null).sort((a, b) => b.xa_per90 - a.xa_per90).slice(0, 20);
+  const c5 = document.getElementById("cXaPlayers");
+  if (c5) {
+    if (_xgCharts.xaPlayers) _xgCharts.xaPlayers.destroy();
+    _xgCharts.xaPlayers = new Chart(c5, {
+      type: "bar",
+      data: {
+        labels: topXa.map(p => p.player),
+        datasets: [{ label: "xA per 90", data: topXa.map(p => +fmt(p.xa_per90,2)), backgroundColor: topXa.map(p => tc(p.club) + "cc"), borderColor: topXa.map(p => tc(p.club)), borderWidth: 1 }],
+      },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: "y",
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${topXa[ctx.dataIndex].club} — xA/90: ${ctx.parsed.x}` } } },
+        scales: { x: { ticks: { color: "#64748b" }, grid: { color: "rgba(255,255,255,.04)" } }, y: { ticks: { color: "#94a3b8", font: { size: 11 } } } },
+      },
+    });
+  }
+
+  // xG table
+  const body = document.getElementById("xgTableBody");
+  if (body) {
+    const withXg = (DATA.squads || []).map(s => {
+      const st = standings.find(t => t.team === s.team) || {};
+      return { ...s, goals: st.GF || 0, goals_against: st.GA || 0, pts: st.Pts || 0, pos: st.position || 99 };
+    }).filter(s => s.xG != null).sort((a, b) => a.pos - b.pos);
+    const sign = v => v > 0 ? `<span class="xg-pos">+${fmt(v,1)}</span>` : `<span class="xg-neg">${fmt(v,1)}</span>`;
+    body.innerHTML = withXg.map(s => {
+      const gxg  = s.goals - s.xG;
+      const gaxga = s.goals_against - (s.xGA || 0);
+      const diff  = (s.goals - s.xG) - (s.goals_against - (s.xGA || 0));
+      return `<tr>
+        <td class="name-col">${crestImg(s.team,18)} ${sn(s.team)}</td>
+        <td>${s.pos}</td>
+        <td>${s.goals}</td><td>${s.xG != null ? fmt(s.xG,1) : "–"}</td><td>${sign(gxg)}</td>
+        <td>${s.goals_against}</td><td>${s.xGA != null ? fmt(s.xGA,1) : "–"}</td><td>${sign(-gaxga)}</td>
+        <td>${s.xG != null ? fmt(s.xG,1) : "–"}</td>
+        <td>${s.xGA != null ? fmt(s.xGA,1) : "–"}</td>
+        <td>${sign(diff)}</td>
+      </tr>`;
+    }).join("");
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   SEASON TIMELINE
+   ════════════════════════════════════════════════════════════ */
+const SEASON_EVENTS = [
+  { date: "2024-08-16", type: "season",  emoji: "🏟️", title: "Season Kicks Off",                  desc: "Matchday 1 of the 2024–2025 Premier League season. All 20 clubs begin their campaign.", teams: [] },
+  { date: "2024-08-25", type: "match",   emoji: "⚽", title: "Ipswich Town promoted debut",         desc: "Ipswich Town make their Premier League return after 22 years. Expectations are high for the newly promoted side.", teams: ["Ipswich Town"] },
+  { date: "2024-09-14", type: "record",  emoji: "📊", title: "Salah's relentless early form",      desc: "Mohamed Salah continues his prolific start — goals and assists in almost every appearance, setting the pace for the Golden Boot race.", teams: ["Liverpool"] },
+  { date: "2024-10-19", type: "match",   emoji: "🔴", title: "Liverpool top the table",            desc: "Liverpool establish themselves at the summit of the Premier League under Arne Slot in his first season as manager.", teams: ["Liverpool"] },
+  { date: "2024-11-09", type: "match",   emoji: "🌳", title: "Nottingham Forest's defensive run",  desc: "Nottingham Forest showcase outstanding defensive resilience, going on one of the season's best unbeaten runs at the City Ground.", teams: ["Nottingham Forest"] },
+  { date: "2024-12-22", type: "match",   emoji: "🎄", title: "Spurs 3–6 Liverpool",                desc: "Boxing week thriller: Tottenham Hotspur 3–6 Liverpool — the highest-scoring match of the 2024–2025 season. Salah at the heart of everything.", teams: ["Tottenham Hotspur", "Liverpool"] },
+  { date: "2025-01-19", type: "match",   emoji: "💥", title: "Ipswich 0–6 Manchester City",        desc: "Manchester City produce the biggest away win of the season, thumping Ipswich Town 0–6 at Portman Road.", teams: ["Ipswich Town", "Manchester City"] },
+  { date: "2025-02-01", type: "match",   emoji: "🌳", title: "Forest 7–0 Brighton",                desc: "Nottingham Forest demolish Brighton 7–0 — the biggest home win of the entire season. A historic afternoon at the City Ground.", teams: ["Nottingham Forest", "Brighton & Hove Albion"] },
+  { date: "2025-02-15", type: "record",  emoji: "📈", title: "Liverpool's 26-match unbeaten run",  desc: "Liverpool extend their unbeaten run to 26 matches — the longest of any club in the 2024–2025 season, cementing their title credentials.", teams: ["Liverpool"] },
+  { date: "2025-03-22", type: "award",   emoji: "🏆", title: "Salah named Player of the Month",   desc: "Mohamed Salah wins his fourth Premier League Player of the Month award of the season — an unprecedented level of consistency.", teams: ["Liverpool"] },
+  { date: "2025-04-06", type: "record",  emoji: "📉", title: "Southampton relegated — record early", desc: "Southampton become the first team in Premier League history to be relegated this early in the season — a record low for the league.", teams: ["Southampton"] },
+  { date: "2025-04-20", type: "season",  emoji: "🏆", title: "Liverpool seal the title",           desc: "Liverpool are crowned Premier League champions 2024–2025 — their 2nd Premier League title and 20th English top-flight title.", teams: ["Liverpool"] },
+  { date: "2025-05-10", type: "season",  emoji: "🔴", title: "Leicester & Ipswich relegated",      desc: "Leicester City and Ipswich Town join Southampton in dropping to the Championship — all three promoted sides go straight back down.", teams: ["Leicester City", "Ipswich Town"] },
+  { date: "2025-05-25", type: "award",   emoji: "👟", title: "Salah wins Golden Boot & awards",    desc: "Mohamed Salah (Liverpool) takes the Golden Boot (29 goals), Playmaker Award (18 assists) and Player of the Season — a historic treble.", teams: ["Liverpool"] },
+  { date: "2025-05-25", type: "award",   emoji: "🧤", title: "Golden Glove — Raya & Sels",        desc: "David Raya (Arsenal) and Matz Sels (Nottingham Forest) share the Golden Glove with 13 clean sheets each.", teams: ["Arsenal", "Nottingham Forest"] },
+  { date: "2025-05-25", type: "season",  emoji: "🎉", title: "Season Ends",                        desc: "The 2024–2025 Premier League season concludes. 380 matches, 1115 goals, 2.93 goals per game average. An unforgettable campaign.", teams: [] },
+];
+
+function renderTimeline() {
+  const container = document.getElementById("seasonTimeline");
+  if (!container) return;
+  const filter = document.getElementById("timelineCategoryFilter")?.value || "all";
+  const events = filter === "all" ? SEASON_EVENTS : SEASON_EVENTS.filter(e => e.type === filter);
+
+  container.innerHTML = events.map((ev, i) => {
+    const d = new Date(ev.date);
+    const dateStr = d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+    const teamBadges = ev.teams.map(t => `<span class="tl-team-badge" style="border-color:${tc(t)};color:${tc(t)}">${crestImg(t, 14)} ${sn(t)}</span>`).join("");
+    const typeColor = { season: C.yellow, match: C.cyan, record: C.purple, award: C.green }[ev.type] || C.purple;
+    return `
+    <div class="tl-item tl-${ev.type}" style="--tl-color:${typeColor}">
+      <div class="tl-dot">${ev.emoji}</div>
+      <div class="tl-content">
+        <div class="tl-date">${dateStr}</div>
+        <div class="tl-title">${ev.title}</div>
+        <div class="tl-desc">${ev.desc}</div>
+        ${teamBadges ? `<div class="tl-teams">${teamBadges}</div>` : ""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ════════════════════════════════════════════════════════════
+   TRANSFER TIMELINE
+   ════════════════════════════════════════════════════════════ */
+const TRANSFERS = [
+  // Summer 2024
+  { window:"summer", month:"Jul 2024", player:"Dominic Solanke",       from:"Bournemouth",      to:"Tottenham Hotspur",    fee:"£65M",  type:"in",   pos:"FW", note:"Record Spurs signing" },
+  { window:"summer", month:"Jul 2024", player:"Archie Gray",           from:"Leeds United",      to:"Tottenham Hotspur",    fee:"£40M",  type:"in",   pos:"MF", note:"Midfielder, 18 years old" },
+  { window:"summer", month:"Jul 2024", player:"Wilson Odobert",        from:"Burnley",           to:"Tottenham Hotspur",    fee:"£25M",  type:"in",   pos:"MF", note:"French winger" },
+  { window:"summer", month:"Jul 2024", player:"Pedro Neto",            from:"Wolverhampton Wanderers", to:"Chelsea",        fee:"£54M",  type:"in",   pos:"MF", note:"Portuguese winger" },
+  { window:"summer", month:"Jul 2024", player:"Joao Pedro",            from:"Brighton & Hove Albion",  to:"Chelsea",        fee:"£35M",  type:"in",   pos:"FW", note:"Brazilian striker" },
+  { window:"summer", month:"Jul 2024", player:"Kiernan Dewsbury-Hall", from:"Leicester City",    to:"Chelsea",              fee:"£30M",  type:"in",   pos:"MF", note:"England international" },
+  { window:"summer", month:"Jul 2024", player:"Riccardo Calafiori",    from:"Bologna",           to:"Arsenal",              fee:"£42M",  type:"in",   pos:"DF", note:"Italy defender" },
+  { window:"summer", month:"Aug 2024", player:"Mikel Merino",          from:"Real Sociedad",     to:"Arsenal",              fee:"£27M",  type:"in",   pos:"MF", note:"Spain international" },
+  { window:"summer", month:"Jun 2024", player:"David Raya",            from:"Bayer Leverkusen",  to:"Arsenal",              fee:"£27M",  type:"in",   pos:"GK", note:"Permanent from loan" },
+  { window:"summer", month:"Jun 2024", player:"Omari Kellyman",        from:"Aston Villa",       to:"Chelsea",              fee:"£19M",  type:"in",   pos:"MF", note:"Young England prospect" },
+  { window:"summer", month:"Jul 2024", player:"Savinho",               from:"Girona",            to:"Manchester City",       fee:"£35M",  type:"in",   pos:"MF", note:"Brazilian winger, ex-City co-ownership" },
+  { window:"summer", month:"Jul 2024", player:"Ilkay Gündoğan",        from:"Barcelona",         to:"Manchester City",       fee:"Free",  type:"in",   pos:"MF", note:"Returns to City on free transfer" },
+  { window:"summer", month:"Aug 2024", player:"Federico Chiesa",       from:"Juventus",          to:"Liverpool",             fee:"£12M",  type:"in",   pos:"MF", note:"Italian winger" },
+  { window:"summer", month:"Jul 2024", player:"Giorgi Mamardashvili",  from:"Valencia",          to:"Liverpool",             fee:"£29M",  type:"in",   pos:"GK", note:"Loaned back to Valencia 2024–25" },
+  { window:"summer", month:"Jun 2024", player:"Lloyd Kelly",           from:"Bournemouth",       to:"Newcastle United",      fee:"Free",  type:"in",   pos:"DF", note:"Out of contract" },
+  { window:"summer", month:"Aug 2024", player:"Yankuba Minteh",        from:"Newcastle United",  to:"Brighton & Hove Albion",fee:"£35M",  type:"in",   pos:"MF", note:"Senegal winger, loan buy" },
+  { window:"summer", month:"Jul 2024", player:"Conor Gallagher",       from:"Chelsea",           to:"Atlético Madrid",       fee:"£33M",  type:"out",  pos:"MF", note:"Departs to La Liga" },
+  { window:"summer", month:"Sep 2024", player:"Raheem Sterling",       from:"Chelsea",           to:"AC Milan",              fee:"Loan",  type:"loan", pos:"MF", note:"Season-long loan to Serie A" },
+  { window:"summer", month:"Jul 2024", player:"Amadou Onana",          from:"Everton",           to:"Aston Villa",           fee:"£50M",  type:"in",   pos:"MF", note:"Belgian midfielder" },
+  { window:"summer", month:"Jul 2024", player:"Ian Maatsen",           from:"Chelsea",           to:"Aston Villa",           fee:"£37.5M",type:"in",  pos:"DF", note:"Dutch full-back, permanent from loan" },
+  // January 2025
+  { window:"january", month:"Jan 2025", player:"Jhon Duran",           from:"Aston Villa",       to:"Al-Qadsiah",            fee:"£61.5M",type:"out",  pos:"FW", note:"Departs to Saudi Pro League mid-season" },
+  { window:"january", month:"Jan 2025", player:"Marcus Rashford",      from:"Manchester United", to:"Aston Villa",           fee:"Loan",  type:"loan", pos:"MF", note:"Season-long loan; fell out of favour at United" },
+  { window:"january", month:"Jan 2025", player:"Antony",               from:"Manchester United", to:"Real Betis",            fee:"Loan",  type:"loan", pos:"MF", note:"Loan to La Liga to revive career" },
+  { window:"january", month:"Jan 2025", player:"Viktor Gyökeres",      from:"Sporting CP",       to:"Arsenal",               fee:"Rumour",type:"in",   pos:"FW", note:"Heavily linked but did not materialise in Jan" },
+  { window:"january", month:"Jan 2025", player:"Matz Sels extension",  from:"Nottingham Forest", to:"Nottingham Forest",     fee:"New deal", type:"in", pos:"GK", note:"Golden Glove keeper extends contract" },
+];
+
+function renderTransferControls() {
+  const clubs = [...new Set(TRANSFERS.flatMap(t => [t.from, t.to]))].filter(c => TEAM[c]).sort();
+  const sel = document.getElementById("transferClubFilter");
+  if (!sel) return;
+  sel.innerHTML = `<option value="all">All clubs</option>` + clubs.map(c => `<option value="${c}">${c}</option>`).join("");
+}
+
+function renderTransfers() {
+  const container = document.getElementById("transferTimeline");
+  const summary   = document.getElementById("transferSummary");
+  if (!container) return;
+
+  const win  = document.getElementById("transferWindowFilter")?.value || "all";
+  const club = document.getElementById("transferClubFilter")?.value   || "all";
+  const type = document.getElementById("transferTypeFilter")?.value   || "all";
+
+  let filtered = TRANSFERS;
+  if (win  !== "all") filtered = filtered.filter(t => t.window === win);
+  if (club !== "all") filtered = filtered.filter(t => t.from === club || t.to === club);
+  if (type !== "all") filtered = filtered.filter(t => t.type === type);
+
+  if (summary) {
+    const ins    = filtered.filter(t => t.type === "in");
+    const outs   = filtered.filter(t => t.type === "out");
+    const loans  = filtered.filter(t => t.type === "loan");
+    summary.innerHTML = `
+      <div class="detail-kpis">
+        <div class="detail-kpi"><strong>${filtered.length}</strong><span>Total transfers</span></div>
+        <div class="detail-kpi"><strong>${ins.length}</strong><span>Arrivals</span></div>
+        <div class="detail-kpi"><strong>${outs.length}</strong><span>Departures</span></div>
+        <div class="detail-kpi"><strong>${loans.length}</strong><span>Loans</span></div>
+      </div>`;
+  }
+
+  const typeIcon = { in: "⬆️", out: "⬇️", loan: "🔁" };
+  const typeLabel = { in: "Arrival", out: "Departure", loan: "Loan" };
+  const typeAccent = { in: C.green, out: C.red, loan: C.yellow };
+  const windows = win === "all" ? ["summer","january"] : [win];
+  const winLabel = { summer: "☀️ Summer 2024 Transfer Window", january: "❄️ January 2025 Transfer Window" };
+
+  container.innerHTML = windows.map(w => {
+    const items = filtered.filter(t => t.window === w);
+    if (!items.length) return "";
+    return `
+    <div class="tr-window">
+      <div class="tr-window-title">${winLabel[w]}</div>
+      <div class="tr-cards">
+        ${items.map(t => {
+          const plTeam = t.type === "out" ? t.from : t.to;
+          const accent = typeAccent[t.type];
+          const plAvatar = PLAYER_PHOTO_IDS[t.player]
+            ? playerAvatar(t.player, plTeam, 44)
+            : `<div class="p-avatar" style="width:44px;height:44px;background:${accent}22;border:2px solid ${accent};font-size:15px;color:${accent}">${typeIcon[t.type]}</div>`;
+          const fromCrest = TEAM[t.from] ? crestImg(t.from, 18) : `<span style="font-size:.7rem">${t.from}</span>`;
+          const toCrest   = TEAM[t.to]   ? crestImg(t.to, 18)   : `<span style="font-size:.7rem">${t.to}</span>`;
+          return `
+          <div class="tr-card tr-${t.type}" style="--tr-accent:${accent}">
+            <div class="tr-card-top">
+              ${plAvatar}
+              <div class="tr-card-info">
+                <strong>${t.player}</strong>
+                <span class="tr-pos-badge">${t.pos}</span>
+              </div>
+              <div class="tr-fee" style="color:${accent}">${t.fee}</div>
+            </div>
+            <div class="tr-route">
+              <span class="tr-club">${fromCrest} ${sn(t.from)}</span>
+              <span class="tr-arrow" style="color:${accent}">→</span>
+              <span class="tr-club">${toCrest} ${sn(t.to)}</span>
+            </div>
+            <div class="tr-meta">
+              <span class="tr-type-badge" style="background:${accent}22;color:${accent};border-color:${accent}55">${typeIcon[t.type]} ${typeLabel[t.type]}</span>
+              <span class="tr-month">${t.month}</span>
+            </div>
+            ${t.note ? `<div class="tr-note">${t.note}</div>` : ""}
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`;
+  }).join("");
 }
 
 // ── Boot ──────────────────────────────────────────────────────
