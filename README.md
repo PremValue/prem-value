@@ -17,6 +17,7 @@ Build and validate the bundle with:
 ```powershell
 python fetch_data.py
 python fetch_data.py --check
+python fetch_data.py --audit-data-health
 ```
 
 The build also regenerates `prem-value-for-money.html`, the self-contained
@@ -34,8 +35,8 @@ The build performs deterministic cleanup and validation:
   club associations;
 - verifies that the player snapshot covers all clubs and all four broad
   positions;
-- flags missing or stale player valuations and excludes stale valuations from
-  featured value-for-money rankings;
+- records missing or stale player valuations with resolution provenance and
+  excludes them from featured value-for-money rankings;
 - calculates reproducible squad values as dated aggregates of player valuations;
 - compares derived euro squad totals with converted external GBP references
   using the checked-in ECB exchange-rate snapshot;
@@ -55,9 +56,12 @@ pip install pandas soccerdata
 python fetch_data.py --refresh-squads
 ```
 
-Some enrichment fields may be `null` when the installed `soccerdata` version
-or current FBRef team tables do not expose them. The generated data-health
-panel reports those coverage gaps explicitly.
+The refresh reads progressive passes from FBRef's team passing table and
+progressive carries from its team possession table when those historical
+tables are available. Some enrichment fields remain `null` when the upstream
+historical source no longer exposes them. The generated data-health panel
+reports those upstream limitations explicitly instead of treating them as
+zero.
 
 ## Optional Understat Refresh
 
@@ -86,6 +90,13 @@ pip install pandas requests lxml soccerdata
 python fetch_data.py --refresh-players
 ```
 
+To refresh only the dated Transfermarkt valuation join while reusing the
+checked-in FBRef roster snapshot:
+
+```powershell
+python fetch_data.py --refresh-player-values
+```
+
 The player refresh also joins the FBRef miscellaneous and goalkeeper tables.
 Those supported tables provide tackles won, interceptions, clean sheets, saves,
 and save percentage. Current FBRef historical tables do not expose progression,
@@ -95,8 +106,11 @@ blocks, or clearances through `soccerdata 1.9.0`; missing optional inputs remain
 Because the dashboard is locked to the completed 2024-2025 season, the refresh
 reuses soccerdata's cached FBRef standard player table when it is available.
 If the cache is absent, soccerdata fetches it before building the snapshot.
-Players without a published Transfermarkt record remain visible in the roster
-with a `null` value but are excluded from featured value-for-money rankings.
+The valuation join stores its resolver method, confidence, matched profile
+metadata, and resolution status. Ambiguous identities fail the refresh until
+an explicit reviewed override is added. Players with a verified profile but no
+published Transfermarkt record remain visible in the roster with a `null`
+value and are excluded from featured value-for-money rankings.
 
 Valuations more than 180 days older than the `2025-05-31` cutoff remain visible
 for transparency but are excluded from featured rankings and bargain cards.
@@ -104,10 +118,11 @@ for transparency but are excluded from featured rankings and bargain cards.
 ## Finance Sources
 
 `data/finance_sources.json` records the provenance and confidence level for
-team squad values, Capology annual payroll estimates, and notable-player wage
-estimates. `data/finances.json` references those source IDs. Capology payrolls
-are rounded gross annual base-payroll estimates. Curated club squad values are
-directional, low-confidence external references only.
+the primary Capology annual payroll and notable-player wage estimates.
+`data/finances.json` references those source IDs. Capology payrolls are rounded
+gross annual base-payroll estimates. Curated club squad values now live
+separately in `data/club_value_references.json` because they are directional,
+low-confidence comparison references only.
 
 The canonical club squad values shown by the dashboard are derived in euros by
 summing dated player valuations at the `2025-05-31` cutoff. The discrepancy
@@ -115,12 +130,18 @@ report converts external GBP references using `data/exchange_rates.json`, an
 ECB reference-rate snapshot dated `2025-05-30`, the last trading day before the
 cutoff.
 
+`data/data_health_audit.json` is regenerated with the dashboard. It records
+the affected players or clubs, resolution notes, source links, and warning,
+informational, or healthy state behind each expandable data-health card.
+
 ## Position-Aware Player Scores
 
 Player value-for-money rankings use a generated role score rather than raw
 goals plus assists. The pipeline converts role inputs to within-position
 percentiles and applies versioned `GK`, `DF`, `MF`, and `FW` weights. Available
 metrics are reweighted when an optional source field is unavailable, and each
-player record exposes a score completeness percentage and component breakdown.
+player record exposes a score completeness percentage, component breakdown,
+status, and explanatory notes. Low-minute or mathematically not-applicable
+scores remain visible without being treated as source failures.
 
 The normal build does not need network access or third-party Python packages.

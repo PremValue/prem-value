@@ -1,0 +1,1348 @@
+{
+  "schema_version": 1,
+  "season": "2024-2025",
+  "valuation_cutoff": "2025-05-31",
+  "generated_by": "fetch_data.py",
+  "records": [
+    {
+      "code": "missing-player-valuations",
+      "severity": "ok",
+      "summary": "0 unresolved player valuations",
+      "details": "Unexplained source gaps or identity joins require review.",
+      "affected_count": 0,
+      "affected": [],
+      "resolution": "Resolve the profile identity or confirm that no dated valuation exists."
+    },
+    {
+      "code": "expected-unpublished-valuations",
+      "severity": "info",
+      "summary": "9 expected unpublished valuations",
+      "details": "Verified profiles had no published value at or before the cutoff.",
+      "affected_count": 9,
+      "affected": [
+        {
+          "label": "Gustavo Nunes",
+          "club": "Brentford",
+          "status": "expected_missing",
+          "source_url": "https://www.transfermarkt.co.uk/gustavo-nunes/profil/spieler/1086375"
+        },
+        {
+          "label": "Harry Howell",
+          "club": "Brighton & Hove Albion",
+          "status": "expected_missing",
+          "source_url": "https://www.transfermarkt.co.uk/harry-howell/profil/spieler/1067168"
+        },
+        {
+          "label": "Asher Agbinone",
+          "club": "Crystal Palace",
+          "status": "expected_missing",
+          "source_url": "https://www.transfermarkt.co.uk/asher-agbinone/profil/spieler/1047256"
+        },
+        {
+          "label": "Olabade Aluko",
+          "club": "Leicester City",
+          "status": "expected_missing",
+          "source_url": "https://www.transfermarkt.co.uk/olabade-aluko/profil/spieler/1135364"
+        },
+        {
+          "label": "Jeremy Monga",
+          "club": "Leicester City",
+          "status": "expected_missing",
+          "source_url": "https://www.transfermarkt.co.uk/jeremy-monga/profil/spieler/1245948"
+        },
+        {
+          "label": "Jake Evans",
+          "club": "Leicester City",
+          "status": "expected_missing",
+          "source_url": "https://www.transfermarkt.co.uk/jake-evans/profil/spieler/1171764"
+        },
+        {
+          "label": "Will Alves",
+          "club": "Leicester City",
+          "status": "expected_missing",
+          "source_url": "https://www.transfermarkt.co.uk/will-alves/profil/spieler/867711"
+        },
+        {
+          "label": "Jay Robinson",
+          "club": "Southampton",
+          "status": "expected_missing",
+          "source_url": "https://www.transfermarkt.co.uk/jay-robinson/profil/spieler/1045124"
+        },
+        {
+          "label": "Will Lankshear",
+          "club": "Tottenham Hotspur",
+          "status": "expected_missing",
+          "source_url": "https://www.transfermarkt.co.uk/will-lankshear/profil/spieler/879768"
+        }
+      ],
+      "resolution": "No imputation is applied; these players stay visible and unranked."
+    },
+    {
+      "code": "stale-player-valuations",
+      "severity": "info",
+      "summary": "13 published-stale player valuations",
+      "details": "Verified records older than 180 days remain visible but unfeatured.",
+      "affected_count": 13,
+      "affected": [
+        {
+          "label": "Ben Mee",
+          "club": "Brentford",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/ben-mee/profil/spieler/74810"
+        },
+        {
+          "label": "Edmond-Paris Maghoma",
+          "club": "Brentford",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/paris-maghoma/profil/spieler/470596"
+        },
+        {
+          "label": "Yunus Emre Konak",
+          "club": "Brentford",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/yunus-konak/profil/spieler/1141628"
+        },
+        {
+          "label": "Alex Palmer",
+          "club": "Ipswich Town",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/alex-palmer/profil/spieler/245625"
+        },
+        {
+          "label": "Christian Walton",
+          "club": "Ipswich Town",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/christian-walton/profil/spieler/208379"
+        },
+        {
+          "label": "Wes Burns",
+          "club": "Ipswich Town",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/wes-burns/profil/spieler/255731"
+        },
+        {
+          "label": "Caleb Okoli",
+          "club": "Leicester City",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/caleb-okoli/profil/spieler/461833"
+        },
+        {
+          "label": "Jakub Stolarczyk",
+          "club": "Leicester City",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/jakub-stolarczyk/profil/spieler/486144"
+        },
+        {
+          "label": "Boubakary Soumaré",
+          "club": "Leicester City",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/boubakary-soumare/profil/spieler/344605"
+        },
+        {
+          "label": "Patson Daka",
+          "club": "Leicester City",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/patson-daka/profil/spieler/365172"
+        },
+        {
+          "label": "Jonny Evans",
+          "club": "Manchester United",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/jonny-evans/profil/spieler/42412"
+        },
+        {
+          "label": "Tyler Fredricson",
+          "club": "Manchester United",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/tyler-fredricson/profil/spieler/911424"
+        },
+        {
+          "label": "Alfie Dorrington",
+          "club": "Tottenham Hotspur",
+          "status": "verified_profile",
+          "source_url": "https://www.transfermarkt.co.uk/alfie-dorrington/profil/spieler/796300"
+        }
+      ],
+      "resolution": "Retained as the latest published point-in-time values before the cutoff."
+    },
+    {
+      "code": "low-confidence-finance-sources",
+      "severity": "ok",
+      "summary": "0 low-confidence primary finance sources",
+      "details": "Canonical dashboard metrics use validated primary or reproducible sources.",
+      "affected_count": 0,
+      "affected": [],
+      "resolution": "Comparison-only references are audited separately from primary finance inputs."
+    },
+    {
+      "code": "advanced-squad-coverage",
+      "severity": "ok",
+      "summary": "Advanced squad coverage complete",
+      "details": "All tracked fields populated.",
+      "affected_count": 0,
+      "affected": [],
+      "resolution": "Refresh the upstream source and require complete club coverage."
+    },
+    {
+      "code": "optional-squad-source-limitations",
+      "severity": "info",
+      "summary": "2 optional squad fields unavailable",
+      "details": "progressive_carries, progressive_passes",
+      "affected_count": 2,
+      "affected": [
+        {
+          "label": "progressive_carries",
+          "status": "source_unavailable"
+        },
+        {
+          "label": "progressive_passes",
+          "status": "source_unavailable"
+        }
+      ],
+      "resolution": "FBRef historical passing and possession tables are unavailable; null is preserved."
+    },
+    {
+      "code": "squad-valuation-discrepancies",
+      "severity": "ok",
+      "summary": "0 squad valuation discrepancies",
+      "details": "Player-derived totals differ by at least 10% from converted references.",
+      "affected_count": 0,
+      "affected": [],
+      "resolution": "Investigate roster scope and point-in-time reference semantics."
+    },
+    {
+      "code": "explained-squad-reference-differences",
+      "severity": "info",
+      "summary": "11 explained squad reference differences",
+      "details": "Comparison-only curated references use a different, unaudited roster scope.",
+      "affected_count": 11,
+      "affected": [
+        {
+          "label": "Liverpool",
+          "status": "explained_reference_scope",
+          "difference_pct": -11.6
+        },
+        {
+          "label": "Chelsea",
+          "status": "explained_reference_scope",
+          "difference_pct": -12.4
+        },
+        {
+          "label": "Newcastle United",
+          "status": "explained_reference_scope",
+          "difference_pct": 16.9
+        },
+        {
+          "label": "Bournemouth",
+          "status": "explained_reference_scope",
+          "difference_pct": 41.9
+        },
+        {
+          "label": "Brighton & Hove Albion",
+          "status": "explained_reference_scope",
+          "difference_pct": 10.2
+        },
+        {
+          "label": "Wolverhampton Wanderers",
+          "status": "explained_reference_scope",
+          "difference_pct": 25.0
+        },
+        {
+          "label": "West Ham United",
+          "status": "explained_reference_scope",
+          "difference_pct": -24.9
+        },
+        {
+          "label": "Crystal Palace",
+          "status": "explained_reference_scope",
+          "difference_pct": 49.4
+        },
+        {
+          "label": "Everton",
+          "status": "explained_reference_scope",
+          "difference_pct": 35.2
+        },
+        {
+          "label": "Ipswich Town",
+          "status": "explained_reference_scope",
+          "difference_pct": 19.0
+        },
+        {
+          "label": "Southampton",
+          "status": "explained_reference_scope",
+          "difference_pct": 27.6
+        }
+      ],
+      "resolution": "Canonical euro totals remain reproducible player aggregates."
+    },
+    {
+      "code": "incomplete-role-scores",
+      "severity": "ok",
+      "summary": "0 eligible role-score source gaps",
+      "details": "Weighted source metrics are missing for otherwise eligible players.",
+      "affected_count": 0,
+      "affected": [],
+      "resolution": "Refresh or replace the missing player-level source metric."
+    },
+    {
+      "code": "role-score-caveats",
+      "severity": "info",
+      "summary": "175 provisional or not-applicable role scores",
+      "details": "Low-minute samples and mathematically unavailable metrics remain transparent.",
+      "affected_count": 175,
+      "affected": [
+        {
+          "label": "Kieran Tierney",
+          "club": "Arsenal",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/kieran-tierney/profil/spieler/300716"
+        },
+        {
+          "label": "Takehiro Tomiyasu",
+          "club": "Arsenal",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/takehiro-tomiyasu/profil/spieler/331560"
+        },
+        {
+          "label": "Raheem Sterling",
+          "club": "Arsenal",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/raheem-sterling/profil/spieler/134425"
+        },
+        {
+          "label": "Nathan Butler-Oyedeji",
+          "club": "Arsenal",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/nathan-butler-oyedeji/profil/spieler/638964"
+        },
+        {
+          "label": "Lamare Bogarde",
+          "club": "Aston Villa",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/lamare-bogarde/profil/spieler/645686"
+        },
+        {
+          "label": "Andrés García",
+          "club": "Aston Villa",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/andres-garcia/profil/spieler/1063329"
+        },
+        {
+          "label": "Kosta Nedeljković",
+          "club": "Aston Villa",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/kosta-nedeljkovic/profil/spieler/848682"
+        },
+        {
+          "label": "Emi Buendía",
+          "club": "Aston Villa",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/emiliano-buendia/profil/spieler/321247"
+        },
+        {
+          "label": "Robin Olsen",
+          "club": "Aston Villa",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/robin-olsen/profil/spieler/75458"
+        },
+        {
+          "label": "Donyell Malen",
+          "club": "Aston Villa",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/donyell-malen/profil/spieler/326029"
+        },
+        {
+          "label": "Julian Araujo",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/julian-araujo/profil/spieler/513970"
+        },
+        {
+          "label": "James Hill",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/james-hill/profil/spieler/611793"
+        },
+        {
+          "label": "Max Aarons",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/max-aarons/profil/spieler/471690"
+        },
+        {
+          "label": "Julio Soler",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/julio-soler/profil/spieler/1009658"
+        },
+        {
+          "label": "Enes Ünal",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/enes-unal/profil/spieler/251106"
+        },
+        {
+          "label": "Daniel Jebbison",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/daniel-jebbison/profil/spieler/746740"
+        },
+        {
+          "label": "Remy Rees-Dottin",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/remy-rees-dottin/profil/spieler/1089802"
+        },
+        {
+          "label": "Mark Travers",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/mark-travers/profil/spieler/357658"
+        },
+        {
+          "label": "Neto",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/neto/profil/spieler/111819"
+        },
+        {
+          "label": "Luis Sinisterra",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/luis-sinisterra/profil/spieler/512385"
+        },
+        {
+          "label": "Philip Billing",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/philip-billing/profil/spieler/320411"
+        },
+        {
+          "label": "Ben Winterburn",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ben-winterburn/profil/spieler/854721"
+        },
+        {
+          "label": "Zain Silcott-Duberry",
+          "club": "Bournemouth",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/zain-silcott-duberry/profil/spieler/777308"
+        },
+        {
+          "label": "Ben Mee",
+          "club": "Brentford",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ben-mee/profil/spieler/74810"
+        },
+        {
+          "label": "Rico Henry",
+          "club": "Brentford",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/rico-henry/profil/spieler/339556"
+        },
+        {
+          "label": "Kim Jisoo",
+          "club": "Brentford",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ji-soo-kim/profil/spieler/709767"
+        },
+        {
+          "label": "Jayden Meghoma",
+          "club": "Brentford",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jayden-meghoma/profil/spieler/954104"
+        },
+        {
+          "label": "Fabio Carvalho",
+          "club": "Brentford",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/fabio-carvalho/profil/spieler/559263"
+        },
+        {
+          "label": "Igor Thiago",
+          "club": "Brentford",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/igor-thiago/profil/spieler/739443"
+        },
+        {
+          "label": "Hákon Valdimarsson",
+          "club": "Brentford",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/hakon-valdimarsson/profil/spieler/488935"
+        },
+        {
+          "label": "Edmond-Paris Maghoma",
+          "club": "Brentford",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/paris-maghoma/profil/spieler/470596"
+        },
+        {
+          "label": "Yunus Emre Konak",
+          "club": "Brentford",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/yunus-konak/profil/spieler/1141628"
+        },
+        {
+          "label": "Frank Onyeka",
+          "club": "Brentford",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/frank-onyeka/profil/spieler/421637"
+        },
+        {
+          "label": "Gustavo Nunes",
+          "club": "Brentford",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/gustavo-nunes/profil/spieler/1086375"
+        },
+        {
+          "label": "Ryan Trevitt",
+          "club": "Brentford",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ryan-trevitt/profil/spieler/874538"
+        },
+        {
+          "label": "Ferdi Kadioglu",
+          "club": "Brighton & Hove Albion",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ferdi-kadioglu/profil/spieler/369316"
+        },
+        {
+          "label": "Eiran Cashin",
+          "club": "Brighton & Hove Albion",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/eiran-cashin/profil/spieler/581330"
+        },
+        {
+          "label": "Evan Ferguson",
+          "club": "Brighton & Hove Albion",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/evan-ferguson/profil/spieler/648046"
+        },
+        {
+          "label": "Jason Steele",
+          "club": "Brighton & Hove Albion",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jason-steele/profil/spieler/73564"
+        },
+        {
+          "label": "James Milner",
+          "club": "Brighton & Hove Albion",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/james-milner/profil/spieler/3333"
+        },
+        {
+          "label": "Solly March",
+          "club": "Brighton & Hove Albion",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/solly-march/profil/spieler/209212"
+        },
+        {
+          "label": "Billy Gilmour",
+          "club": "Brighton & Hove Albion",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/billy-gilmour/profil/spieler/423744"
+        },
+        {
+          "label": "Jakub Moder",
+          "club": "Brighton & Hove Albion",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jakub-moder/profil/spieler/384461"
+        },
+        {
+          "label": "Jeremy Sarmiento",
+          "club": "Brighton & Hove Albion",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jeremy-sarmiento/profil/spieler/568005"
+        },
+        {
+          "label": "Harry Howell",
+          "club": "Brighton & Hove Albion",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/harry-howell/profil/spieler/1067168"
+        },
+        {
+          "label": "Benoît Badiashile",
+          "club": "Chelsea",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/benoit-badiashile/profil/spieler/463603"
+        },
+        {
+          "label": "Joshua Acheampong",
+          "club": "Chelsea",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/josh-acheampong/profil/spieler/1004708"
+        },
+        {
+          "label": "Tyrique George",
+          "club": "Chelsea",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/tyrique-george/profil/spieler/936874"
+        },
+        {
+          "label": "Marc Guiu",
+          "club": "Chelsea",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/marc-guiu/profil/spieler/938158"
+        },
+        {
+          "label": "Shumaira Mheuka",
+          "club": "Chelsea",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/shumaira-mheuka/profil/spieler/982097"
+        },
+        {
+          "label": "João Félix",
+          "club": "Chelsea",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/joao-felix/profil/spieler/462250"
+        },
+        {
+          "label": "Kiernan Dewsbury-Hall",
+          "club": "Chelsea",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/kiernan-dewsbury-hall/profil/spieler/475188"
+        },
+        {
+          "label": "Renato Veiga",
+          "club": "Chelsea",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/renato-veiga/profil/spieler/805714"
+        },
+        {
+          "label": "Mykhailo Mudryk",
+          "club": "Chelsea",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/mykhaylo-mudryk/profil/spieler/537860"
+        },
+        {
+          "label": "Mathis Amougou",
+          "club": "Chelsea",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/mathis-amougou/profil/spieler/1010854"
+        },
+        {
+          "label": "Nathaniel Clyne",
+          "club": "Crystal Palace",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/nathaniel-clyne/profil/spieler/85177"
+        },
+        {
+          "label": "Jeffrey Schlupp",
+          "club": "Crystal Palace",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jeffrey-schlupp/profil/spieler/157506"
+        },
+        {
+          "label": "Chadi Riad",
+          "club": "Crystal Palace",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/chadi-riad/profil/spieler/689637"
+        },
+        {
+          "label": "Joel Ward",
+          "club": "Crystal Palace",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/joel-ward/profil/spieler/92572"
+        },
+        {
+          "label": "Caleb Kporha",
+          "club": "Crystal Palace",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/caleb-kporha/profil/spieler/1047261"
+        },
+        {
+          "label": "Matheus França",
+          "club": "Crystal Palace",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/matheus-franca/profil/spieler/743597"
+        },
+        {
+          "label": "Cheick Doucouré",
+          "club": "Crystal Palace",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/cheick-doucoure/profil/spieler/543387"
+        },
+        {
+          "label": "Ben Chilwell",
+          "club": "Crystal Palace",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ben-chilwell/profil/spieler/316125"
+        },
+        {
+          "label": "Odsonne Édouard",
+          "club": "Crystal Palace",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/odsonne-edouard/profil/spieler/344152"
+        },
+        {
+          "label": "Romain Esse",
+          "club": "Crystal Palace",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/romain-esse/profil/spieler/967319"
+        },
+        {
+          "label": "Asher Agbinone",
+          "club": "Crystal Palace",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/asher-agbinone/profil/spieler/1047256"
+        },
+        {
+          "label": "Nathan Patterson",
+          "club": "Everton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/nathan-patterson/profil/spieler/424015"
+        },
+        {
+          "label": "Séamus Coleman",
+          "club": "Everton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/seamus-coleman/profil/spieler/68390"
+        },
+        {
+          "label": "Roman Dixon",
+          "club": "Everton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/roman-dixon/profil/spieler/856479"
+        },
+        {
+          "label": "Mason Holgate",
+          "club": "Everton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/mason-holgate/profil/spieler/348623"
+        },
+        {
+          "label": "Armando Broja",
+          "club": "Everton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/armando-broja/profil/spieler/571743"
+        },
+        {
+          "label": "Youssef Chermiti",
+          "club": "Everton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/youssef-chermiti/profil/spieler/670688"
+        },
+        {
+          "label": "Harrison Armstrong",
+          "club": "Everton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/harrison-armstrong/profil/spieler/1107733"
+        },
+        {
+          "label": "Jorge Cuenca",
+          "club": "Fulham",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jorge-cuenca/profil/spieler/494880"
+        },
+        {
+          "label": "Martial Godo",
+          "club": "Fulham",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/martial-godo/profil/spieler/992686"
+        },
+        {
+          "label": "Carlos Vinícius",
+          "club": "Fulham",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/carlos-vinicius/profil/spieler/525287"
+        },
+        {
+          "label": "Jay Stansfield",
+          "club": "Fulham",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jay-stansfield/profil/spieler/696346"
+        },
+        {
+          "label": "Reiss Nelson",
+          "club": "Fulham",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/reiss-nelson/profil/spieler/340325"
+        },
+        {
+          "label": "Willian",
+          "club": "Fulham",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/willian/profil/spieler/52769"
+        },
+        {
+          "label": "Joshua King",
+          "club": "Fulham",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/josh-king/profil/spieler/1011131"
+        },
+        {
+          "label": "Harrison Reed",
+          "club": "Fulham",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/harrison-reed/profil/spieler/226973"
+        },
+        {
+          "label": "Harry Clarke",
+          "club": "Ipswich Town",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/harry-clarke/profil/spieler/528892"
+        },
+        {
+          "label": "Conor Townsend",
+          "club": "Ipswich Town",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/conor-townsend/profil/spieler/146509"
+        },
+        {
+          "label": "Ben Godfrey",
+          "club": "Ipswich Town",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ben-godfrey/profil/spieler/343475"
+        },
+        {
+          "label": "George Edmundson",
+          "club": "Ipswich Town",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/george-edmundson/profil/spieler/385848"
+        },
+        {
+          "label": "Ali Al Hamadi",
+          "club": "Ipswich Town",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ali-al-hamadi/profil/spieler/610581"
+        },
+        {
+          "label": "Marcus Harness",
+          "club": "Ipswich Town",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/marcus-harness/profil/spieler/288323"
+        },
+        {
+          "label": "Chiedozie Ogbene",
+          "club": "Ipswich Town",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/chiedozie-ogbene/profil/spieler/392591"
+        },
+        {
+          "label": "Massimo Luongo",
+          "club": "Ipswich Town",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/massimo-luongo/profil/spieler/181687"
+        },
+        {
+          "label": "Ricardo Pereira",
+          "club": "Leicester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ricardo-pereira/profil/spieler/215876"
+        },
+        {
+          "label": "Woyo Coulibaly",
+          "club": "Leicester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/woyo-coulibaly/profil/spieler/592975"
+        },
+        {
+          "label": "Olabade Aluko",
+          "club": "Leicester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/olabade-aluko/profil/spieler/1135364"
+        },
+        {
+          "label": "Jeremy Monga",
+          "club": "Leicester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jeremy-monga/profil/spieler/1245948"
+        },
+        {
+          "label": "Danny Ward",
+          "club": "Leicester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/danny-ward/profil/spieler/203026"
+        },
+        {
+          "label": "Hamza Choudhury",
+          "club": "Leicester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/hamza-choudhury/profil/spieler/341501"
+        },
+        {
+          "label": "Jake Evans",
+          "club": "Leicester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jake-evans/profil/spieler/1171764"
+        },
+        {
+          "label": "Michael Golding",
+          "club": "Leicester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/michael-golding/profil/spieler/936842"
+        },
+        {
+          "label": "Will Alves",
+          "club": "Leicester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/will-alves/profil/spieler/867711"
+        },
+        {
+          "label": "Jarell Quansah",
+          "club": "Liverpool",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jarell-quansah/profil/spieler/632349"
+        },
+        {
+          "label": "Federico Chiesa",
+          "club": "Liverpool",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/federico-chiesa/profil/spieler/341092"
+        },
+        {
+          "label": "Jayden Danns",
+          "club": "Liverpool",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jayden-danns/profil/spieler/939290"
+        },
+        {
+          "label": "Vitezslav Jaros",
+          "club": "Liverpool",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/vitezslav-jaros/profil/spieler/486604"
+        },
+        {
+          "label": "Harvey Elliott",
+          "club": "Liverpool",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/harvey-elliott/profil/spieler/565822"
+        },
+        {
+          "label": "Wataru Endo",
+          "club": "Liverpool",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/wataru-endo/profil/spieler/146310"
+        },
+        {
+          "label": "Jahmai Simpson-Pusey",
+          "club": "Manchester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jahmai-simpson-pusey/profil/spieler/942497"
+        },
+        {
+          "label": "Vitor Reis",
+          "club": "Manchester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/vitor-reis/profil/spieler/1005575"
+        },
+        {
+          "label": "Divin Mubama",
+          "club": "Manchester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/divin-mubama/profil/spieler/670848"
+        },
+        {
+          "label": "Oscar Bobb",
+          "club": "Manchester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/oscar-bobb/profil/spieler/661207"
+        },
+        {
+          "label": "James Mcatee",
+          "club": "Manchester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/james-mcatee/profil/spieler/583199"
+        },
+        {
+          "label": "Rodri",
+          "club": "Manchester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/rodri/profil/spieler/357565"
+        },
+        {
+          "label": "Claudio Echeverri",
+          "club": "Manchester City",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/claudio-echeverri/profil/spieler/994536"
+        },
+        {
+          "label": "Luke Shaw",
+          "club": "Manchester United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/luke-shaw/profil/spieler/183288"
+        },
+        {
+          "label": "Jonny Evans",
+          "club": "Manchester United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jonny-evans/profil/spieler/42412"
+        },
+        {
+          "label": "Ayden Heaven",
+          "club": "Manchester United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ayden-heaven/profil/spieler/1078163"
+        },
+        {
+          "label": "Tyler Fredricson",
+          "club": "Manchester United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/tyler-fredricson/profil/spieler/911424"
+        },
+        {
+          "label": "Chidozie Obi-Martin",
+          "club": "Manchester United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/chido-obi/profil/spieler/1042886"
+        },
+        {
+          "label": "Antony",
+          "club": "Manchester United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/antony/profil/spieler/602105"
+        },
+        {
+          "label": "Altay Bayındır",
+          "club": "Manchester United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/altay-bayindir/profil/spieler/336077"
+        },
+        {
+          "label": "Harry Amass",
+          "club": "Manchester United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/harry-amass/profil/spieler/1011738"
+        },
+        {
+          "label": "Toby Collyer",
+          "club": "Manchester United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/toby-collyer/profil/spieler/654253"
+        },
+        {
+          "label": "Tyrell Malacia",
+          "club": "Manchester United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/tyrell-malacia/profil/spieler/339340"
+        },
+        {
+          "label": "Scott McTominay",
+          "club": "Manchester United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/scott-mctominay/profil/spieler/315969"
+        },
+        {
+          "label": "Sven Botman",
+          "club": "Newcastle United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/sven-botman/profil/spieler/361093"
+        },
+        {
+          "label": "Emil Krafth",
+          "club": "Newcastle United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/emil-krafth/profil/spieler/184528"
+        },
+        {
+          "label": "Lloyd Kelly",
+          "club": "Newcastle United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/lloyd-kelly/profil/spieler/480116"
+        },
+        {
+          "label": "Matt Targett",
+          "club": "Newcastle United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/matt-targett/profil/spieler/250478"
+        },
+        {
+          "label": "Callum Wilson",
+          "club": "Newcastle United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/callum-wilson/profil/spieler/123682"
+        },
+        {
+          "label": "Miguel Almirón",
+          "club": "Newcastle United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/miguel-almiron/profil/spieler/272999"
+        },
+        {
+          "label": "William Osula",
+          "club": "Newcastle United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/william-osula/profil/spieler/609556"
+        },
+        {
+          "label": "Lewis Miley",
+          "club": "Newcastle United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/lewis-miley/profil/spieler/922769"
+        },
+        {
+          "label": "Willy Boly",
+          "club": "Nottingham Forest",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/willy-boly/profil/spieler/142310"
+        },
+        {
+          "label": "Harry Toffolo",
+          "club": "Nottingham Forest",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/harry-toffolo/profil/spieler/198516"
+        },
+        {
+          "label": "Eric da Silva Moreira",
+          "club": "Nottingham Forest",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/eric-da-silva-moreira/profil/spieler/897481"
+        },
+        {
+          "label": "Taiwo Awoniyi",
+          "club": "Nottingham Forest",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/taiwo-awoniyi/profil/spieler/295313"
+        },
+        {
+          "label": "Ramón Sosa",
+          "club": "Nottingham Forest",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ramon-sosa/profil/spieler/745191"
+        },
+        {
+          "label": "Danilo Santos",
+          "club": "Nottingham Forest",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/danilo/profil/spieler/808509"
+        },
+        {
+          "label": "Charlie Taylor",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/charlie-taylor/profil/spieler/195633"
+        },
+        {
+          "label": "Armel Bella Kotchap",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/armel-bella-kotchap/profil/spieler/467563"
+        },
+        {
+          "label": "Joachim Kayi Sanda",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/joachim-kayi-sanda/profil/spieler/986298"
+        },
+        {
+          "label": "Ronnie Edwards",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ronnie-edwards/profil/spieler/732165"
+        },
+        {
+          "label": "Ben Brereton",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ben-brereton-diaz/profil/spieler/426192"
+        },
+        {
+          "label": "Ross Stewart",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ross-stewart/profil/spieler/447995"
+        },
+        {
+          "label": "Samuel Edozie",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/samuel-edozie/profil/spieler/680806"
+        },
+        {
+          "label": "Samuel Amo-Ameyaw",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/samuel-amo-ameyaw/profil/spieler/933900"
+        },
+        {
+          "label": "Alex McCarthy",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/alex-mccarthy/profil/spieler/95976"
+        },
+        {
+          "label": "Joe Lumley",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/joe-lumley/profil/spieler/336367"
+        },
+        {
+          "label": "Welington",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/welington/profil/spieler/729264"
+        },
+        {
+          "label": "Adam Lallana",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/adam-lallana/profil/spieler/43530"
+        },
+        {
+          "label": "Ryan Fraser",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/ryan-fraser/profil/spieler/146795"
+        },
+        {
+          "label": "Albert Grønbaek",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/albert-gronbaek/profil/spieler/503866"
+        },
+        {
+          "label": "Jay Robinson",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/jay-robinson/profil/spieler/1045124"
+        },
+        {
+          "label": "Maxwel Cornet",
+          "club": "Southampton",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/maxwel-cornet/profil/spieler/234781"
+        },
+        {
+          "label": "Sergio Reguilón",
+          "club": "Tottenham Hotspur",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/sergio-reguilon/profil/spieler/282429"
+        },
+        {
+          "label": "Alfie Dorrington",
+          "club": "Tottenham Hotspur",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/alfie-dorrington/profil/spieler/796300"
+        },
+        {
+          "label": "Dane Scarlett",
+          "club": "Tottenham Hotspur",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/dane-scarlett/profil/spieler/670883"
+        },
+        {
+          "label": "Will Lankshear",
+          "club": "Tottenham Hotspur",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/will-lankshear/profil/spieler/879768"
+        },
+        {
+          "label": "Brandon Austin",
+          "club": "Tottenham Hotspur",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/brandon-austin/profil/spieler/428016"
+        },
+        {
+          "label": "Mikey Moore",
+          "club": "Tottenham Hotspur",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/mikey-moore/profil/spieler/1011147"
+        },
+        {
+          "label": "Kaelan Casey",
+          "club": "West Ham United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/kaelan-casey/profil/spieler/845321"
+        },
+        {
+          "label": "Danny Ings",
+          "club": "West Ham United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/danny-ings/profil/spieler/134294"
+        },
+        {
+          "label": "Andy Irving",
+          "club": "West Ham United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/andrew-irving/profil/spieler/430310"
+        },
+        {
+          "label": "Luis Guilherme",
+          "club": "West Ham United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/luis-guilherme/profil/spieler/991800"
+        },
+        {
+          "label": "Lewis Orford",
+          "club": "West Ham United",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/lewis-orford/profil/spieler/845809"
+        },
+        {
+          "label": "Yerson Mosquera",
+          "club": "Wolverhampton Wanderers",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/yerson-mosquera/profil/spieler/716276"
+        },
+        {
+          "label": "Nasser Djiga",
+          "club": "Wolverhampton Wanderers",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/nasser-djiga/profil/spieler/862297"
+        },
+        {
+          "label": "Alfie Pond",
+          "club": "Wolverhampton Wanderers",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/alfie-pond/profil/spieler/821522"
+        },
+        {
+          "label": "Daniel Podence",
+          "club": "Wolverhampton Wanderers",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/daniel-podence/profil/spieler/256977"
+        },
+        {
+          "label": "Chiquinho",
+          "club": "Wolverhampton Wanderers",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/chiquinho/profil/spieler/695454"
+        },
+        {
+          "label": "Daniel Bentley",
+          "club": "Wolverhampton Wanderers",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/daniel-bentley/profil/spieler/136401"
+        },
+        {
+          "label": "Tom King",
+          "club": "Wolverhampton Wanderers",
+          "status": "not_applicable",
+          "source_url": "https://www.transfermarkt.co.uk/tom-king/profil/spieler/215810"
+        },
+        {
+          "label": "Tommy Doyle",
+          "club": "Wolverhampton Wanderers",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/tommy-doyle/profil/spieler/433183"
+        },
+        {
+          "label": "Carlos Forbs",
+          "club": "Wolverhampton Wanderers",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/carlos-forbs/profil/spieler/742451"
+        },
+        {
+          "label": "Pedro Lima",
+          "club": "Wolverhampton Wanderers",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/pedro-lima/profil/spieler/1193867"
+        },
+        {
+          "label": "Mateus Mane",
+          "club": "Wolverhampton Wanderers",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/mateus-mane/profil/spieler/1230661"
+        },
+        {
+          "label": "Boubacar Traoré",
+          "club": "Wolverhampton Wanderers",
+          "status": "provisional",
+          "source_url": "https://www.transfermarkt.co.uk/boubacar-traore/profil/spieler/649020"
+        }
+      ],
+      "resolution": "These scores stay visible but are excluded by featured ranking thresholds."
+    }
+  ]
+}

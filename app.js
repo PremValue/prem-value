@@ -101,6 +101,7 @@ const DEFAULT_VALUE_POLICY = {
 
 const valuePolicy = () => ({ ...DEFAULT_VALUE_POLICY, ...(DATA._meta?.player_value_policy || {}) });
 const financeSource = id => (DATA.finance_sources || []).find(source => source.id === id);
+const clubValueComparisonSource = () => DATA.club_value_references?.source;
 const hasFreshValue = p => p.market_value_m > 0 && p.valuation_status === "fresh";
 const isExplorerEligible = p => p.mins >= valuePolicy().explorer_min_minutes && p.market_value_m > 0;
 const isFeaturedEligible = p => p.mins >= valuePolicy().featured_min_minutes && hasFreshValue(p);
@@ -112,6 +113,9 @@ const squadValuationFor = team => (DATA.squad_valuations || []).find(value => va
 const fmt = (value, digits = 1) => Number(value).toFixed(digits);
 const signed = (value, digits = 1) => `${value > 0 ? "+" : ""}${fmt(value, digits)}`;
 const encodedTeam = team => encodeURIComponent(team);
+const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+}[char]));
 
 function readUrlState() {
   const params = new URLSearchParams(window.location.search);
@@ -765,20 +769,32 @@ function renderTeamEfficiencyTable() {
 function renderFinanceMethodology() {
   const el = document.getElementById("financeMethodology"); if (!el) return;
   const sources = DATA.finance_sources || [];
+  const comparisonSource = clubValueComparisonSource();
   el.innerHTML = `
     <div class="method-title">Finance data methodology</div>
     <div class="method-copy">
       Wage bills use rounded Capology combined gross annual base-payroll estimates for 2024-2025.
       Capology notes that historical combined payrolls may include mid-season transfers and exclude
       bonuses and club staff. Canonical squad values are reproducible euro aggregates of dated
-      player valuations. Curated Transfermarkt club totals remain low-confidence comparison references.
+      player valuations. Curated Transfermarkt club totals remain separated, low-confidence comparison references.
     </div>
     <div class="method-links">
       ${sources.map(source => `
         ${sourceLink(source)}
         ${confidenceBadge(source)}
       `).join("")}
+      ${sourceLink(comparisonSource, "club totals comparison")}
+      ${confidenceBadge(comparisonSource)}
     </div>`;
+}
+
+function healthAffectedItem(item) {
+  const status = item.status ? `<span class="health-status">${escapeHtml(item.status)}</span>` : "";
+  const difference = item.difference_pct == null ? "" : `<span>${signed(item.difference_pct)}%</span>`;
+  const source = item.source_url
+    ? `<a href="${escapeHtml(item.source_url)}" target="_blank" rel="noopener noreferrer">source</a>`
+    : "";
+  return `<li><strong>${escapeHtml(item.label)}</strong>${item.club ? `<span>${escapeHtml(item.club)}</span>` : ""}${status}${difference}${source}</li>`;
 }
 
 function renderDataHealth() {
@@ -786,9 +802,15 @@ function renderDataHealth() {
   const html = `
     <div class="method-title">Data health</div>
     <div class="health-grid">${health.map(item => `
-      <div class="health-item health-${item.severity}">
-        <strong>${item.summary}</strong><span>${item.details}</span>
-      </div>`).join("")}</div>`;
+      <details class="health-item health-${item.severity}">
+        <summary><strong>${escapeHtml(item.summary)}</strong><span>${escapeHtml(item.details)}</span></summary>
+        <div class="health-detail">
+          <p>${escapeHtml(item.resolution)}</p>
+          ${(item.affected || []).length
+            ? `<ul>${item.affected.map(healthAffectedItem).join("")}</ul>`
+            : `<span>No affected records.</span>`}
+        </div>
+      </details>`).join("")}</div>`;
   ["overviewDataHealth", "financeDataHealth"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
@@ -805,7 +827,7 @@ function renderValuationDiscrepancies() {
       <td>€${fmt(row.external_reference_eur_m)}M</td><td>${signed(row.difference_eur_m)}M</td>
       <td class="${row.severity === "warning" ? "metric-bad" : "metric-neutral"}">${signed(row.difference_pct)}%</td>
       <td>${row.valued_player_count} valued · ${row.missing_player_value_count} missing</td>
-      <td><span class="valuation-badge ${row.severity === "warning" ? "valuation-stale" : "valuation-fresh"}">${row.severity}</span></td>
+      <td><span class="valuation-badge ${row.severity === "warning" ? "valuation-stale" : "valuation-fresh"}">${row.reconciliation_status.replaceAll("_", " ")}</span></td>
     </tr>`).join("");
 }
 
@@ -817,7 +839,7 @@ function renderWageGrid() {
   el.innerHTML = DATA.finances.map(f => {
     const st = DATA.standings.find(s => s.team === f.team) || {};
     const valuation = squadValuationFor(f.team);
-    const squadSource = financeSource(f.squad_value_source);
+    const squadSource = clubValueComparisonSource();
     const payrollSource = financeSource(f.wage_bill_source);
     const playerWageSource = financeSource(f.famous_player_wage_source);
     return `
@@ -1257,7 +1279,7 @@ function renderClubs() {
   el.innerHTML = DATA.standings.map(t => {
     const fin = finMap[t.team] || {};
     const valuation = squadValuationFor(t.team);
-    const squadSource = financeSource(fin.squad_value_source);
+    const squadSource = clubValueComparisonSource();
     const payrollSource = financeSource(fin.wage_bill_source);
     const col = tc(t.team);
     const pos = t.position;

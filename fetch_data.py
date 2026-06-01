@@ -32,6 +32,7 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
 DASHBOARD_FILE = DATA_DIR / "dashboard.json"
+DATA_HEALTH_AUDIT_FILE = DATA_DIR / "data_health_audit.json"
 STANDALONE_FILE = ROOT / "prem-value-for-money.html"
 
 SEASON = "2024-2025"
@@ -43,6 +44,7 @@ SOURCE_NAMES = (
     "facts",
     "finances",
     "finance_sources",
+    "club_value_references",
     "players",
     "player_values",
     "squads",
@@ -59,6 +61,7 @@ PLAYER_FEATURED_MINUTES = 900
 FINANCE_CONFIDENCE_LEVELS = {"low", "medium", "high"}
 ROLE_SCORE_VERSION = "position-aware-v1"
 SQUAD_VALUATION_DISCREPANCY_THRESHOLD = 10
+ROLE_SCORE_SAMPLE_MINUTES = 500
 ROLE_SCORE_WEIGHTS = {
     "FW": {
         "goals_per90": 0.30,
@@ -168,6 +171,14 @@ PLAYER_PROFILE_OVERRIDES = {
     ("West Ham United", "emerson palmieri"): 181778,
     ("Bournemouth", "neto"): 111819,
     ("Wolverhampton Wanderers", "chiquinho"): 695454,
+    ("Brighton & Hove Albion", "igor"): 380350,
+    ("Chelsea", "joao felix"): 462250,
+    ("Chelsea", "renato veiga"): 805714,
+    ("Crystal Palace", "jeffrey schlupp"): 157506,
+    ("Crystal Palace", "odsonne edouard"): 344152,
+    ("Fulham", "joshua king"): 1011131,
+    ("Manchester City", "savio"): 743591,
+    ("Manchester United", "marcus rashford"): 258923,
 }
 UNDERSTAT_PLAYER_ALIASES = {
     "Ezri Konsa": "Ezri Konsa Ngoyo",
@@ -201,8 +212,6 @@ REQUIRED_FIELDS = {
     "goalkeeping": {"rank", "goalkeeper", "club", "apps", "clean_sheets", "goals_conceded"},
     "finances": {
         "team",
-        "squad_value_m",
-        "squad_value_source",
         "wage_bill_m",
         "wage_bill_source",
         "famous_player_wage_source",
@@ -269,6 +278,16 @@ def parse_args() -> argparse.Namespace:
         "--refresh-understat",
         action="store_true",
         help="Refresh data/understat.json from the dated EPL 2024 Understat endpoint.",
+    )
+    parser.add_argument(
+        "--refresh-player-values",
+        action="store_true",
+        help="Refresh dated Transfermarkt player valuations without re-scraping FBRef.",
+    )
+    parser.add_argument(
+        "--audit-data-health",
+        action="store_true",
+        help="Print the generated data-health audit after validating source snapshots.",
     )
     return parser.parse_args()
 
@@ -367,6 +386,24 @@ def validate_url(value: str, label: str) -> None:
         raise DataValidationError(f"{label} must be an HTTP(S) URL: {value!r}")
 
 
+def validate_text_encoding(source_name: str, value: Any, path: str = "") -> None:
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            validate_text_encoding(source_name, nested, f"{path}.{key}" if path else str(key))
+        return
+    if isinstance(value, list):
+        for index, nested in enumerate(value):
+            validate_text_encoding(source_name, nested, f"{path}[{index}]")
+        return
+    if not isinstance(value, str):
+        return
+    markers = ("\u00c3", "\u00c2", "\u00e2", "\u00f0", "\ufffd")
+    if any(marker in value for marker in markers):
+        raise DataValidationError(
+            f"data/{source_name}.json contains possible UTF-8 mojibake at {path}: {value!r}"
+        )
+
+
 def validate_understat(snapshot: dict[str, Any], standings_teams: set[str]) -> None:
     if not isinstance(snapshot, dict):
         raise DataValidationError("data/understat.json must contain a JSON object")
@@ -397,6 +434,52 @@ def validate_exchange_rates(snapshot: dict[str, Any]) -> None:
     parse_iso_date(snapshot["rate_date"], "Exchange-rate rate_date")
     if snapshot["gbp_to_eur"] <= 0:
         raise DataValidationError("Exchange-rate gbp_to_eur must be positive")
+
+
+def validate_club_value_references(
+    snapshot: dict[str, Any], standings_teams: set[str]
+) -> None:
+    if not isinstance(snapshot, dict):
+        raise DataValidationError("data/club_value_references.json must contain an object")
+    required = {"source", "references"}
+    missing = required - snapshot.keys()
+    if missing:
+        raise DataValidationError(
+            f"data/club_value_references.json is missing: {', '.join(sorted(missing))}"
+        )
+    source = snapshot["source"]
+    for field in (
+        "id",
+        "source_name",
+        "source_url",
+        "season",
+        "as_of_date",
+        "retrieved_at",
+        "confidence",
+        "comparison_only",
+        "roster_definition",
+        "notes",
+    ):
+        if field not in source:
+            raise DataValidationError(
+                f"data/club_value_references.json source is missing: {field}"
+            )
+    validate_url(source["source_url"], "Club-value reference source_url")
+    parse_iso_date(source["as_of_date"], "Club-value reference as_of_date")
+    parse_iso_date(source["retrieved_at"], "Club-value reference retrieved_at")
+    if source["confidence"] not in FINANCE_CONFIDENCE_LEVELS:
+        raise DataValidationError("Club-value reference has invalid confidence")
+    references = snapshot["references"]
+    if not isinstance(references, list) or not references:
+        raise DataValidationError("Club-value references must be a non-empty array")
+    teams = {row.get("team") for row in references}
+    if teams != standings_teams or len(references) != len(standings_teams):
+        raise DataValidationError("Club-value references must exactly cover standings clubs")
+    for row in references:
+        if row.get("value_m", 0) <= 0 or row.get("currency") != "GBP":
+            raise DataValidationError(
+                f"Club-value reference must be a positive GBP value: {row.get('team')}"
+            )
 
 
 def percentile(value: float, values: list[float]) -> float:
@@ -512,50 +595,84 @@ def annotate_player_scores(
         player["role_score_completeness"] = round(
             available_weight / sum(weights.values()) * 100, 1
         )
+        missing_metrics = [metric for metric in weights if player.get(metric) is None]
+        if not missing_metrics:
+            role_score_status = (
+                "provisional" if player["mins"] < ROLE_SCORE_SAMPLE_MINUTES else "complete"
+            )
+            role_score_notes = (
+                [f"Below the {ROLE_SCORE_SAMPLE_MINUTES}-minute comparison sample."]
+                if role_score_status == "provisional"
+                else []
+            )
+        elif (
+            player["position"] == "GK"
+            and missing_metrics == ["save_pct"]
+            and (player.get("saves") or 0) == 0
+        ):
+            role_score_status = "not_applicable"
+            role_score_notes = ["Save percentage is not applicable because no saves were recorded."]
+        elif player["mins"] < ROLE_SCORE_SAMPLE_MINUTES:
+            role_score_status = "provisional"
+            role_score_notes = [
+                f"Optional metrics are incomplete below the {ROLE_SCORE_SAMPLE_MINUTES}-minute sample."
+            ]
+        else:
+            role_score_status = "source_missing"
+            role_score_notes = [f"Missing weighted source metrics: {', '.join(missing_metrics)}."]
         player["role_score_version"] = ROLE_SCORE_VERSION
         player["role_score_components"] = components
+        player["role_score_status"] = role_score_status
+        player["role_score_notes"] = role_score_notes
     return annotated
 
 
 def build_squad_valuations(
     players: list[dict[str, Any]],
-    finances: list[dict[str, Any]],
+    club_value_references: dict[str, Any],
     exchange_rates: dict[str, Any],
     warnings: list[str],
 ) -> list[dict[str, Any]]:
     gbp_to_eur = exchange_rates["gbp_to_eur"]
+    reference_source = club_value_references["source"]
     players_by_team: dict[str, list[dict[str, Any]]] = {}
     for player in players:
         players_by_team.setdefault(player["club"], []).append(player)
     rows = []
-    for finance in finances:
-        team_players = players_by_team[finance["team"]]
+    for reference in club_value_references["references"]:
+        team_players = players_by_team[reference["team"]]
         valued = [row for row in team_players if row["market_value_m"] is not None]
         derived_value = round(sum(row["market_value_m"] for row in valued), 3)
-        external_gbp = finance["squad_value_m"]
+        external_gbp = reference["value_m"]
         external_eur = round(external_gbp * gbp_to_eur, 3)
         difference = round(derived_value - external_eur, 3)
         difference_pct = round(difference / external_eur * 100, 1)
-        severity = (
-            "warning"
-            if abs(difference_pct) >= SQUAD_VALUATION_DISCREPANCY_THRESHOLD
-            else "info"
+        above_threshold = abs(difference_pct) >= SQUAD_VALUATION_DISCREPANCY_THRESHOLD
+        reconciliation_status = (
+            "explained_reference_scope"
+            if above_threshold and reference_source["comparison_only"]
+            else "unexplained"
+            if above_threshold
+            else "aligned"
         )
         rows.append(
             {
-                "team": finance["team"],
+                "team": reference["team"],
                 "squad_value_eur_m": derived_value,
                 "valued_player_count": len(valued),
                 "missing_player_value_count": len(team_players) - len(valued),
                 "valuation_cutoff": PLAYER_VALUATION_CUTOFF,
                 "external_reference_gbp_m": external_gbp,
                 "external_reference_eur_m": external_eur,
-                "external_reference_source": finance["squad_value_source"],
+                "external_reference_source": reference_source["id"],
                 "fx_rate_date": exchange_rates["rate_date"],
                 "gbp_to_eur": gbp_to_eur,
                 "difference_eur_m": difference,
                 "difference_pct": difference_pct,
-                "severity": severity,
+                "severity": "warning" if reconciliation_status == "unexplained" else "info",
+                "reconciliation_status": reconciliation_status,
+                "comparison_only": reference_source["comparison_only"],
+                "roster_definition": reference_source["roster_definition"],
             }
         )
     flagged = [row for row in rows if row["severity"] == "warning"]
@@ -573,39 +690,92 @@ def build_health_records(
     finance_sources: list[dict[str, Any]],
     squad_valuations: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    missing = [row for row in players if row["valuation_status"] == "missing"]
+    missing = [
+        row
+        for row in players
+        if row["valuation_status"] == "missing"
+        and row["valuation_resolution_status"] != "expected_missing"
+    ]
+    expected_missing = [
+        row for row in players if row["valuation_resolution_status"] == "expected_missing"
+    ]
     stale = [row for row in players if row["valuation_status"] == "stale"]
     low_confidence = [row for row in finance_sources if row["confidence"] == "low"]
     low_coverage = [
         field
-        for field in ("xG", "xGA", "progressive_carries", "progressive_passes")
-        if sum(row.get(field) is not None for row in squads) < len(squads)
+        for field in ("xG", "xGA")
+        if 0 < sum(row.get(field) is not None for row in squads) < len(squads)
+        or sum(row.get(field) is not None for row in squads) == 0
+    ]
+    unavailable_optional = [
+        field
+        for field in ("progressive_carries", "progressive_passes")
+        if sum(row.get(field) is not None for row in squads) == 0
     ]
     discrepancies = [row for row in squad_valuations if row["severity"] == "warning"]
-    incomplete_scores = [
-        row for row in players if row["role_score_completeness"] < 100
+    explained_discrepancies = [
+        row for row in squad_valuations if row["reconciliation_status"] == "explained_reference_scope"
     ]
+    incomplete_scores = [row for row in players if row["role_score_status"] == "source_missing"]
+    score_caveats = [
+        row for row in players if row["role_score_status"] in {"not_applicable", "provisional"}
+    ]
+    player_item = lambda row: {
+        "label": row["player"],
+        "club": row["club"],
+        "status": row.get("valuation_resolution_status"),
+        "source_url": row.get("valuation_source_url"),
+    }
+    score_item = lambda row: {
+        "label": row["player"],
+        "club": row["club"],
+        "status": row.get("role_score_status"),
+        "source_url": row.get("valuation_source_url"),
+    }
+    club_item = lambda row: {
+        "label": row["team"],
+        "status": row.get("reconciliation_status"),
+        "difference_pct": row.get("difference_pct"),
+    }
     return [
         {
             "code": "missing-player-valuations",
             "severity": "warning" if missing else "ok",
-            "summary": f"{len(missing)} missing player valuations",
-            "details": "Players remain visible but are excluded from value rankings.",
+            "summary": f"{len(missing)} unresolved player valuations",
+            "details": "Unexplained source gaps or identity joins require review.",
             "affected_count": len(missing),
+            "affected": [player_item(row) for row in missing],
+            "resolution": "Resolve the profile identity or confirm that no dated valuation exists.",
+        },
+        {
+            "code": "expected-unpublished-valuations",
+            "severity": "info",
+            "summary": f"{len(expected_missing)} expected unpublished valuations",
+            "details": "Verified profiles had no published value at or before the cutoff.",
+            "affected_count": len(expected_missing),
+            "affected": [player_item(row) for row in expected_missing],
+            "resolution": "No imputation is applied; these players stay visible and unranked.",
         },
         {
             "code": "stale-player-valuations",
-            "severity": "warning" if stale else "ok",
-            "summary": f"{len(stale)} stale player valuations",
-            "details": f"Older than {PLAYER_VALUATION_STALE_DAYS} days at the cutoff.",
+            "severity": "info" if stale else "ok",
+            "summary": f"{len(stale)} published-stale player valuations",
+            "details": f"Verified records older than {PLAYER_VALUATION_STALE_DAYS} days remain visible but unfeatured.",
             "affected_count": len(stale),
+            "affected": [player_item(row) for row in stale],
+            "resolution": "Retained as the latest published point-in-time values before the cutoff.",
         },
         {
             "code": "low-confidence-finance-sources",
             "severity": "warning" if low_confidence else "ok",
-            "summary": f"{len(low_confidence)} low-confidence finance source",
-            "details": "External club totals are retained only as comparison references.",
+            "summary": f"{len(low_confidence)} low-confidence primary finance sources",
+            "details": "Canonical dashboard metrics use validated primary or reproducible sources.",
             "affected_count": len(low_confidence),
+            "affected": [
+                {"label": row["source_name"], "source_url": row["source_url"]}
+                for row in low_confidence
+            ],
+            "resolution": "Comparison-only references are audited separately from primary finance inputs.",
         },
         {
             "code": "advanced-squad-coverage",
@@ -617,6 +787,20 @@ def build_health_records(
             ),
             "details": ", ".join(low_coverage) if low_coverage else "All tracked fields populated.",
             "affected_count": len(low_coverage),
+            "affected": [{"label": field, "status": "incomplete"} for field in low_coverage],
+            "resolution": "Refresh the upstream source and require complete club coverage.",
+        },
+        {
+            "code": "optional-squad-source-limitations",
+            "severity": "info",
+            "summary": f"{len(unavailable_optional)} optional squad fields unavailable",
+            "details": ", ".join(unavailable_optional) if unavailable_optional else "Optional progression fields populated.",
+            "affected_count": len(unavailable_optional),
+            "affected": [
+                {"label": field, "status": "source_unavailable"}
+                for field in unavailable_optional
+            ],
+            "resolution": "FBRef historical passing and possession tables are unavailable; null is preserved.",
         },
         {
             "code": "squad-valuation-discrepancies",
@@ -627,13 +811,35 @@ def build_health_records(
                 f"{SQUAD_VALUATION_DISCREPANCY_THRESHOLD}% from converted references."
             ),
             "affected_count": len(discrepancies),
+            "affected": [club_item(row) for row in discrepancies],
+            "resolution": "Investigate roster scope and point-in-time reference semantics.",
+        },
+        {
+            "code": "explained-squad-reference-differences",
+            "severity": "info",
+            "summary": f"{len(explained_discrepancies)} explained squad reference differences",
+            "details": "Comparison-only curated references use a different, unaudited roster scope.",
+            "affected_count": len(explained_discrepancies),
+            "affected": [club_item(row) for row in explained_discrepancies],
+            "resolution": "Canonical euro totals remain reproducible player aggregates.",
         },
         {
             "code": "incomplete-role-scores",
             "severity": "warning" if incomplete_scores else "ok",
-            "summary": f"{len(incomplete_scores)} incomplete role score",
-            "details": "Optional source metrics were unavailable and remaining weights were rebalanced.",
+            "summary": f"{len(incomplete_scores)} eligible role-score source gaps",
+            "details": "Weighted source metrics are missing for otherwise eligible players.",
             "affected_count": len(incomplete_scores),
+            "affected": [score_item(row) for row in incomplete_scores],
+            "resolution": "Refresh or replace the missing player-level source metric.",
+        },
+        {
+            "code": "role-score-caveats",
+            "severity": "info",
+            "summary": f"{len(score_caveats)} provisional or not-applicable role scores",
+            "details": "Low-minute samples and mathematically unavailable metrics remain transparent.",
+            "affected_count": len(score_caveats),
+            "affected": [score_item(row) for row in score_caveats],
+            "resolution": "These scores stay visible but are excluded by featured ranking thresholds.",
         },
     ]
 
@@ -651,6 +857,14 @@ def build_enrichment_coverage(
             field: {
                 "populated": sum(row.get(field) is not None for row in squads),
                 "total": len(squads),
+                "status": (
+                    "complete"
+                    if sum(row.get(field) is not None for row in squads) == len(squads)
+                    else "source_unavailable"
+                    if field in {"progressive_carries", "progressive_passes"}
+                    and sum(row.get(field) is not None for row in squads) == 0
+                    else "incomplete"
+                ),
             }
             for field in (
                 "xG",
@@ -681,6 +895,16 @@ def build_enrichment_coverage(
     }
 
 
+def build_data_health_audit(health_records: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "season": SEASON,
+        "valuation_cutoff": PLAYER_VALUATION_CUTOFF,
+        "generated_by": "fetch_data.py",
+        "records": health_records,
+    }
+
+
 def validate_finances(
     finances: list[dict[str, Any]],
     finance_sources: list[dict[str, Any]],
@@ -693,7 +917,7 @@ def validate_finances(
 
     for source in finance_sources:
         label = f"Finance source '{source['id']}'"
-        if source["kind"] not in {"squad_value", "wage_bill", "player_wage"}:
+        if source["kind"] not in {"wage_bill", "player_wage"}:
             raise DataValidationError(f"{label} has unknown kind: {source['kind']}")
         if source["season"] != SEASON:
             raise DataValidationError(f"{label} must use season {SEASON}")
@@ -717,7 +941,6 @@ def validate_finances(
 
     sources_by_id = {source["id"]: source for source in finance_sources}
     expected_sources = {
-        "squad_value_source": "squad_value",
         "wage_bill_source": "wage_bill",
         "famous_player_wage_source": "player_wage",
     }
@@ -737,8 +960,8 @@ def validate_finances(
                     f"Finance row for {team} field {field} must reference "
                     f"a {expected_kind} source"
                 )
-        if finance["squad_value_m"] <= 0 or finance["wage_bill_m"] <= 0:
-            raise DataValidationError(f"Finance values must be positive for {team}")
+        if finance["wage_bill_m"] <= 0:
+            raise DataValidationError(f"Finance wage bill must be positive for {team}")
         if not finance["famous_players"]:
             raise DataValidationError(f"Finance row for {team} must list notable players")
         for player in finance["famous_players"]:
@@ -816,14 +1039,6 @@ def validate_players(
             "Player snapshot must include goalkeepers, defenders, midfielders, and forwards"
         )
 
-    missing_values = [row for row in players if row["market_value_m"] is None]
-    if missing_values:
-        warnings.append(
-            f"{len(missing_values)} players have no published Transfermarkt valuation; "
-            "their market value remains null."
-        )
-
-
 def validate_player_values(
     players: list[dict[str, Any]], player_values: list[dict[str, Any]]
 ) -> None:
@@ -845,6 +1060,7 @@ def annotate_player_valuations(
     }
     annotated = []
     stale = []
+    unresolved_missing = []
 
     for player in players:
         value = values_by_key[(player["player"], player["club"])]
@@ -878,25 +1094,33 @@ def annotate_player_valuations(
             )
         if valuation_status == "stale":
             stale.append(player)
+        valuation_resolution_status = value.get("valuation_resolution_status")
+        if not valuation_resolution_status:
+            valuation_resolution_status = (
+                "expected_missing"
+                if valuation_status == "missing" and value.get("transfermarkt_id")
+                else "published_stale"
+                if valuation_status == "stale"
+                else "verified"
+            )
+        if valuation_status == "missing" and valuation_resolution_status != "expected_missing":
+            unresolved_missing.append(player)
 
         annotated.append(
             {
                 **player,
                 "valuation_age_days": valuation_age_days,
                 "valuation_status": valuation_status,
+                "valuation_resolution_status": valuation_resolution_status,
+                "valuation_resolution_method": value.get("resolution_method", "legacy_snapshot"),
+                "valuation_resolution_confidence": value.get("resolution_confidence", "medium"),
                 "valuation_source_url": value["source_url"],
             }
         )
 
-    if stale:
-        examples = ", ".join(
-            f"{row['player']} ({row['club']})"
-            for row in sorted(stale, key=lambda row: row["valuation_date"] or "")[:5]
-        )
+    if unresolved_missing:
         warnings.append(
-            f"{len(stale)} players have Transfermarkt valuations older than "
-            f"{PLAYER_VALUATION_STALE_DAYS} days at the {PLAYER_VALUATION_CUTOFF} cutoff; "
-            f"they are excluded from featured rankings. Examples: {examples}."
+            f"{len(unresolved_missing)} players have unexplained missing Transfermarkt values."
         )
 
     return annotated
@@ -958,7 +1182,9 @@ def normalize_squads(
 
     for field in ("xG", "xGA", "progressive_carries", "progressive_passes"):
         populated = sum(row.get(field) is not None for row in normalized)
-        if populated < len(normalized):
+        if populated < len(normalized) and not (
+            field in {"progressive_carries", "progressive_passes"} and populated == 0
+        ):
             warnings.append(
                 f"Squad enrichment field {field} is populated for {populated}/{len(normalized)} clubs."
             )
@@ -1038,7 +1264,7 @@ def build_team_metrics(
                 "cost_per_goal": round(wage_bill / goals, 3),
                 "squad_value_per_point": round(squad_value / points, 3),
                 "squad_value_per_goal": round(squad_value / goals, 3),
-                "squad_value_source": finance["squad_value_source"],
+                "squad_value_source": "player_valuations_aggregate",
                 "wage_bill_source": finance["wage_bill_source"],
             }
         )
@@ -1114,7 +1340,8 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
     warnings: list[str] = []
 
     for name in SOURCE_NAMES:
-        if name not in {"facts", "understat", "exchange_rates"}:
+        validate_text_encoding(name, sources[name])
+        if name not in {"facts", "understat", "exchange_rates", "club_value_references"}:
             validate_rows(name, sources[name])
 
     facts = sources["facts"]
@@ -1125,6 +1352,7 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
     standings_teams = validate_standings(standings)
     validate_understat(sources["understat"], standings_teams)
     validate_exchange_rates(sources["exchange_rates"])
+    validate_club_value_references(sources["club_value_references"], standings_teams)
     finances = sources["finances"]
     if {row["team"] for row in finances} != standings_teams:
         raise DataValidationError("Finance clubs must exactly match standings clubs")
@@ -1143,7 +1371,7 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
     squads = normalize_squads(sources["squads"], standings, sources["understat"], warnings)
     players = annotate_player_scores(players, squads, sources["understat"], warnings)
     squad_valuations = build_squad_valuations(
-        players, finances, sources["exchange_rates"], warnings
+        players, sources["club_value_references"], sources["exchange_rates"], warnings
     )
     validate_cross_file_facts(standings, facts, warnings)
     team_metrics = build_team_metrics(standings, finances, squad_valuations)
@@ -1151,11 +1379,12 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
     health_records = build_health_records(
         players, squads, sources["finance_sources"], squad_valuations
     )
+    data_health_audit = build_data_health_audit(health_records)
     enrichment_coverage = build_enrichment_coverage(players, squads, sources["understat"])
 
     bundle = {
         "_meta": {
-            "schema_version": 4,
+            "schema_version": 5,
             "season": SEASON,
             "generated_by": "fetch_data.py",
             "player_value_policy": {
@@ -1180,11 +1409,13 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
         "facts": facts,
         "finances": finances,
         "finance_sources": sources["finance_sources"],
+        "club_value_references": sources["club_value_references"],
         "team_metrics": team_metrics,
         "players": players,
         "squads": squads,
         "squad_valuations": squad_valuations,
         "exchange_rates": sources["exchange_rates"],
+        "data_health_audit": data_health_audit,
     }
     return bundle, warnings
 
@@ -1326,6 +1557,8 @@ def refresh_squads() -> None:
         "keeper": fetch_frame("keeper"),
         "shooting": fetch_frame("shooting"),
         "shooting_against": fetch_frame("shooting", opponent_stats=True),
+        "passing": fetch_frame("passing"),
+        "possession": fetch_frame("possession"),
         "playing_time": fetch_frame("playing_time"),
         "misc": fetch_frame("misc"),
     }
@@ -1374,8 +1607,12 @@ def refresh_squads() -> None:
                 "xG": value("shooting", team, "Expected_xG"),
                 "xGA": value("shooting_against", team, "Expected_xG"),
                 "possession": value("standard", team, "Poss"),
-                "progressive_carries": value("standard", team, "Progression_PrgC"),
-                "progressive_passes": value("standard", team, "Progression_PrgP"),
+                "progressive_carries": value(
+                    "possession", team, "Carries_PrgC", "Progression_PrgC", "PrgC"
+                ),
+                "progressive_passes": value(
+                    "passing", team, "PrgP", "Progression_PrgP", "Total_PrgP"
+                ),
                 "tackles": value("misc", team, "Performance_TklW"),
                 "yellow_cards": value("misc", team, "Performance_CrdY"),
                 "red_cards": value("misc", team, "Performance_CrdR"),
@@ -1519,6 +1756,145 @@ def normalized_position(raw_position: str) -> str:
     return "FW"
 
 
+def normalized_transfermarkt_position(raw_position: str) -> str:
+    return {
+        "Goalkeeper": "GK",
+        "Defender": "DF",
+        "Midfield": "MF",
+        "Attack": "FW",
+    }.get(raw_position, "FW")
+
+
+def resolve_transfermarkt_profile(
+    player: dict[str, Any],
+    profiles_by_id: dict[int, dict[str, str]],
+    profiles_by_name: dict[str, list[dict[str, str]]],
+    latest_valuations: dict[int, dict[str, str]],
+) -> tuple[dict[str, str] | None, str, str]:
+    club = player["club"]
+    normalized_name = canonical_player_name(player["player"])
+    override = PLAYER_PROFILE_OVERRIDES.get((club, normalized_name))
+    if override is not None:
+        return profiles_by_id.get(override), "explicit_override", "high"
+
+    transfermarkt_name = PLAYER_NAME_ALIASES.get(player["player"], player["player"])
+    candidates = profiles_by_name.get(canonical_player_name(transfermarkt_name), [])
+    expected_club_id = str(TRANSFERMARKT_CLUB_IDS[club])
+    valued_at_club = [
+        profile
+        for profile in candidates
+        if latest_valuations.get(int(profile["player_id"]), {}).get("current_club_id")
+        == expected_club_id
+    ]
+    if len(valued_at_club) == 1:
+        return valued_at_club[0], "cutoff_club_match", "high"
+
+    current_club = [
+        profile for profile in candidates if profile.get("current_club_id") == expected_club_id
+    ]
+    if len(current_club) == 1:
+        return current_club[0], "profile_club_match", "high"
+
+    position_matches = [
+        profile
+        for profile in candidates
+        if normalized_transfermarkt_position(profile.get("position", "")) == player["position"]
+    ]
+    if len(position_matches) == 1 and len(candidates) == 1:
+        return position_matches[0], "unique_name_position_match", "medium"
+    return None, "unresolved", "low"
+
+
+def build_player_values_snapshot(
+    players: list[dict[str, Any]], requests: Any
+) -> list[dict[str, Any]]:
+    profiles = download_transfermarkt_csv(requests, "players.csv.gz")
+    valuations = download_transfermarkt_csv(requests, "player_valuations.csv.gz")
+    profiles_by_id = {int(row["player_id"]): row for row in profiles}
+    profiles_by_name: dict[str, list[dict[str, str]]] = {}
+    for profile in profiles:
+        profiles_by_name.setdefault(canonical_player_name(profile["name"]), []).append(profile)
+
+    latest_valuations: dict[int, dict[str, str]] = {}
+    for valuation in valuations:
+        valuation_date = valuation["date"]
+        if not valuation_date or valuation_date > PLAYER_VALUATION_CUTOFF:
+            continue
+        player_id = int(valuation["player_id"])
+        previous = latest_valuations.get(player_id)
+        if previous is None or valuation_date > previous["date"]:
+            latest_valuations[player_id] = valuation
+
+    player_values = []
+    unresolved = []
+    for player in players:
+        profile, resolution_method, resolution_confidence = resolve_transfermarkt_profile(
+            player, profiles_by_id, profiles_by_name, latest_valuations
+        )
+        if profile is None:
+            unresolved.append(f"{player['player']} ({player['club']})")
+            continue
+        player_id = int(profile["player_id"])
+        valuation = latest_valuations.get(player_id)
+        market_value_m = (
+            round(int(valuation["market_value_in_eur"]) / 1_000_000, 3)
+            if valuation and valuation["market_value_in_eur"]
+            else None
+        )
+        player["market_value_m"] = market_value_m
+        player["valuation_date"] = valuation["date"] if valuation else None
+        player_values.append(
+            {
+                "player": player["player"],
+                "club": player["club"],
+                "transfermarkt_id": player_id,
+                "market_value_m": market_value_m,
+                "valuation_date": valuation["date"] if valuation else None,
+                "valuation_resolution_status": (
+                    "expected_missing" if valuation is None else "verified_profile"
+                ),
+                "resolution_method": resolution_method,
+                "resolution_confidence": resolution_confidence,
+                "profile_name": profile["name"],
+                "profile_position": profile.get("position"),
+                "profile_date_of_birth": profile.get("date_of_birth"),
+                "source_url": profile["url"],
+            }
+        )
+
+    if unresolved:
+        examples = ", ".join(unresolved[:8])
+        raise DataValidationError(
+            f"Could not safely resolve {len(unresolved)} FBRef players to Transfermarkt profiles. "
+            f"Add explicit aliases or overrides. Examples: {examples}"
+        )
+    return sorted(player_values, key=lambda row: (row["club"], row["player"]))
+
+
+def refresh_player_values() -> None:
+    try:
+        import requests
+    except ImportError as exc:
+        raise DataValidationError(
+            "Refreshing player valuations requires requests. Install it with: pip install requests"
+        ) from exc
+    print("Refreshing dated Transfermarkt player valuations...")
+    players = read_json(DATA_DIR / "players.json")
+    player_values = build_player_values_snapshot(players, requests)
+    updated = [
+        path.relative_to(ROOT)
+        for path, content in (
+            (DATA_DIR / "players.json", json_text(players)),
+            (DATA_DIR / "player_values.json", json_text(player_values)),
+        )
+        if write_if_changed(path, content)
+    ]
+    for path in updated:
+        print(f"  - {path}")
+    missing_values = sum(row["market_value_m"] is None for row in player_values)
+    print(f"  Resolved {len(players)} players; {missing_values} have no published valuation record.")
+
+
 def refresh_players() -> None:
     try:
         import pandas as pd
@@ -1623,6 +1999,11 @@ def refresh_players() -> None:
                 "blocks": None,
                 "clearances": None,
                 "saves": round(saves, 3) if saves is not None else None,
+                "shots_on_target_against": (
+                    round(shots_on_target_against, 3)
+                    if shots_on_target_against is not None
+                    else None
+                ),
                 "save_pct": save_pct,
                 "clean_sheets": (
                     round(keeper.get("clean_sheets", 0), 3) if keeper else None
@@ -1630,79 +2011,7 @@ def refresh_players() -> None:
             }
         )
 
-    profiles = download_transfermarkt_csv(requests, "players.csv.gz")
-    valuations = download_transfermarkt_csv(requests, "player_valuations.csv.gz")
-    profiles_by_id = {int(row["player_id"]): row for row in profiles}
-    profiles_by_name: dict[str, list[dict[str, str]]] = {}
-    for profile in profiles:
-        profiles_by_name.setdefault(canonical_player_name(profile["name"]), []).append(profile)
-
-    latest_valuations: dict[int, dict[str, str]] = {}
-    for valuation in valuations:
-        valuation_date = valuation["date"]
-        if not valuation_date or valuation_date > PLAYER_VALUATION_CUTOFF:
-            continue
-        player_id = int(valuation["player_id"])
-        previous = latest_valuations.get(player_id)
-        if previous is None or valuation_date > previous["date"]:
-            latest_valuations[player_id] = valuation
-
-    player_values = []
-    unresolved = []
-    for player in stats_rows:
-        player_name = player["player"]
-        club = player["club"]
-        normalized_name = canonical_player_name(player_name)
-        player_id = PLAYER_PROFILE_OVERRIDES.get((club, normalized_name))
-
-        if player_id is None:
-            transfermarkt_name = PLAYER_NAME_ALIASES.get(player_name, player_name)
-            candidates = profiles_by_name.get(canonical_player_name(transfermarkt_name), [])
-            matching_club = [
-                profile
-                for profile in candidates
-                if (
-                    latest_valuations.get(int(profile["player_id"]), {}).get("current_club_id")
-                    == str(TRANSFERMARKT_CLUB_IDS[club])
-                )
-            ]
-            if len(matching_club) == 1:
-                player_id = int(matching_club[0]["player_id"])
-            elif len(candidates) == 1:
-                player_id = int(candidates[0]["player_id"])
-            else:
-                unresolved.append(f"{player_name} ({club})")
-                continue
-
-        profile = profiles_by_id.get(player_id)
-        if profile is None:
-            unresolved.append(f"{player_name} ({club})")
-            continue
-        valuation = latest_valuations.get(player_id)
-        market_value_m = (
-            round(int(valuation["market_value_in_eur"]) / 1_000_000, 3)
-            if valuation and valuation["market_value_in_eur"]
-            else None
-        )
-        player["market_value_m"] = market_value_m
-        player["valuation_date"] = valuation["date"] if valuation else None
-        player_values.append(
-            {
-                "player": player_name,
-                "club": club,
-                "transfermarkt_id": player_id,
-                "market_value_m": market_value_m,
-                "valuation_date": valuation["date"] if valuation else None,
-                "source_url": profile["url"],
-            }
-        )
-
-    if unresolved:
-        examples = ", ".join(unresolved[:8])
-        raise DataValidationError(
-            f"Could not resolve {len(unresolved)} FBRef players to Transfermarkt profiles. "
-            f"Add explicit aliases or overrides. Examples: {examples}"
-        )
+    player_values = build_player_values_snapshot(stats_rows, requests)
 
     stats_rows.sort(key=lambda row: (row["club"], row["position"], -row["mins"], row["player"]))
     player_values.sort(key=lambda row: (row["club"], row["player"]))
@@ -1737,9 +2046,12 @@ def main() -> int:
             refresh_squads()
         if args.refresh_players:
             refresh_players()
+        elif args.refresh_player_values:
+            refresh_player_values()
 
         bundle, warnings = build_bundle()
         dashboard_text = json_text(bundle)
+        data_health_audit_text = json_text(bundle["data_health_audit"])
         standalone_text = build_standalone_html(bundle)
 
         if args.check:
@@ -1747,6 +2059,7 @@ def main() -> int:
                 path.relative_to(ROOT)
                 for path, content in (
                     (DASHBOARD_FILE, dashboard_text),
+                    (DATA_HEALTH_AUDIT_FILE, data_health_audit_text),
                     (STANDALONE_FILE, standalone_text),
                 )
                 if not check_current(path, content)
@@ -1763,6 +2076,7 @@ def main() -> int:
                 path.relative_to(ROOT)
                 for path, content in (
                     (DASHBOARD_FILE, dashboard_text),
+                    (DATA_HEALTH_AUDIT_FILE, data_health_audit_text),
                     (STANDALONE_FILE, standalone_text),
                 )
                 if write_if_changed(path, content)
@@ -1780,6 +2094,13 @@ def main() -> int:
         )
         for warning in warnings:
             print(f"WARNING: {warning}")
+        if args.audit_data_health:
+            print("Data-health audit:")
+            for record in bundle["data_health_audit"]["records"]:
+                print(
+                    f"  - {record['severity'].upper()}: {record['summary']} "
+                    f"({record['details']})"
+                )
         return 0
     except DataValidationError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

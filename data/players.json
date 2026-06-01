@@ -2256,8 +2256,8 @@
     "saves": null,
     "save_pct": null,
     "clean_sheets": null,
-    "market_value_m": 0.1,
-    "valuation_date": "2016-06-21"
+    "market_value_m": 20.0,
+    "valuation_date": "2025-05-30"
   },
   {
     "player": "Adam Webster",
@@ -4856,8 +4856,8 @@
     "saves": null,
     "save_pct": null,
     "clean_sheets": null,
-    "market_value_m": 2.0,
-    "valuation_date": "2024-12-10"
+    "market_value_m": 1.0,
+    "valuation_date": "2025-05-30"
   },
   {
     "player": "Harrison Reed",
@@ -7056,8 +7056,8 @@
     "saves": null,
     "save_pct": null,
     "clean_sheets": null,
-    "market_value_m": 0.2,
-    "valuation_date": "2024-06-06"
+    "market_value_m": 50.0,
+    "valuation_date": "2025-05-30"
   },
   {
     "player": "Kevin De Bruyne",

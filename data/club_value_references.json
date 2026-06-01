@@ -1,0 +1,36 @@
+{
+  "source": {
+    "id": "transfermarkt_club_values_comparison_reference",
+    "source_name": "Transfermarkt Premier League club market values comparison",
+    "source_url": "https://www.transfermarkt.co.uk/premier-league/marktwerteverein/wettbewerb/GB1",
+    "season": "2024-2025",
+    "as_of_date": "2025-05-31",
+    "retrieved_at": "2026-05-31",
+    "confidence": "low",
+    "comparison_only": true,
+    "roster_definition": "Curated directional club totals with an unaudited roster scope; comparison-only, not canonical.",
+    "notes": "Separated from primary finance inputs. Canonical dashboard squad values are reproducible euro aggregates of dated player valuations."
+  },
+  "references": [
+    {"team": "Liverpool", "value_m": 890, "currency": "GBP"},
+    {"team": "Arsenal", "value_m": 850, "currency": "GBP"},
+    {"team": "Manchester City", "value_m": 950, "currency": "GBP"},
+    {"team": "Chelsea", "value_m": 870, "currency": "GBP"},
+    {"team": "Newcastle United", "value_m": 480, "currency": "GBP"},
+    {"team": "Aston Villa", "value_m": 520, "currency": "GBP"},
+    {"team": "Nottingham Forest", "value_m": 400, "currency": "GBP"},
+    {"team": "Bournemouth", "value_m": 290, "currency": "GBP"},
+    {"team": "Brighton & Hove Albion", "value_m": 460, "currency": "GBP"},
+    {"team": "Tottenham Hotspur", "value_m": 700, "currency": "GBP"},
+    {"team": "Brentford", "value_m": 320, "currency": "GBP"},
+    {"team": "Fulham", "value_m": 310, "currency": "GBP"},
+    {"team": "Wolverhampton Wanderers", "value_m": 280, "currency": "GBP"},
+    {"team": "Manchester United", "value_m": 650, "currency": "GBP"},
+    {"team": "West Ham United", "value_m": 420, "currency": "GBP"},
+    {"team": "Crystal Palace", "value_m": 270, "currency": "GBP"},
+    {"team": "Everton", "value_m": 220, "currency": "GBP"},
+    {"team": "Leicester City", "value_m": 200, "currency": "GBP"},
+    {"team": "Ipswich Town", "value_m": 190, "currency": "GBP"},
+    {"team": "Southampton", "value_m": 180, "currency": "GBP"}
+  ]
+}
