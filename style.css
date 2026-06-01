@@ -377,6 +377,8 @@ body::before {
 
 .explorer-controls,
 .xi-controls,
+.xi-roster-controls,
+.finance-compare-controls,
 .club-toolbar {
   display:flex;align-items:end;gap:.75rem;flex-wrap:wrap;
   padding:1rem;margin-top:1rem;background:var(--glass);
@@ -384,6 +386,8 @@ body::before {
 }
 .explorer-controls label,
 .xi-controls label,
+.xi-roster-controls label,
+.finance-compare-controls label,
 .club-toolbar label {
   display:flex;flex-direction:column;gap:.3rem;color:var(--t3);
   font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
@@ -392,6 +396,8 @@ body::before {
 .explorer-controls select,
 .xi-controls input,
 .xi-controls select,
+.xi-roster-controls select,
+.finance-compare-controls select,
 .club-toolbar select {
   min-width:130px;background:rgba(0,0,0,.25);border:1px solid var(--border);
   color:var(--t1);padding:.48rem .55rem;border-radius:8px;font:inherit;
@@ -400,6 +406,17 @@ body::before {
 .explorer-controls .check-label { flex-direction:row;align-items:center;padding:.48rem 0;text-transform:none }
 .explorer-controls .check-label input { min-width:auto }
 .result-count { color:var(--cyan);font-size:.78rem;margin:.75rem 0 0 }
+.compact-hdr { margin-bottom:.75rem }
+.comparison-grid { margin-top:1rem }
+.comparison-table-wrap { margin-top:1rem }
+.comparison-status { color:var(--cyan);font-size:.76rem;margin-top:.7rem }
+.comparison-insights {
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.6rem;margin-top:.8rem;
+}
+.comparison-insights p {
+  color:var(--t2);font-size:.76rem;line-height:1.5;padding:.7rem .8rem;
+  background:var(--glass);border:1px solid var(--border);border-radius:var(--r-sm);
+}
 
 /* Bargain grid */
 .bargain-grid {
@@ -552,6 +569,21 @@ body::before {
 
 /* ── BEST XI ─────────────────────────────────────────────────── */
 .xi-summary { margin-top:1rem }
+.xi-constraints,.xi-alternatives,.xi-replacements {
+  display:flex;align-items:center;flex-wrap:wrap;gap:.55rem;margin-top:.75rem;
+}
+.xi-alternatives strong { color:var(--t2);font-size:.76rem;margin-right:.2rem }
+.xi-alternatives .action-btn.active { color:#fff;background:rgba(139,92,246,.36);border-color:var(--purple) }
+.xi-constraint {
+  display:inline-flex;align-items:center;gap:.35rem;padding:.28rem .5rem;border-radius:50px;
+  color:var(--t2);font-size:.7rem;border:1px solid var(--border);
+}
+.xi-constraint.lock { border-color:rgba(16,185,129,.45);color:#6ee7b7 }
+.xi-constraint.exclude { border-color:rgba(239,68,68,.45);color:#fca5a5 }
+.xi-constraint button {
+  color:inherit;background:transparent;border:0;cursor:pointer;font-weight:800;
+}
+.xi-explanation { color:var(--t2);font-size:.78rem;line-height:1.5 }
 .pitch {
   display:flex;flex-direction:column;justify-content:space-around;gap:1rem;
   min-height:700px;margin-top:1rem;padding:2rem 1rem;
@@ -564,11 +596,19 @@ body::before {
 .xi-player-card {
   width:150px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:.2rem;
   padding:.65rem .45rem;background:rgba(7,7,15,.88);border:1px solid var(--club-color);
-  border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.3);
+  border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer;font-family:inherit;
 }
+.xi-player-card:hover,.xi-player-card:focus { transform:translateY(-2px);outline:2px solid rgba(255,255,255,.4) }
 .xi-player-card strong { font-size:.75rem;color:var(--t1) }
 .xi-player-card span { color:var(--t2);font-size:.67rem }
 .xi-player-card small { color:var(--cyan);font-size:.61rem }
+.replacement-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.55rem;width:100% }
+.replacement-card {
+  display:flex;flex-direction:column;gap:.2rem;text-align:left;padding:.65rem .7rem;cursor:pointer;
+  color:var(--t1);background:var(--glass);border:1px solid var(--border);border-radius:var(--r-sm);
+}
+.replacement-card:hover,.replacement-card:focus { border-color:var(--cyan);outline:none }
+.replacement-card span { color:var(--t3);font-size:.68rem }
 
 /* ── FACTS GRID ─────────────────────────────────────────────── */
 .facts-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.1rem }
@@ -662,11 +702,15 @@ body::before {
   .bargain-grid{ grid-template-columns:1fr }
   .metric-legend { flex-direction:column }
   .explorer-controls label,
-  .xi-controls label { flex:1 1 135px }
+  .xi-controls label,
+  .xi-roster-controls label,
+  .finance-compare-controls label { flex:1 1 135px }
   .explorer-controls input,
   .explorer-controls select,
   .xi-controls input,
-  .xi-controls select { width:100%;min-width:0 }
+  .xi-controls select,
+  .xi-roster-controls select,
+  .finance-compare-controls select { width:100%;min-width:0 }
   .xi-player-card { width:92px }
   .xi-player-card .p-avatar { display:none }
 }

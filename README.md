@@ -3,9 +3,10 @@
 PremValue is a static Premier League 2024-2025 value-for-money dashboard.
 
 The dashboard includes a wage-based team efficiency table and spending trend
-line, linked club drill-down views, a tactical club comparison, a filterable
-player explorer, and a formation-aware Best Value XI builder with optional
-budget and per-club limits.
+line, linked club drill-down views, tactical and financial club comparisons, a
+filterable player explorer with raw and adjusted value models, and a
+formation-aware Best Value XI builder with selectable objectives, optional
+budget and per-club limits, player constraints, alternatives, and manual swaps.
 
 ## Data Pipeline
 
@@ -145,3 +146,12 @@ status, and explanatory notes. Low-minute or mathematically not-applicable
 scores remain visible without being treated as source failures.
 
 The normal build does not need network access or third-party Python packages.
+
+## Adjusted Value-for-Money Model
+
+The bundle stores the original raw player value score (`role score / market
+value`) alongside a dampened adjusted score (`role score / sqrt(market
+value)`). Position-relative percentiles are generated from fresh valuations
+with at least 500 minutes. Bargain cards require a fresh valuation, at least
+900 minutes, an above-median role score and adjusted value score for the
+position, and a below-median market value for the position.

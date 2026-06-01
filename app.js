@@ -90,9 +90,16 @@ let financeSort = { key: "value_rank", direction: "asc" };
 let tacticsTeams = ["Liverpool", "Arsenal"];
 let playerFilters = {
   search: "", club: "all", position: "all", age: "all",
-  minMinutes: 500, valuation: "all", bargainOnly: false,
+  minMinutes: 500, valuation: "all", rankingMethod: "adjusted_vfm",
+  minValue: 0, bargainOnly: false,
 };
-let xiSettings = { formation: "4-3-3", minMinutes: 900, maxValue: "", maxPerClub: 3 };
+let financeComparison = { a: "Brentford", b: "Liverpool" };
+let xiSettings = { formation: "4-3-3", objective: "balanced", minMinutes: 900, maxValue: "", maxPerClub: 3 };
+let xiLocks = [];
+let xiExclusions = [];
+let xiManualSwaps = {};
+let xiSelectedAlternative = 0;
+let xiSwapSlot = "";
 const DEFAULT_VALUE_POLICY = {
   explorer_min_minutes: 500,
   featured_min_minutes: 900,
@@ -110,6 +117,9 @@ const standingFor = team => (DATA.standings || []).find(standing => standing.tea
 const squadFor = team => (DATA.squads || []).find(squad => squad.team === team);
 const financeFor = team => (DATA.finances || []).find(finance => finance.team === team);
 const squadValuationFor = team => (DATA.squad_valuations || []).find(value => value.team === team);
+const playerKey = player => `${player.player}|${player.club}`;
+const parseListParam = value => value ? value.split("~").filter(Boolean) : [];
+const serializeListParam = values => values.length ? values.join("~") : "";
 const fmt = (value, digits = 1) => Number(value).toFixed(digits);
 const signed = (value, digits = 1) => `${value > 0 ? "+" : ""}${fmt(value, digits)}`;
 const encodedTeam = team => encodeURIComponent(team);
@@ -131,14 +141,30 @@ function readUrlState() {
     age: params.get("age") || "all",
     minMinutes: Number(params.get("mins") || 500),
     valuation: params.get("valuation") || "all",
+    rankingMethod: params.get("ranking") || "adjusted_vfm",
+    minValue: Number(params.get("minValue") || 0),
     bargainOnly: params.get("bargains") === "1",
+  };
+  financeComparison = {
+    a: params.get("compareA") || "Brentford",
+    b: params.get("compareB") || "Liverpool",
   };
   xiSettings = {
     formation: params.get("formation") || "4-3-3",
+    objective: params.get("xiObjective") || "balanced",
     minMinutes: Number(params.get("xiMins") || 900),
     maxValue: params.get("budget") || "",
     maxPerClub: Number(params.get("clubLimit") || 3),
   };
+  xiLocks = parseListParam(params.get("locks"));
+  xiExclusions = parseListParam(params.get("exclusions"));
+  xiSelectedAlternative = Number(params.get("alternative") || 0);
+  xiManualSwaps = Object.fromEntries(
+    parseListParam(params.get("swaps")).map(value => {
+      const separator = value.indexOf("=");
+      return separator > 0 ? [value.slice(0, separator), value.slice(separator + 1)] : ["", ""];
+    }).filter(([slot, key]) => slot && key)
+  );
 }
 
 function syncUrlState() {
@@ -151,11 +177,21 @@ function syncUrlState() {
   if (playerFilters.age !== "all") params.set("age", playerFilters.age);
   if (playerFilters.minMinutes !== 500) params.set("mins", playerFilters.minMinutes);
   if (playerFilters.valuation !== "all") params.set("valuation", playerFilters.valuation);
+  if (playerFilters.rankingMethod !== "adjusted_vfm") params.set("ranking", playerFilters.rankingMethod);
+  if (playerFilters.minValue) params.set("minValue", playerFilters.minValue);
   if (playerFilters.bargainOnly) params.set("bargains", "1");
+  if (financeComparison.a !== "Brentford") params.set("compareA", financeComparison.a);
+  if (financeComparison.b !== "Liverpool") params.set("compareB", financeComparison.b);
   if (xiSettings.formation !== "4-3-3") params.set("formation", xiSettings.formation);
+  if (xiSettings.objective !== "balanced") params.set("xiObjective", xiSettings.objective);
   if (xiSettings.minMinutes !== 900) params.set("xiMins", xiSettings.minMinutes);
   if (xiSettings.maxValue) params.set("budget", xiSettings.maxValue);
   if (xiSettings.maxPerClub !== 3) params.set("clubLimit", xiSettings.maxPerClub);
+  if (xiLocks.length) params.set("locks", serializeListParam(xiLocks));
+  if (xiExclusions.length) params.set("exclusions", serializeListParam(xiExclusions));
+  if (xiSelectedAlternative) params.set("alternative", xiSelectedAlternative);
+  const swaps = Object.entries(xiManualSwaps).map(([slot, key]) => `${slot}=${key}`);
+  if (swaps.length) params.set("swaps", serializeListParam(swaps));
   const query = params.toString();
   history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);
 }
@@ -212,6 +248,7 @@ function init() {
   renderFacts();
   renderWageGrid();
   renderFinanceMethodology();
+  renderFinanceComparisonControls();
   renderDataHealth();
   renderValuationDiscrepancies();
   renderTacticControls();
@@ -219,6 +256,7 @@ function init() {
   renderPlayerControls();
   renderClubs();
   renderXiControls();
+  renderXiRosterControls();
   renderXi();
   showSection(activeSection, { scroll: false });
 }
@@ -570,6 +608,168 @@ function buildFinanceMetrics() {
   }));
 }
 
+function financeComparisonRecord(team) {
+  const metric = teamMetric(team);
+  const standing = standingFor(team);
+  const squad = squadFor(team);
+  return metric && standing ? { ...standing, ...squad, ...metric } : null;
+}
+
+function renderFinanceComparisonControls() {
+  const first = document.getElementById("financeCompareA");
+  const second = document.getElementById("financeCompareB");
+  if (!first || !second) return;
+  const options = DATA.standings.map(team => `<option value="${team.team}">${team.team}</option>`).join("");
+  first.innerHTML = options;
+  second.innerHTML = options;
+  if (!standingFor(financeComparison.a)) financeComparison.a = "Brentford";
+  if (!standingFor(financeComparison.b) || financeComparison.a === financeComparison.b) financeComparison.b = "Liverpool";
+  first.value = financeComparison.a;
+  second.value = financeComparison.b;
+}
+
+function updateFinanceComparison(key, team) {
+  if (!standingFor(team)) return;
+  financeComparison[key] = team;
+  if (financeComparison.a === financeComparison.b) {
+    financeComparison[key === "a" ? "b" : "a"] = DATA.standings.find(row => row.team !== team).team;
+  }
+  renderFinanceComparisonControls();
+  syncUrlState();
+  renderFinanceComparison();
+}
+
+function setFinanceComparisonClub(teamValue) {
+  const team = decodeURIComponent(teamValue || "");
+  if (!standingFor(team)) return;
+  const key = financeComparison.a === team ? "b" : "a";
+  updateFinanceComparison(key, team);
+  showSection("finance");
+}
+
+function swapFinanceComparison() {
+  financeComparison = { a: financeComparison.b, b: financeComparison.a };
+  renderFinanceComparisonControls();
+  syncUrlState();
+  renderFinanceComparison();
+}
+
+function resetFinanceComparison() {
+  financeComparison = { a: "Brentford", b: "Liverpool" };
+  renderFinanceComparisonControls();
+  syncUrlState();
+  renderFinanceComparison();
+}
+
+async function copyFinanceComparisonLink() {
+  syncUrlState();
+  const status = document.getElementById("financeCompareStatus");
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    if (status) status.textContent = "Comparison link copied.";
+  } catch {
+    if (status) status.textContent = "Copy was unavailable. Use the current page URL.";
+  }
+}
+
+function renderFinanceComparison() {
+  const a = financeComparisonRecord(financeComparison.a);
+  const b = financeComparisonRecord(financeComparison.b);
+  const body = document.getElementById("financeCompareBody");
+  if (!a || !b || !body) return;
+  document.getElementById("financeCompareHeadA").textContent = a.team;
+  document.getElementById("financeCompareHeadB").textContent = b.team;
+  const status = document.getElementById("financeCompareStatus");
+  if (status) status.textContent = `${a.team} compared with ${b.team}`;
+  const fields = [
+    { key: "league_position", label: "League position", digits: 0 },
+    { key: "points", label: "Points", digits: 0 },
+    { key: "goals_for", label: "Goals for", digits: 0 },
+    { key: "GA", label: "Goals against", digits: 0, lower: true },
+    { key: "wage_bill_m", label: "Annual wage bill", prefix: "£", suffix: "M", digits: 1, lower: true },
+    { key: "squad_value_m", label: "Squad market value", prefix: "€", suffix: "M", digits: 1, lower: true },
+    { key: "cost_per_point", label: "Cost per point", prefix: "£", suffix: "M", digits: 2, lower: true },
+    { key: "cost_per_goal", label: "Cost per goal", prefix: "£", suffix: "M", digits: 2, lower: true },
+    { key: "value_index", label: "Value index", digits: 2, lower: true },
+    { key: "predicted_points", label: "Expected points", digits: 1 },
+    { key: "residual_points", label: "Residual points", digits: 1 },
+    { key: "possession", label: "Possession", suffix: "%", digits: 1 },
+    { key: "xG", label: "Expected goals (xG)", digits: 1 },
+    { key: "xGA", label: "Expected goals against (xGA)", digits: 1, lower: true },
+    { key: "clean_sheets", label: "Clean sheets", digits: 0 },
+  ];
+  const formatMetric = (value, field, difference = false) => {
+    if (value == null) return "Unavailable";
+    const sign = difference && value > 0 ? "+" : "";
+    return `${sign}${field.prefix || ""}${fmt(value, field.digits)}${field.suffix || ""}`;
+  };
+  body.innerHTML = fields.map(field => {
+    const av = a[field.key], bv = b[field.key];
+    const difference = av == null || bv == null ? null : av - bv;
+    const good = difference == null ? "" : (field.lower ? difference < 0 : difference > 0) ? "metric-good" : difference ? "metric-bad" : "metric-neutral";
+    return `<tr><td class="name-col">${field.label}</td><td>${formatMetric(av, field)}</td><td>${formatMetric(bv, field)}</td><td class="${good}">${formatMetric(difference, field, true)}</td></tr>`;
+  }).join("");
+
+  const insights = [
+    `${a.team} spends ${formatMetric(Math.abs(a.wage_bill_m - b.wage_bill_m), { prefix: "£", suffix: "M", digits: 1 })} ${a.wage_bill_m < b.wage_bill_m ? "less" : "more"} on annual wages than ${b.team}.`,
+    `${a.team} earned ${Math.abs(a.points - b.points)} ${a.points >= b.points ? "more" : "fewer"} points and finished ${Math.abs(a.league_position - b.league_position)} places ${a.league_position <= b.league_position ? "higher" : "lower"}.`,
+    `${a.team} delivered ${signed(a.residual_points)} points against wage-based expectation; ${b.team} delivered ${signed(b.residual_points)}.`,
+    `${a.team} recorded ${fmt(a.cost_per_point, 2) === fmt(b.cost_per_point, 2) ? "the same" : a.cost_per_point < b.cost_per_point ? "a lower" : "a higher"} cost per point than ${b.team}.`,
+  ];
+  document.getElementById("financeCompareInsights").innerHTML = insights.map(insight => `<p>${insight}</p>`).join("");
+
+  const metrics = buildFinanceMetrics();
+  const average = key => metrics.reduce((sum, row) => sum + row[key], 0) / metrics.length;
+  const profile = [
+    { label: "Points", key: "points" },
+    { label: "Goals", key: "goals_for" },
+    { label: "Wage efficiency", key: "cost_per_point", lower: true },
+    { label: "Residual", value: row => 100 + row.residual_points },
+    { label: "xG", key: "xG", source: row => squadFor(row.team) },
+    { label: "xGA efficiency", key: "xGA", lower: true, source: row => squadFor(row.team) },
+  ];
+  const normalized = (row, item) => {
+    if (item.value) return item.value(row);
+    const source = item.source ? item.source(row) : row;
+    const values = item.source ? DATA.squads : metrics;
+    const value = source?.[item.key];
+    const avg = values.reduce((sum, valueRow) => sum + (valueRow[item.key] || 0), 0) / values.length;
+    if (value == null || !avg) return null;
+    return item.lower ? avg / value * 100 : value / avg * 100;
+  };
+
+  destroyChart("cFinCompareProfile");
+  charts["cFinCompareProfile"] = new Chart(document.getElementById("cFinCompareProfile"), {
+    type: "radar",
+    data: { labels: profile.map(item => item.label), datasets: [
+      { label: a.team, data: profile.map(item => normalized(a, item)), borderColor: tc(a.team), backgroundColor: tc(a.team) + "33", pointBackgroundColor: tc(a.team) },
+      { label: b.team, data: profile.map(item => normalized(b, item)), borderColor: tc(b.team), backgroundColor: tc(b.team) + "22", pointBackgroundColor: tc(b.team) },
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, scales: { r: { beginAtZero: true, grid: { color: "rgba(255,255,255,.08)" }, angleLines: { color: "rgba(255,255,255,.08)" } } } },
+  });
+  destroyChart("cFinComparePoints");
+  charts["cFinComparePoints"] = new Chart(document.getElementById("cFinComparePoints"), {
+    type: "bar",
+    data: { labels: [a.team, b.team], datasets: [
+      { label: "Expected points", data: [a.predicted_points, b.predicted_points], backgroundColor: C.cyan + "88", borderColor: C.cyan, borderWidth: 1.5 },
+      { label: "Actual points", data: [a.points, b.points], backgroundColor: [tc(a.team) + "cc", tc(b.team) + "cc"], borderColor: [tc(a.team), tc(b.team)], borderWidth: 1.5 },
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: "rgba(255,255,255,.05)" } } } },
+  });
+  destroyChart("cFinCompareResources");
+  charts["cFinCompareResources"] = new Chart(document.getElementById("cFinCompareResources"), {
+    type: "bar",
+    data: { labels: [a.team, b.team], datasets: [
+      { label: "Annual wage bill (£M)", data: [a.wage_bill_m, b.wage_bill_m], backgroundColor: C.orange + "aa", yAxisID: "yGbp" },
+      { label: "Squad market value (€M)", data: [a.squad_value_m, b.squad_value_m], backgroundColor: C.purple + "aa", yAxisID: "yEur" },
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, scales: {
+      yGbp: { type: "linear", position: "left", title: { display: true, text: "Annual wage bill (£M)" }, grid: { color: "rgba(255,255,255,.05)" } },
+      yEur: { type: "linear", position: "right", title: { display: true, text: "Squad market value (€M)" }, grid: { drawOnChartArea: false } },
+    }},
+  });
+}
+
 function renderFinanceKPIs(metrics) {
   const sorted   = [...metrics].sort((a, b) => a.valueIndex - b.valueIndex);
   const best     = sorted[0];
@@ -595,6 +795,7 @@ function renderFinanceCharts() {
   const metrics = buildFinanceMetrics();
 
   renderFinanceKPIs(metrics);
+  renderFinanceComparison();
   renderFinanceScatter(metrics);
 
   // Squad value chart
@@ -761,7 +962,7 @@ function renderTeamEfficiencyTable() {
         <td>£${fmt(team.cost_per_point, 2)}M</td><td>£${fmt(team.cost_per_goal, 2)}M</td>
         <td class="${indexClass}">${fmt(team.value_index, 2)}</td>
         <td class="${residualClass}">${signed(team.residual_points)}</td>
-        <td><button class="table-action" onclick="openTeamDetail('${encodedTeam(team.team)}')">View team</button></td>
+        <td><button class="table-action" onclick="openTeamDetail('${encodedTeam(team.team)}')">View team</button> <button class="table-action" onclick="setFinanceComparisonClub('${encodedTeam(team.team)}')">Compare</button></td>
       </tr>`;
   }).join("");
 }
@@ -900,50 +1101,29 @@ function cleanPlayers() {
 }
 
 function computeVFM(players) {
-  return players.map(p => {
-    const perf90 = p.role_score || 0;
-    const vfm    = p.market_value_m > 0 ? parseFloat((perf90 / p.market_value_m).toFixed(3)) : 0;
-    return { ...p, perf90, vfm };
-  });
+  return players.map(p => ({
+    ...p,
+    perf90: p.role_score || 0,
+    vfm: p.adjusted_vfm || 0,
+  }));
 }
 
 function computeBargains(players) {
-  const groups = {};
-  players.filter(p => isExplorerEligible(p) && hasFreshValue(p)).forEach(p => {
-    const pos = p.position === "CB" ? "DF" : p.position;
-    if (p.market_value_m > 0) {
-      if (!groups[pos]) groups[pos] = [];
-      groups[pos].push(p);
-    }
-  });
-
-  const medianOf = arr => {
-    const s = [...arr].sort((a, b) => a - b);
-    const m = Math.floor(s.length / 2);
-    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-  };
-
-  const medians = {};
-  Object.entries(groups).forEach(([pos, ps]) => {
-    medians[pos] = {
-      perf90: medianOf(ps.map(p => p.perf90)),
-      value:  medianOf(ps.map(p => p.market_value_m)),
-    };
-  });
-
-  return players.map(p => {
-    const pos = p.position === "CB" ? "DF" : p.position;
-    const med = medians[pos] || { perf90: 0, value: 99 };
-    const isBargain = isFeaturedEligible(p)
-      && p.perf90 >= med.perf90
-      && p.market_value_m <= med.value;
-    return { ...p, isBargain, medians: med };
-  });
+  return players.map(p => ({ ...p, isBargain: Boolean(p.bargain_candidate) }));
 }
 
 function allComputedPlayers() {
   return computeBargains(computeVFM(cleanPlayers()));
 }
+
+const PLAYER_RANKINGS = {
+  adjusted_vfm: { label: "Adjusted VFM", digits: 2 },
+  raw_vfm: { label: "Raw VFM", digits: 2 },
+  role_score: { label: "Role score", digits: 2 },
+  adjusted_vfm_position_percentile: { label: "Position percentile", digits: 1 },
+};
+const playerRanking = player => Number(player[playerFilters.rankingMethod] || 0);
+const playerRankingConfig = () => PLAYER_RANKINGS[playerFilters.rankingMethod] || PLAYER_RANKINGS.adjusted_vfm;
 
 function matchesAgeBand(player, band) {
   if (band === "all") return true;
@@ -963,6 +1143,7 @@ function filteredPlayers(players = allComputedPlayers()) {
     && matchesAgeBand(player, playerFilters.age)
     && player.mins >= Number(playerFilters.minMinutes)
     && (playerFilters.valuation === "all" || player.valuation_status === playerFilters.valuation)
+    && (player.market_value_m || 0) >= Number(playerFilters.minValue)
     && (!playerFilters.bargainOnly || player.isBargain)
   );
 }
@@ -978,11 +1159,13 @@ function renderPlayerControls() {
   document.getElementById("playerAgeFilter").value = playerFilters.age;
   document.getElementById("playerMinutesFilter").value = String(playerFilters.minMinutes);
   document.getElementById("playerValuationFilter").value = playerFilters.valuation;
+  document.getElementById("playerRankingFilter").value = playerFilters.rankingMethod;
+  document.getElementById("playerMinValueFilter").value = String(playerFilters.minValue);
   document.getElementById("playerBargainFilter").checked = playerFilters.bargainOnly;
 }
 
 function updatePlayerFilter(key, value) {
-  playerFilters[key] = key === "minMinutes" ? Number(value) : value;
+  playerFilters[key] = ["minMinutes", "minValue"].includes(key) ? Number(value) : value;
   syncUrlState();
   renderPlayerExplorer();
 }
@@ -990,7 +1173,8 @@ function updatePlayerFilter(key, value) {
 function resetPlayerFilters() {
   playerFilters = {
     search: "", club: "all", position: "all", age: "all",
-    minMinutes: 500, valuation: "all", bargainOnly: false,
+    minMinutes: 500, valuation: "all", rankingMethod: "adjusted_vfm",
+    minValue: 0, bargainOnly: false,
   };
   renderPlayerControls();
   syncUrlState();
@@ -1008,10 +1192,11 @@ function renderPlayerExplorer() {
 
 function renderValueKPIs(players) {
   const featured = players.filter(isFeaturedEligible);
-  const byVfm  = [...featured].sort((a, b) => b.vfm  - a.vfm);
+  const ranking = playerRankingConfig();
+  const byVfm  = [...featured].sort((a, b) => playerRanking(b) - playerRanking(a));
   const byPerf = [...featured].sort((a, b) => b.perf90 - a.perf90);
   const bargains = players.filter(p => p.isBargain);
-  const topBargain = [...bargains].sort((a, b) => b.vfm - a.vfm)[0] || byVfm[0];
+  const topBargain = [...bargains].sort((a, b) => playerRanking(b) - playerRanking(a))[0] || byVfm[0];
   if (!byVfm.length || !byPerf.length) {
     document.getElementById("valueKpis").innerHTML = `<div class="empty-state">No featured players match the current filters.</div>`;
     return;
@@ -1019,7 +1204,7 @@ function renderValueKPIs(players) {
 
   document.getElementById("valueKpis").innerHTML = [
     { icon: crestImg(byVfm[0].club, 32), value: byVfm[0].player,
-      label: "Top VFM Score", sub: `VFM ${byVfm[0].vfm.toFixed(1)} · €${byVfm[0].market_value_m}M · ${byVfm[0].club}`,
+      label: `Top ${ranking.label}`, sub: `${ranking.label} ${fmt(playerRanking(byVfm[0]), ranking.digits)} · €${byVfm[0].market_value_m}M · ${byVfm[0].club}`,
       accent: `linear-gradient(90deg,${C.green},${C.cyan})` },
     { icon: "🏹", value: byPerf[0].player,
       label: "Best Role Score", sub: `${byPerf[0].perf90.toFixed(2)} role score · ${byPerf[0].goals}G ${byPerf[0].assists}A`,
@@ -1041,6 +1226,9 @@ function renderValueKPIs(players) {
 
 function renderValueCharts(players = filteredPlayers()) {
   renderValueKPIs(players);
+  const ranking = playerRankingConfig();
+  const rankingTitle = document.getElementById("valueRankingTitle");
+  if (rankingTitle) rankingTitle.textContent = `Top 25 - ${ranking.label}`;
 
   // Scatter: position-aware role score vs market value
   destroyChart("cValScatter");
@@ -1072,11 +1260,11 @@ function renderValueCharts(players = filteredPlayers()) {
   // VFM Bar chart — top 25
   destroyChart("cValRanking");
   const ctx2 = document.getElementById("cValRanking"); if (!ctx2) return;
-  const top25 = [...players].filter(isFeaturedEligible).sort((a, b) => b.vfm - a.vfm).slice(0, 25);
+  const top25 = [...players].filter(isFeaturedEligible).sort((a, b) => playerRanking(b) - playerRanking(a)).slice(0, 25);
   charts["cValRanking"] = new Chart(ctx2, {
     type: "bar", data: {
       labels: top25.map(p => p.player),
-      datasets: [{ label: "VFM Score", data: top25.map(p => p.vfm),
+      datasets: [{ label: ranking.label, data: top25.map(playerRanking),
         backgroundColor: top25.map(p => p.isBargain ? C.green + "dd" : tc(p.club) + "cc"),
         borderColor:     top25.map(p => p.isBargain ? C.green         : tc(p.club)),
         borderWidth: 1.5, borderRadius: 5, borderSkipped: false }]
@@ -1085,7 +1273,7 @@ function renderValueCharts(players = filteredPlayers()) {
       plugins: { legend: { display: false },
         tooltip: { callbacks: { label: c => {
           const p = top25[c.dataIndex];
-          return ` VFM: ${c.parsed.x.toFixed(1)}  |  €${p.market_value_m}M  |  ${p.goals}G ${p.assists}A  ${p.isBargain ? "🏷️" : ""}`;
+          return ` ${ranking.label}: ${fmt(c.parsed.x, ranking.digits)}  |  €${p.market_value_m}M  |  ${p.goals}G ${p.assists}A  ${p.isBargain ? "🏷️" : ""}`;
         }}}},
       scales: { x: { grid: { color: "rgba(255,255,255,0.05)" } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } }
     }
@@ -1094,14 +1282,14 @@ function renderValueCharts(players = filteredPlayers()) {
 
 // ── Bargain Player Feature Cards ──────────────────────────────
 function renderBargainGrid(players = filteredPlayers()) {
-  const bargains = [...players.filter(p => p.isBargain)].sort((a, b) => b.vfm - a.vfm);
+  const bargains = [...players.filter(p => p.isBargain)].sort((a, b) => playerRanking(b) - playerRanking(a));
 
   const el = document.getElementById("bargainGrid"); if (!el) return;
   if (!bargains.length) { el.innerHTML = `<p style="color:var(--t3)">No bargain players found with current criteria.</p>`; return; }
 
   el.innerHTML = bargains.map(p => {
     const col   = tc(p.club);
-    const stars = Math.min(5, Math.round(p.vfm * 2));
+    const stars = Math.min(5, Math.max(1, Math.round((p.adjusted_vfm_position_percentile || 0) / 20)));
     const starStr = "★".repeat(stars) + "☆".repeat(5 - stars);
     return `
     <div class="bargain-card" style="--club-color:${col};--club-bg:${tbg(p.club)}">
@@ -1126,8 +1314,8 @@ function renderBargainGrid(players = filteredPlayers()) {
           <div class="bc-stat"><div class="bc-stat-val">€${p.market_value_m}M</div><div class="bc-stat-lbl">Value</div></div>
         </div>
         <div class="bc-vfm-row">
-          <span class="bc-vfm-label">VFM Score</span>
-          <span class="bc-vfm-val">${p.vfm.toFixed(1)}</span>
+          <span class="bc-vfm-label">Adjusted VFM</span>
+          <span class="bc-vfm-val">${fmt(p.adjusted_vfm, 1)}</span>
         </div>
       </div>
     </div>`;
@@ -1137,7 +1325,7 @@ function renderBargainGrid(players = filteredPlayers()) {
 // ── VFM Rankings Table ────────────────────────────────────────
 function renderVFMTable(players = filteredPlayers()) {
   const body = document.getElementById("vfmBody"); if (!body) return;
-  const sorted  = [...players].sort((a, b) => Number(hasFreshValue(b)) - Number(hasFreshValue(a)) || b.vfm - a.vfm);
+  const sorted  = [...players].sort((a, b) => Number(hasFreshValue(b)) - Number(hasFreshValue(a)) || playerRanking(b) - playerRanking(a));
 
   body.innerHTML = sorted.map((p, i) => `
     <tr class="${p.isBargain ? "row-bargain" : ""}">
@@ -1153,7 +1341,9 @@ function renderVFMTable(players = filteredPlayers()) {
       <td style="color:var(--green);font-weight:600">${p.perf90.toFixed(2)}</td>
       <td>${p.market_value_m == null ? "–" : `€${p.market_value_m}M`}</td>
       <td>${valuationBadge(p)} ${p.valuation_source_url ? sourceLink({ source_url: p.valuation_source_url, notes: `Transfermarkt valuation dated ${p.valuation_date || "unknown"}` }, p.valuation_date || "source") : ""}</td>
-      <td class="vfm-col">${p.vfm.toFixed(1)}</td>
+      <td>${p.raw_vfm == null ? "–" : fmt(p.raw_vfm, 2)}</td>
+      <td class="vfm-col">${p.adjusted_vfm == null ? "–" : fmt(p.adjusted_vfm, 2)}</td>
+      <td>${p.adjusted_vfm_position_percentile == null ? "–" : fmt(p.adjusted_vfm_position_percentile, 1)}</td>
       <td>${p.isBargain ? '<span class="bargain-tag">🏷️ Yes</span>' : '<span style="color:var(--t3)">–</span>'}</td>
     </tr>`).join("");
 }
@@ -1359,10 +1549,19 @@ const FORMATIONS = {
   "4-3-3": ["GK", "DF", "DF", "DF", "DF", "MF", "MF", "MF", "FW", "FW", "FW"],
   "4-4-2": ["GK", "DF", "DF", "DF", "DF", "MF", "MF", "MF", "MF", "FW", "FW"],
   "3-5-2": ["GK", "DF", "DF", "DF", "MF", "MF", "MF", "MF", "MF", "FW", "FW"],
+  "4-2-3-1": ["GK", "DF", "DF", "DF", "DF", "MF", "MF", "MF", "MF", "MF", "FW"],
+  "3-4-3": ["GK", "DF", "DF", "DF", "MF", "MF", "MF", "MF", "FW", "FW", "FW"],
+};
+const XI_OBJECTIVES = {
+  balanced: "Balanced value and quality",
+  adjusted_vfm: "Best adjusted VFM",
+  raw_vfm: "Best raw VFM",
+  role_score: "Best role score under budget",
 };
 
 function renderXiControls() {
   document.getElementById("xiFormation").value = xiSettings.formation;
+  document.getElementById("xiObjective").value = xiSettings.objective;
   document.getElementById("xiMinutes").value = String(xiSettings.minMinutes);
   document.getElementById("xiBudget").value = xiSettings.maxValue;
   document.getElementById("xiClubLimit").value = String(xiSettings.maxPerClub);
@@ -1370,30 +1569,159 @@ function renderXiControls() {
 
 function updateXiSetting(key, value) {
   xiSettings[key] = ["minMinutes", "maxPerClub"].includes(key) ? Number(value) : value;
+  xiSelectedAlternative = 0;
+  xiManualSwaps = {};
+  xiSwapSlot = "";
   syncUrlState();
   renderXi();
 }
 
 function resetXiSettings() {
-  xiSettings = { formation: "4-3-3", minMinutes: 900, maxValue: "", maxPerClub: 3 };
+  xiSettings = { formation: "4-3-3", objective: "balanced", minMinutes: 900, maxValue: "", maxPerClub: 3 };
+  xiLocks = [];
+  xiExclusions = [];
+  xiManualSwaps = {};
+  xiSelectedAlternative = 0;
+  xiSwapSlot = "";
   renderXiControls();
+  renderXiRosterControls();
   syncUrlState();
   renderXi();
+}
+
+function xiPlayerScore(player) {
+  if (xiSettings.objective === "raw_vfm") return player.raw_vfm || 0;
+  if (xiSettings.objective === "adjusted_vfm") return player.adjusted_vfm || 0;
+  if (xiSettings.objective === "role_score") return player.role_score || 0;
+  return (player.adjusted_vfm_position_percentile || 0) * .6
+    + (player.role_score_position_percentile || 0) * .4;
+}
+
+function getEligibleXiPlayers() {
+  const excluded = new Set(xiExclusions);
+  return allComputedPlayers()
+    .filter(player => hasFreshValue(player) && player.mins >= xiSettings.minMinutes && !excluded.has(playerKey(player)))
+    .map(player => ({ ...player, xiScore: xiPlayerScore(player) }))
+    .sort((a, b) => b.xiScore - a.xiScore || b.mins - a.mins);
+}
+
+function renderXiRosterControls() {
+  const select = document.getElementById("xiPlayerConstraint");
+  const summary = document.getElementById("xiConstraints");
+  if (!select || !summary) return;
+  const players = allComputedPlayers()
+    .filter(player => hasFreshValue(player))
+    .sort((a, b) => a.player.localeCompare(b.player) || a.club.localeCompare(b.club));
+  select.innerHTML = `<option value="">Choose a player</option>${players.map(player =>
+    `<option value="${escapeHtml(playerKey(player))}">${escapeHtml(player.player)} - ${escapeHtml(sn(player.club))} (${player.position})</option>`
+  ).join("")}`;
+  const pills = [
+    ...xiLocks.map(key => ({ key, type: "lock", label: "Locked" })),
+    ...xiExclusions.map(key => ({ key, type: "exclude", label: "Excluded" })),
+  ];
+  summary.innerHTML = pills.length
+    ? pills.map(item => {
+      const player = players.find(row => playerKey(row) === item.key);
+      return `<span class="xi-constraint ${item.type}">${item.label}: ${escapeHtml(player?.player || item.key)}
+        <button type="button" onclick="removeXiConstraint('${item.type}','${encodeURIComponent(item.key)}')" aria-label="Remove ${item.label.toLowerCase()} player">x</button></span>`;
+    }).join("")
+    : `<span class="comparison-status">No locked or excluded players.</span>`;
+}
+
+function addXiConstraint(type) {
+  const select = document.getElementById("xiPlayerConstraint");
+  const key = select?.value;
+  if (!key) return;
+  if (type === "lock") {
+    xiExclusions = xiExclusions.filter(value => value !== key);
+    if (!xiLocks.includes(key)) xiLocks.push(key);
+  } else {
+    xiLocks = xiLocks.filter(value => value !== key);
+    if (!xiExclusions.includes(key)) xiExclusions.push(key);
+    Object.entries(xiManualSwaps).forEach(([slot, value]) => {
+      if (value === key) delete xiManualSwaps[slot];
+    });
+  }
+  xiSelectedAlternative = 0;
+  renderXiRosterControls();
+  syncUrlState();
+  renderXi();
+}
+
+function removeXiConstraint(type, encodedKey) {
+  const key = decodeURIComponent(encodedKey);
+  if (type === "lock") xiLocks = xiLocks.filter(value => value !== key);
+  if (type === "exclude") xiExclusions = xiExclusions.filter(value => value !== key);
+  renderXiRosterControls();
+  syncUrlState();
+  renderXi();
+}
+
+function clearXiConstraints() {
+  xiLocks = [];
+  xiExclusions = [];
+  renderXiRosterControls();
+  syncUrlState();
+  renderXi();
+}
+
+function clearXiSwaps() {
+  xiManualSwaps = {};
+  xiSwapSlot = "";
+  syncUrlState();
+  renderXi();
+}
+
+function validateXiLineup(players, slots) {
+  if (!players || players.length !== slots.length) return "The lineup does not fill every formation slot.";
+  if (new Set(players.map(playerKey)).size !== players.length) return "A player cannot fill more than one slot.";
+  if (players.some((player, index) => player.position !== slots[index])) return "A replacement must match the broad position for its slot.";
+  if (players.some(player => xiExclusions.includes(playerKey(player)))) return "An excluded player is present.";
+  if (xiLocks.some(key => !players.some(player => playerKey(player) === key))) return "A locked player is missing.";
+  const totalValue = players.reduce((sum, player) => sum + player.market_value_m, 0);
+  const budget = xiSettings.maxValue === "" ? Infinity : Number(xiSettings.maxValue);
+  if (totalValue > budget) return "The lineup exceeds the selected budget.";
+  const clubs = {};
+  players.forEach(player => clubs[player.club] = (clubs[player.club] || 0) + 1);
+  if (Object.values(clubs).some(count => count > xiSettings.maxPerClub)) return "The lineup exceeds the per-club limit.";
+  return "";
+}
+
+function lineupState(players) {
+  return {
+    players,
+    totalValue: players.reduce((sum, player) => sum + player.market_value_m, 0),
+    score: players.reduce((sum, player) => sum + xiPlayerScore(player), 0),
+  };
+}
+
+function applyManualXiSwaps(lineup, slots, eligible) {
+  if (!lineup) return { lineup: null, error: "" };
+  const players = [...lineup.players];
+  Object.entries(xiManualSwaps).forEach(([slot, key]) => {
+    const index = slotIndex(slots, slot);
+    const player = eligible.find(candidate => playerKey(candidate) === key);
+    if (index >= 0 && player) players[index] = player;
+  });
+  const error = validateXiLineup(players, slots);
+  return { lineup: error ? lineup : lineupState(players), error };
 }
 
 function optimizeXi() {
   const slots = FORMATIONS[xiSettings.formation] || FORMATIONS["4-3-3"];
   const budget = xiSettings.maxValue === "" ? Infinity : Number(xiSettings.maxValue);
-  const eligible = allComputedPlayers()
-    .filter(player => hasFreshValue(player) && player.mins >= xiSettings.minMinutes)
-    .map(player => ({ ...player, xiScore: player.vfm + player.mins / 100000 }))
-    .sort((a, b) => b.xiScore - a.xiScore);
+  const eligible = getEligibleXiPlayers();
+  const locked = new Set(xiLocks);
   const byRole = {};
   ["GK", "DF", "MF", "FW"].forEach(role => {
-    byRole[role] = eligible.filter(player => player.position === role).slice(0, 28);
+    const rolePlayers = eligible.filter(player => player.position === role);
+    byRole[role] = [
+      ...rolePlayers.filter(player => locked.has(playerKey(player))),
+      ...rolePlayers.filter(player => !locked.has(playerKey(player))).slice(0, 36),
+    ];
   });
 
-  let states = [{ players: [], totalValue: 0, score: 0, clubs: {} }];
+  let states = [{ players: [], totalValue: 0, score: 0, priority: 0, clubs: {} }];
   for (const role of slots) {
     const next = [];
     for (const state of states) {
@@ -1406,14 +1734,63 @@ function optimizeXi() {
           players: [...state.players, player],
           totalValue,
           score: state.score + player.xiScore,
+          priority: state.priority + player.xiScore + (locked.has(playerKey(player)) ? 10000 : 0),
           clubs: { ...state.clubs, [player.club]: (state.clubs[player.club] || 0) + 1 },
         });
       }
     }
-    states = next.sort((a, b) => b.score - a.score || a.totalValue - b.totalValue).slice(0, 500);
+    states = next.sort((a, b) => b.priority - a.priority || a.totalValue - b.totalValue).slice(0, 1000);
     if (!states.length) break;
   }
-  return { slots, lineup: states[0] || null };
+  const distinct = new Map();
+  states
+    .filter(state => xiLocks.every(key => state.players.some(player => playerKey(player) === key)))
+    .sort((a, b) => b.score - a.score || a.totalValue - b.totalValue)
+    .forEach(state => {
+      const signature = state.players.map(playerKey).sort().join("~");
+      if (!distinct.has(signature)) distinct.set(signature, state);
+    });
+  return { slots, eligible, lineups: [...distinct.values()].slice(0, 3) };
+}
+
+function slotLabels(slots) {
+  return slots.map((role, index) => `${role}${slots.slice(0, index + 1).filter(value => value === role).length}`);
+}
+
+function slotIndex(slots, slot) {
+  return slotLabels(slots).indexOf(slot);
+}
+
+function selectXiAlternative(index) {
+  xiSelectedAlternative = Number(index);
+  xiManualSwaps = {};
+  xiSwapSlot = "";
+  syncUrlState();
+  renderXi();
+}
+
+function openXiReplacements(slot) {
+  xiSwapSlot = slot;
+  renderXi();
+}
+
+function applyXiSwap(slot, encodedKey) {
+  xiManualSwaps[slot] = decodeURIComponent(encodedKey);
+  xiSwapSlot = "";
+  syncUrlState();
+  renderXi();
+}
+
+function diagnoseXiFailure(slots) {
+  const lockedPlayers = xiLocks.map(key => allComputedPlayers().find(player => playerKey(player) === key)).filter(Boolean);
+  if (xiLocks.some(key => xiExclusions.includes(key))) return "A player cannot be both locked and excluded.";
+  if (lockedPlayers.some(player => !hasFreshValue(player) || player.mins < xiSettings.minMinutes)) return "A locked player does not meet the freshness or minutes requirement.";
+  for (const role of ["GK", "DF", "MF", "FW"]) {
+    if (lockedPlayers.filter(player => player.position === role).length > slots.filter(slot => slot === role).length) {
+      return `Too many locked ${role} players for ${xiSettings.formation}.`;
+    }
+  }
+  return "No valid XI satisfies the current budget, minutes threshold, per-club limit, and player constraints.";
 }
 
 function renderXi() {
@@ -1421,39 +1798,74 @@ function renderXi() {
   const pitch = document.getElementById("xiPitch");
   const body = document.getElementById("xiBody");
   if (!summary || !pitch || !body) return;
-  const { slots, lineup } = optimizeXi();
+  const result = optimizeXi();
+  const { slots, eligible, lineups } = result;
+  const alternatives = document.getElementById("xiAlternatives");
+  const replacements = document.getElementById("xiReplacements");
+  if (xiSelectedAlternative >= lineups.length) xiSelectedAlternative = 0;
+  const baseLineup = lineups[xiSelectedAlternative] || null;
+  const manual = applyManualXiSwaps(baseLineup, slots, eligible);
+  const lineup = manual.lineup;
+  if (alternatives) alternatives.innerHTML = lineups.length
+    ? `<strong>Optimizer alternatives</strong>${lineups.map((option, index) =>
+      `<button class="action-btn ${index === xiSelectedAlternative ? "active" : ""}" onclick="selectXiAlternative(${index})">XI ${index + 1} · €${fmt(option.totalValue)}M · ${fmt(option.score, 1)} pts</button>`
+    ).join("")}`
+    : "";
   if (!lineup || lineup.players.length !== 11) {
-    summary.innerHTML = `<div class="empty-state">No valid XI satisfies these constraints. Increase the budget, minutes threshold, or per-club limit.</div>`;
+    summary.innerHTML = `<div class="empty-state">${diagnoseXiFailure(slots)}</div>`;
     pitch.innerHTML = "";
     body.innerHTML = "";
+    if (replacements) replacements.innerHTML = "";
     return;
   }
-  const selected = lineup.players.map((player, index) => ({ ...player, slot: `${slots[index]}${slots.slice(0, index + 1).filter(role => role === slots[index]).length}` }));
+  const labels = slotLabels(slots);
+  const selected = lineup.players.map((player, index) => ({ ...player, slot: labels[index] }));
   const totalGoals = selected.reduce((sum, player) => sum + player.goals, 0);
   const totalAssists = selected.reduce((sum, player) => sum + player.assists, 0);
-  const averageVfm = selected.reduce((sum, player) => sum + player.vfm, 0) / selected.length;
+  const averageVfm = selected.reduce((sum, player) => sum + (player.adjusted_vfm || 0), 0) / selected.length;
+  const isCustom = Object.keys(xiManualSwaps).length > 0 && !manual.error;
   summary.innerHTML = `
     <div class="detail-kpis">
       <div class="detail-kpi"><strong>${xiSettings.formation}</strong><span>Formation</span></div>
       <div class="detail-kpi"><strong>€${fmt(lineup.totalValue)}M</strong><span>Total market value</span></div>
       <div class="detail-kpi"><strong>${totalGoals}</strong><span>Combined goals</span></div>
       <div class="detail-kpi"><strong>${totalAssists}</strong><span>Combined assists</span></div>
-      <div class="detail-kpi"><strong>${fmt(averageVfm, 1)}</strong><span>Average VFM score</span></div>
-    </div>`;
+      <div class="detail-kpi"><strong>${fmt(averageVfm, 1)}</strong><span>Average adjusted VFM</span></div>
+      <div class="detail-kpi"><strong>${isCustom ? "Custom XI" : "Optimized XI"}</strong><span>${XI_OBJECTIVES[xiSettings.objective]}</span></div>
+    </div>
+    ${manual.error ? `<div class="empty-state">${manual.error} The last valid XI is shown.</div>` : ""}
+    <p class="xi-explanation">Lineup score: ${fmt(lineup.score, 1)}. Click any pitch card to review valid replacements for that slot.</p>`;
   const rows = ["FW", "MF", "DF", "GK"];
   pitch.innerHTML = rows.map(role => `
     <div class="pitch-row pitch-${role.toLowerCase()}">
       ${selected.filter(player => player.position === role).map(player => `
-        <div class="xi-player-card" style="--club-color:${tc(player.club)}">
+        <button class="xi-player-card" type="button" onclick="openXiReplacements('${player.slot}')" style="--club-color:${tc(player.club)}">
           ${playerAvatar(player.player, player.club, 42)}
           <strong>${player.player}</strong><span>${sn(player.club)}</span>
-          <small>${player.slot} · €${player.market_value_m}M · VFM ${fmt(player.vfm, 1)}</small>
-        </div>`).join("")}
+          <small>${player.slot} · €${player.market_value_m}M · adj ${fmt(player.adjusted_vfm, 1)}${xiLocks.includes(playerKey(player)) ? " · locked" : ""}</small>
+        </button>`).join("")}
     </div>`).join("");
   body.innerHTML = selected.map(player => `
     <tr><td>${player.slot}</td><td class="name-col">${playerAvatar(player.player, player.club, 26)} ${player.player}</td>
     <td>${crestImg(player.club, 18)} ${sn(player.club)}</td><td>${player.position}</td><td>${player.mins.toLocaleString()}</td>
-    <td>${player.goals}</td><td>${player.assists}</td><td>${fmt(player.perf90, 2)}</td><td>€${player.market_value_m}M</td><td class="vfm-col">${fmt(player.vfm, 1)}</td></tr>`).join("");
+    <td>${player.goals}</td><td>${player.assists}</td><td>${fmt(player.perf90, 2)}</td><td>€${player.market_value_m}M</td><td class="vfm-col">${fmt(player.adjusted_vfm, 1)}</td></tr>`).join("");
+  if (replacements) {
+    if (!xiSwapSlot) {
+      replacements.innerHTML = `<span class="comparison-status">Select a pitch card to review valid replacements.</span>`;
+    } else {
+      const index = slotIndex(slots, xiSwapSlot);
+      const candidates = eligible.filter(candidate => candidate.position === slots[index] && !selected.some(player => playerKey(player) === playerKey(candidate)))
+        .filter(candidate => {
+          const players = [...lineup.players];
+          players[index] = candidate;
+          return !validateXiLineup(players, slots);
+        }).slice(0, 12);
+      replacements.innerHTML = `<div class="section-hdr compact-hdr"><h3>Valid replacements for ${xiSwapSlot}</h3><p>Each option preserves formation, budget, club limit, locks, and exclusions.</p></div>
+        <div class="replacement-grid">${candidates.map(candidate =>
+          `<button class="replacement-card" type="button" onclick="applyXiSwap('${xiSwapSlot}','${encodeURIComponent(playerKey(candidate))}')"><strong>${escapeHtml(candidate.player)}</strong><span>${escapeHtml(sn(candidate.club))} · €${candidate.market_value_m}M · adj ${fmt(candidate.adjusted_vfm, 1)}</span></button>`
+        ).join("") || `<span class="comparison-status">No alternate player satisfies the active constraints.</span>`}</div>`;
+    }
+  }
 }
 
 /* ════════════════════════════════════════════════════════════

@@ -20,6 +20,7 @@ import hashlib
 import html
 import io
 import json
+import math
 import re
 import sys
 import unicodedata
@@ -60,6 +61,7 @@ PLAYER_EXPLORER_MINUTES = 500
 PLAYER_FEATURED_MINUTES = 900
 FINANCE_CONFIDENCE_LEVELS = {"low", "medium", "high"}
 ROLE_SCORE_VERSION = "position-aware-v1"
+VFM_MODEL_VERSION = "position-adjusted-v1"
 SQUAD_VALUATION_DISCREPANCY_THRESHOLD = 10
 ROLE_SCORE_SAMPLE_MINUTES = 500
 ROLE_SCORE_WEIGHTS = {
@@ -487,7 +489,8 @@ def percentile(value: float, values: list[float]) -> float:
         return 0.0
     below = sum(item < value for item in values)
     equal = sum(item == value for item in values)
-    return round((below + (equal - 1) / 2) / max(len(values) - 1, 1) * 100, 3)
+    score = (below + (equal - 1) / 2) / max(len(values) - 1, 1) * 100
+    return round(max(0.0, min(100.0, score)), 3)
 
 
 def per90(value: float | int | None, minutes: int) -> float | None:
@@ -625,6 +628,108 @@ def annotate_player_scores(
         player["role_score_status"] = role_score_status
         player["role_score_notes"] = role_score_notes
     return annotated
+
+
+def annotate_player_value_metrics(players: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    eligible = [
+        player
+        for player in players
+        if player["mins"] >= PLAYER_EXPLORER_MINUTES
+        and player.get("role_score") is not None
+        and (player.get("market_value_m") or 0) > 0
+        and player.get("valuation_status") == "fresh"
+    ]
+    distributions: dict[tuple[str, str], list[float]] = {}
+    for player in eligible:
+        market_value = player["market_value_m"]
+        raw_vfm = player["role_score"] / market_value
+        adjusted_vfm = player["role_score"] / math.sqrt(market_value)
+        for metric, value in (
+            ("role_score", player["role_score"]),
+            ("market_value", market_value),
+            ("raw_vfm", raw_vfm),
+            ("adjusted_vfm", adjusted_vfm),
+        ):
+            distributions.setdefault((player["position"], metric), []).append(value)
+
+    for player in players:
+        market_value = player.get("market_value_m")
+        role_score = player.get("role_score")
+        if role_score is None or not market_value or market_value <= 0:
+            player.update(
+                {
+                    "raw_vfm": None,
+                    "adjusted_vfm": None,
+                    "role_score_position_percentile": None,
+                    "market_value_position_percentile": None,
+                    "raw_vfm_position_percentile": None,
+                    "adjusted_vfm_position_percentile": None,
+                    "bargain_candidate": False,
+                }
+            )
+            continue
+
+        position = player["position"]
+        raw_vfm = role_score / market_value
+        adjusted_vfm = role_score / math.sqrt(market_value)
+        role_percentile = percentile(
+            role_score, distributions.get((position, "role_score"), [])
+        )
+        value_percentile = percentile(
+            market_value, distributions.get((position, "market_value"), [])
+        )
+        adjusted_percentile = percentile(
+            adjusted_vfm, distributions.get((position, "adjusted_vfm"), [])
+        )
+        player.update(
+            {
+                "raw_vfm": round(raw_vfm, 3),
+                "adjusted_vfm": round(adjusted_vfm, 3),
+                "role_score_position_percentile": role_percentile,
+                "market_value_position_percentile": value_percentile,
+                "raw_vfm_position_percentile": percentile(
+                    raw_vfm, distributions.get((position, "raw_vfm"), [])
+                ),
+                "adjusted_vfm_position_percentile": adjusted_percentile,
+                "bargain_candidate": (
+                    player["mins"] >= PLAYER_FEATURED_MINUTES
+                    and player.get("valuation_status") == "fresh"
+                    and role_percentile >= 50
+                    and value_percentile <= 50
+                    and adjusted_percentile >= 50
+                ),
+            }
+        )
+    return players
+
+
+def validate_player_value_metrics(players: list[dict[str, Any]]) -> None:
+    percentile_fields = (
+        "role_score_position_percentile",
+        "market_value_position_percentile",
+        "raw_vfm_position_percentile",
+        "adjusted_vfm_position_percentile",
+    )
+    for player in players:
+        for field in ("raw_vfm", "adjusted_vfm"):
+            value = player[field]
+            if value is not None and value < 0:
+                raise DataValidationError(
+                    f"Player {field} must be non-negative for {player['player']}"
+                )
+        for field in percentile_fields:
+            value = player[field]
+            if value is not None and not 0 <= value <= 100:
+                raise DataValidationError(
+                    f"Player {field} must be between 0 and 100 for {player['player']}"
+                )
+        if player["bargain_candidate"] and (
+            player["mins"] < PLAYER_FEATURED_MINUTES
+            or player.get("valuation_status") != "fresh"
+        ):
+            raise DataValidationError(
+                f"Bargain candidate must have featured eligibility: {player['player']}"
+            )
 
 
 def build_squad_valuations(
@@ -1370,6 +1475,8 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
     validate_finances(finances, sources["finance_sources"], players, warnings)
     squads = normalize_squads(sources["squads"], standings, sources["understat"], warnings)
     players = annotate_player_scores(players, squads, sources["understat"], warnings)
+    players = annotate_player_value_metrics(players)
+    validate_player_value_metrics(players)
     squad_valuations = build_squad_valuations(
         players, sources["club_value_references"], sources["exchange_rates"], warnings
     )
@@ -1384,7 +1491,7 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
 
     bundle = {
         "_meta": {
-            "schema_version": 5,
+            "schema_version": 6,
             "season": SEASON,
             "generated_by": "fetch_data.py",
             "player_value_policy": {
@@ -1399,6 +1506,16 @@ def build_bundle() -> tuple[dict[str, Any], list[str]]:
             "role_score": {
                 "version": ROLE_SCORE_VERSION,
                 "weights": ROLE_SCORE_WEIGHTS,
+            },
+            "vfm_model": {
+                "version": VFM_MODEL_VERSION,
+                "raw_formula": "role_score / market_value_m",
+                "adjusted_formula": "role_score / sqrt(market_value_m)",
+                "percentile_sample": "fresh valuations with at least 500 minutes",
+                "bargain_rule": (
+                    "fresh value, at least 900 minutes, role score percentile >= 50, "
+                    "market value percentile <= 50, adjusted VFM percentile >= 50"
+                ),
             },
             "enrichment_coverage": enrichment_coverage,
         },
