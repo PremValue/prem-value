@@ -183,6 +183,13 @@
       <div class="finance-kpis" id="financeKpis"></div>
       <div class="finance-methodology" id="financeMethodology"></div>
       <div class="data-health" id="financeDataHealth"></div>
+      <div class="export-toolbar">
+        <strong>Export / Share</strong>
+        <button class="action-btn" onclick="copyCurrentViewLink('financeExportStatus')">Copy finance link</button>
+        <button class="action-btn" onclick="exportTeamEfficiencyCsv()">Export team CSV</button>
+        <button class="action-btn" onclick="downloadChartPng('cFinSpendPoints','premvalue-spending-vs-points-2024-2025.png','financeExportStatus')">Download spending chart PNG</button>
+        <span class="export-status" id="financeExportStatus" aria-live="polite"></span>
+      </div>
 
       <div class="section-hdr compact-hdr" style="margin-top:2rem">
         <h2>Club Finance Comparison</h2>
@@ -193,6 +200,8 @@
         <label>Second club<select id="financeCompareB" onchange="updateFinanceComparison('b',this.value)"></select></label>
         <button class="action-btn" onclick="swapFinanceComparison()">Swap clubs</button>
         <button class="action-btn" onclick="copyFinanceComparisonLink()">Copy link</button>
+        <button class="action-btn" onclick="exportFinanceComparisonCsv()">Export comparison CSV</button>
+        <button class="action-btn" onclick="downloadChartPng('cFinCompareProfile','premvalue-finance-comparison-profile-2024-2025.png','financeCompareStatus')">Download profile PNG</button>
         <button class="action-btn" onclick="resetFinanceComparison()">Reset comparison</button>
       </div>
       <div class="comparison-status" id="financeCompareStatus" aria-live="polite"></div>
@@ -298,6 +307,13 @@
       </div>
 
       <div class="value-kpis" id="valueKpis"></div>
+      <div class="export-toolbar">
+        <strong>Export / Share</strong>
+        <button class="action-btn" onclick="copyCurrentViewLink('valueExportStatus')">Copy player explorer link</button>
+        <button class="action-btn" onclick="exportPlayerRankingsCsv()">Export filtered player CSV</button>
+        <button class="action-btn" onclick="downloadChartPng('cValScatter','premvalue-player-scatter-2024-2025.png','valueExportStatus')">Download scatter PNG</button>
+        <span class="export-status" id="valueExportStatus" aria-live="polite"></span>
+      </div>
 
       <div class="metric-legend">
         <div class="metric-item"><span class="dot green"></span><strong>Role score</strong> = Position-weighted percentile score using output, expected output, defence, clean sheets, and saves</div>
@@ -335,7 +351,19 @@
       <div class="chart-grid" style="margin-top:1.5rem">
         <div class="chart-card wide">
           <div class="card-hdr"><h3>Role Score vs Market Value</h3><span class="badge">Position-aware score</span></div>
+          <div class="scatter-controls">
+            <label>Trend scope<select id="playerTrendScope" onchange="updateScatterSetting('trendScope',this.value)">
+              <option value="position">By position</option><option value="all">All players</option><option value="hide">Hide trend lines</option>
+            </select></label>
+            <label>Reference lines<select id="playerQuadrantMode" onchange="updateScatterSetting('quadrantMode',this.value)">
+              <option value="position">Position medians</option><option value="league">League medians</option><option value="hide">Hide quadrants</option>
+            </select></label>
+            <label>Labels<select id="playerLabelMode" onchange="updateScatterSetting('labelMode',this.value)">
+              <option value="outliers">Outliers only</option><option value="bargains">Bargains only</option><option value="position">Selected position</option><option value="hide">Hide labels</option>
+            </select></label>
+          </div>
           <div class="chart-wrap tall"><canvas id="cValScatter"></canvas></div>
+          <p class="chart-note" id="playerScatterSummary"></p>
         </div>
         <div class="chart-card wide">
           <div class="card-hdr"><h3 id="valueRankingTitle">Top 25 - Adjusted VFM</h3><span class="badge">900+ mins - fresh values</span></div>
@@ -386,6 +414,12 @@
       <div class="section-hdr">
         <h2>📋 Best Value XI</h2>
         <p>Build a reproducible lineup from fresh player valuations. Broad FBRef position groups are used because the source snapshot does not reliably distinguish detailed roles.</p>
+      </div>
+      <div class="export-toolbar">
+        <strong>Export / Share</strong>
+        <button class="action-btn" onclick="copyCurrentViewLink('xiExportStatus')">Copy XI link</button>
+        <button class="action-btn" onclick="exportXiCsv()">Export XI CSV</button>
+        <span class="export-status" id="xiExportStatus" aria-live="polite"></span>
       </div>
       <div class="xi-controls">
         <label>Formation<select id="xiFormation" onchange="updateXiSetting('formation',this.value)">

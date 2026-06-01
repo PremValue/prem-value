@@ -7,6 +7,9 @@ line, linked club drill-down views, tactical and financial club comparisons, a
 filterable player explorer with raw and adjusted value models, and a
 formation-aware Best Value XI builder with selectable objectives, optional
 budget and per-club limits, player constraints, alternatives, and manual swaps.
+The player explorer also includes optional position trend lines, median
+reference quadrants, and selective labels. Finance, player, club, and XI views
+provide shareable URL state plus relevant CSV or chart PNG downloads.
 
 ## Data Pipeline
 
@@ -133,7 +136,9 @@ cutoff.
 
 `data/data_health_audit.json` is regenerated with the dashboard. It records
 the affected players or clubs, resolution notes, source links, and warning,
-informational, or healthy state behind each expandable data-health card.
+informational, or healthy state behind each data-health check. The dashboard
+keeps that audit compact by default, then exposes severity filters, search,
+passed-check grouping, and bounded affected-record lists when expanded.
 
 ## Position-Aware Player Scores
 

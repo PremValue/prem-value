@@ -93,6 +93,9 @@ let playerFilters = {
   minMinutes: 500, valuation: "all", rankingMethod: "adjusted_vfm",
   minValue: 0, bargainOnly: false,
 };
+let scatterSettings = { trendScope: "position", quadrantMode: "position", labelMode: "outliers" };
+let healthUiState = { open: false, severity: "all", search: "", expanded: [] };
+let healthSearchTimer = null;
 let financeComparison = { a: "Brentford", b: "Liverpool" };
 let xiSettings = { formation: "4-3-3", objective: "balanced", minMinutes: 900, maxValue: "", maxPerClub: 3 };
 let xiLocks = [];
@@ -120,12 +123,61 @@ const squadValuationFor = team => (DATA.squad_valuations || []).find(value => va
 const playerKey = player => `${player.player}|${player.club}`;
 const parseListParam = value => value ? value.split("~").filter(Boolean) : [];
 const serializeListParam = values => values.length ? values.join("~") : "";
+const optionParam = (params, key, options, fallback) => options.includes(params.get(key)) ? params.get(key) : fallback;
 const fmt = (value, digits = 1) => Number(value).toFixed(digits);
 const signed = (value, digits = 1) => `${value > 0 ? "+" : ""}${fmt(value, digits)}`;
 const encodedTeam = team => encodeURIComponent(team);
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 }[char]));
+const csvEscape = value => {
+  const text = String(value ?? "");
+  const safe = /^[=+\-@]/.test(text) ? `'${text}` : text;
+  return `"${safe.replaceAll('"', '""')}"`;
+};
+const buildCsv = (headers, rows) => "\uFEFF" + [headers, ...rows]
+  .map(row => row.map(csvEscape).join(",")).join("\r\n");
+const slug = value => String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+function setExportStatus(id, message) {
+  const status = document.getElementById(id);
+  if (status) status.textContent = message;
+}
+
+function triggerDownload(filename, href) {
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+}
+
+function downloadTextFile(filename, content, type = "text/csv;charset=utf-8") {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  triggerDownload(filename, url);
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+async function copyCurrentViewLink(statusId) {
+  syncUrlState();
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    setExportStatus(statusId, "Link copied.");
+  } catch {
+    setExportStatus(statusId, `Copy unavailable. Use the current page URL: ${window.location.href}`);
+  }
+}
+
+function downloadChartPng(chartId, filename, statusId) {
+  const chart = charts[chartId];
+  if (!chart) {
+    setExportStatus(statusId, "Open this view before downloading its chart.");
+    return;
+  }
+  triggerDownload(filename, chart.toBase64Image());
+  setExportStatus(statusId, "Chart PNG downloaded.");
+}
 
 function readUrlState() {
   const params = new URLSearchParams(window.location.search);
@@ -144,6 +196,17 @@ function readUrlState() {
     rankingMethod: params.get("ranking") || "adjusted_vfm",
     minValue: Number(params.get("minValue") || 0),
     bargainOnly: params.get("bargains") === "1",
+  };
+  scatterSettings = {
+    trendScope: optionParam(params, "trend", ["position", "all", "hide"], "position"),
+    quadrantMode: optionParam(params, "quadrants", ["position", "league", "hide"], "position"),
+    labelMode: optionParam(params, "labels", ["outliers", "bargains", "position", "hide"], "outliers"),
+  };
+  healthUiState = {
+    open: params.get("health") === "open",
+    severity: optionParam(params, "healthSeverity", ["all", "warning", "info", "ok"], "all"),
+    search: params.get("healthSearch") || "",
+    expanded: parseListParam(params.get("healthExpanded")),
   };
   financeComparison = {
     a: params.get("compareA") || "Brentford",
@@ -180,6 +243,13 @@ function syncUrlState() {
   if (playerFilters.rankingMethod !== "adjusted_vfm") params.set("ranking", playerFilters.rankingMethod);
   if (playerFilters.minValue) params.set("minValue", playerFilters.minValue);
   if (playerFilters.bargainOnly) params.set("bargains", "1");
+  if (scatterSettings.trendScope !== "position") params.set("trend", scatterSettings.trendScope);
+  if (scatterSettings.quadrantMode !== "position") params.set("quadrants", scatterSettings.quadrantMode);
+  if (scatterSettings.labelMode !== "outliers") params.set("labels", scatterSettings.labelMode);
+  if (healthUiState.open) params.set("health", "open");
+  if (healthUiState.severity !== "all") params.set("healthSeverity", healthUiState.severity);
+  if (healthUiState.search) params.set("healthSearch", healthUiState.search);
+  if (healthUiState.expanded.length) params.set("healthExpanded", serializeListParam(healthUiState.expanded));
   if (financeComparison.a !== "Brentford") params.set("compareA", financeComparison.a);
   if (financeComparison.b !== "Liverpool") params.set("compareB", financeComparison.b);
   if (xiSettings.formation !== "4-3-3") params.set("formation", xiSettings.formation);
@@ -615,6 +685,24 @@ function financeComparisonRecord(team) {
   return metric && standing ? { ...standing, ...squad, ...metric } : null;
 }
 
+const FINANCE_COMPARISON_FIELDS = [
+  ["league_position", "League position"],
+  ["points", "Points"],
+  ["goals_for", "Goals for"],
+  ["GA", "Goals against"],
+  ["wage_bill_m", "Annual wage bill GBP M"],
+  ["squad_value_m", "Squad market value EUR M"],
+  ["cost_per_point", "Cost per point GBP M"],
+  ["cost_per_goal", "Cost per goal GBP M"],
+  ["value_index", "Value index"],
+  ["predicted_points", "Expected points"],
+  ["residual_points", "Residual points"],
+  ["possession", "Possession percent"],
+  ["xG", "Expected goals xG"],
+  ["xGA", "Expected goals against xGA"],
+  ["clean_sheets", "Clean sheets"],
+];
+
 function renderFinanceComparisonControls() {
   const first = document.getElementById("financeCompareA");
   const second = document.getElementById("financeCompareB");
@@ -662,14 +750,32 @@ function resetFinanceComparison() {
 }
 
 async function copyFinanceComparisonLink() {
-  syncUrlState();
-  const status = document.getElementById("financeCompareStatus");
-  try {
-    await navigator.clipboard.writeText(window.location.href);
-    if (status) status.textContent = "Comparison link copied.";
-  } catch {
-    if (status) status.textContent = "Copy was unavailable. Use the current page URL.";
-  }
+  await copyCurrentViewLink("financeCompareStatus");
+}
+
+function exportTeamEfficiencyCsv() {
+  const rows = [...(DATA.team_metrics || [])].sort((a, b) => a.value_rank - b.value_rank);
+  downloadTextFile("premvalue-team-efficiency-2024-2025.csv", buildCsv(
+    ["Rank", "Club", "League Position", "Points", "Goals For", "Squad Value EUR M", "Annual Wages GBP M", "Cost Per Point GBP M", "Cost Per Goal GBP M", "Value Index", "Expected Points", "Residual Points"],
+    rows.map(row => [row.value_rank, row.team, row.league_position, row.points, row.goals_for, row.squad_value_m, row.wage_bill_m, row.cost_per_point, row.cost_per_goal, row.value_index, row.predicted_points, row.residual_points])
+  ));
+  setExportStatus("financeExportStatus", "Team efficiency CSV downloaded.");
+}
+
+function exportFinanceComparisonCsv() {
+  const a = financeComparisonRecord(financeComparison.a);
+  const b = financeComparisonRecord(financeComparison.b);
+  if (!a || !b) return;
+  downloadTextFile(`premvalue-${slug(a.team)}-vs-${slug(b.team)}-2024-2025.csv`, buildCsv(
+    ["Metric", a.team, b.team, "Difference (A - B)"],
+    FINANCE_COMPARISON_FIELDS.map(([key, label]) => [
+      label,
+      a[key],
+      b[key],
+      a[key] == null || b[key] == null ? "" : a[key] - b[key],
+    ])
+  ));
+  setExportStatus("financeCompareStatus", "Comparison CSV downloaded.");
 }
 
 function renderFinanceComparison() {
@@ -998,23 +1104,99 @@ function healthAffectedItem(item) {
   return `<li><strong>${escapeHtml(item.label)}</strong>${item.club ? `<span>${escapeHtml(item.club)}</span>` : ""}${status}${difference}${source}</li>`;
 }
 
-function renderDataHealth() {
+function healthCounts(records) {
+  return records.reduce((counts, record) => {
+    counts[record.severity] = (counts[record.severity] || 0) + 1;
+    return counts;
+  }, { warning: 0, info: 0, ok: 0 });
+}
+
+function updateHealthState(key, value) {
+  healthUiState[key] = value;
+  syncUrlState();
+  renderDataHealth();
+}
+
+function queueHealthSearch(value) {
+  clearTimeout(healthSearchTimer);
+  healthSearchTimer = setTimeout(() => updateHealthState("search", value), 200);
+}
+
+function toggleHealthAudit() {
+  updateHealthState("open", !healthUiState.open);
+}
+
+function toggleHealthAffected(code) {
+  healthUiState.expanded = healthUiState.expanded.includes(code)
+    ? healthUiState.expanded.filter(value => value !== code)
+    : [...healthUiState.expanded, code];
+  syncUrlState();
+  renderDataHealth();
+}
+
+function healthMatches(record) {
+  if (healthUiState.severity !== "all" && record.severity !== healthUiState.severity) return false;
+  const query = healthUiState.search.trim().toLowerCase();
+  if (!query) return true;
+  return [
+    record.code, record.summary, record.details, record.resolution,
+    ...(record.affected || []).flatMap(item => [item.label, item.club, item.status]),
+  ].some(value => String(value || "").toLowerCase().includes(query));
+}
+
+function renderHealthRecord(record) {
+  const affected = record.affected || [];
+  const expanded = healthUiState.expanded.includes(record.code);
+  const visible = expanded ? affected : affected.slice(0, 10);
+  return `
+    <details class="health-item health-${record.severity}">
+      <summary><strong>${escapeHtml(record.summary)}</strong><span>${escapeHtml(record.details)}</span></summary>
+      <div class="health-detail">
+        <p>${escapeHtml(record.resolution)}</p>
+        ${visible.length ? `<ul>${visible.map(healthAffectedItem).join("")}</ul>` : `<span>No affected records.</span>`}
+        ${affected.length > 10 ? `<button class="health-more" type="button" onclick="toggleHealthAffected('${escapeHtml(record.code)}')">${expanded ? "Show first 10" : `Show all ${affected.length}`}</button>` : ""}
+      </div>
+    </details>`;
+}
+
+function renderHealthPanel(prefix) {
   const health = DATA._meta?.health || [];
-  const html = `
-    <div class="method-title">Data health</div>
-    <div class="health-grid">${health.map(item => `
-      <details class="health-item health-${item.severity}">
-        <summary><strong>${escapeHtml(item.summary)}</strong><span>${escapeHtml(item.details)}</span></summary>
-        <div class="health-detail">
-          <p>${escapeHtml(item.resolution)}</p>
-          ${(item.affected || []).length
-            ? `<ul>${item.affected.map(healthAffectedItem).join("")}</ul>`
-            : `<span>No affected records.</span>`}
+  const counts = healthCounts(health);
+  const overall = counts.warning ? "Review recommended" : counts.info ? "Notes available" : "Healthy";
+  const filtered = health.filter(healthMatches);
+  const active = filtered.filter(record => record.severity !== "ok");
+  const passed = filtered.filter(record => record.severity === "ok");
+  const cutoff = DATA._meta?.player_value_policy?.valuation_cutoff || "2025-05-31";
+  return `
+    <div class="health-summary-row">
+      <div>
+        <div class="method-title">Data health <span class="health-overall">${overall}</span></div>
+        <p>${counts.warning} warnings · ${counts.info} notes · ${counts.ok} passed checks · valuation cutoff ${cutoff}</p>
+      </div>
+      <button class="action-btn" type="button" aria-expanded="${healthUiState.open}" aria-controls="${prefix}Audit" onclick="toggleHealthAudit()">${healthUiState.open ? "Hide audit" : "View audit"}</button>
+    </div>
+    ${healthUiState.open ? `
+      <div class="health-audit" id="${prefix}Audit">
+        <div class="health-toolbar">
+          <label>Severity<select onchange="updateHealthState('severity',this.value)">
+            <option value="all"${healthUiState.severity === "all" ? " selected" : ""}>All statuses</option>
+            <option value="warning"${healthUiState.severity === "warning" ? " selected" : ""}>Warnings</option>
+            <option value="info"${healthUiState.severity === "info" ? " selected" : ""}>Notes</option>
+            <option value="ok"${healthUiState.severity === "ok" ? " selected" : ""}>Passed checks</option>
+          </select></label>
+          <label>Search<input type="search" value="${escapeHtml(healthUiState.search)}" placeholder="Player, club, or check" oninput="queueHealthSearch(this.value)" onchange="updateHealthState('search',this.value)" /></label>
+          <span>${filtered.length} of ${health.length} checks shown</span>
         </div>
-      </details>`).join("")}</div>`;
+        <div class="health-grid">${active.map(renderHealthRecord).join("")}</div>
+        ${passed.length ? `<details class="health-passed"><summary>${passed.length} passed checks</summary><div class="health-grid">${passed.map(renderHealthRecord).join("")}</div></details>` : ""}
+        ${!filtered.length ? `<div class="empty-state">No data-health checks match these filters.</div>` : ""}
+      </div>` : ""}`;
+}
+
+function renderDataHealth() {
   ["overviewDataHealth", "financeDataHealth"].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = html;
+    if (el) el.innerHTML = renderHealthPanel(id);
   });
 }
 
@@ -1224,8 +1406,146 @@ function renderValueKPIs(players) {
     </div>`).join("");
 }
 
+const POSITION_COLORS = { GK: C.yellow, DF: C.green, MF: C.blue, FW: C.red };
+
+function median(values) {
+  const sorted = [...values].filter(Number.isFinite).sort((a, b) => a - b);
+  if (!sorted.length) return 0;
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+function scatterRegression(players) {
+  if (players.length < 2) return null;
+  const meanX = players.reduce((sum, player) => sum + player.market_value_m, 0) / players.length;
+  const meanY = players.reduce((sum, player) => sum + player.perf90, 0) / players.length;
+  const denominator = players.reduce((sum, player) => sum + (player.market_value_m - meanX) ** 2, 0);
+  if (!denominator) return null;
+  const slope = players.reduce((sum, player) => sum + (player.market_value_m - meanX) * (player.perf90 - meanY), 0) / denominator;
+  return { slope, intercept: meanY - slope * meanX };
+}
+
+function scatterReferences(players) {
+  const references = {
+    league: { value: median(players.map(player => player.market_value_m)), score: median(players.map(player => player.perf90)) },
+  };
+  ["GK", "DF", "MF", "FW"].forEach(position => {
+    const group = players.filter(player => player.position === position);
+    if (group.length) references[position] = { value: median(group.map(player => player.market_value_m)), score: median(group.map(player => player.perf90)) };
+  });
+  return references;
+}
+
+function scatterLine(label, data, color, dash = [7, 5]) {
+  return {
+    type: "line", label, data, borderColor: color, borderDash: dash, borderWidth: 1.5,
+    pointRadius: 0, pointHoverRadius: 0, fill: false,
+  };
+}
+
+function scatterTrendDatasets(players) {
+  if (scatterSettings.trendScope === "hide") return [];
+  const groups = scatterSettings.trendScope === "all"
+    ? [["All players", players, C.cyan]]
+    : ["GK", "DF", "MF", "FW"].map(position => [posLabel(position), players.filter(player => player.position === position), POSITION_COLORS[position]]);
+  return groups.flatMap(([label, group, color]) => {
+    const regression = scatterRegression(group);
+    if (!regression) return [];
+    const values = group.map(player => player.market_value_m);
+    const low = Math.min(...values), high = Math.max(...values);
+    return [scatterLine(`${label} trend`, [
+      { x: low, y: regression.intercept + regression.slope * low },
+      { x: high, y: regression.intercept + regression.slope * high },
+    ], color)];
+  });
+}
+
+function scatterReferenceDatasets(players, references) {
+  if (scatterSettings.quadrantMode === "hide" || !players.length) return [];
+  const maxX = Math.max(...players.map(player => player.market_value_m));
+  const maxY = Math.max(...players.map(player => player.perf90));
+  const groups = scatterSettings.quadrantMode === "league"
+    ? [["League", references.league, C.purple]]
+    : ["GK", "DF", "MF", "FW"].map(position => [position, references[position], POSITION_COLORS[position]]);
+  return groups.flatMap(([label, reference, color]) => reference ? [
+    scatterLine(`${label} median value`, [{ x: reference.value, y: 0 }, { x: reference.value, y: maxY }], color + "77", [3, 5]),
+    scatterLine(`${label} median role score`, [{ x: 0, y: reference.score }, { x: maxX, y: reference.score }], color + "77", [3, 5]),
+  ] : []);
+}
+
+function scatterLabelKeys(players) {
+  const ranked = [...players].sort((a, b) =>
+    Number(b.isBargain) - Number(a.isBargain)
+    || (b.adjusted_vfm_position_percentile || 0) - (a.adjusted_vfm_position_percentile || 0)
+  );
+  if (scatterSettings.labelMode === "hide") return new Set();
+  if (scatterSettings.labelMode === "bargains") return new Set(ranked.filter(player => player.isBargain).map(playerKey));
+  if (scatterSettings.labelMode === "position") {
+    const position = playerFilters.position === "all" ? "" : playerFilters.position;
+    return new Set(ranked.filter(player => !position || player.position === position).slice(0, 18).map(playerKey));
+  }
+  return new Set(ranked.slice(0, 10).map(playerKey));
+}
+
+function scatterQuadrant(point, references) {
+  const reference = references[point.position] || references.league;
+  if (point.x <= reference.value && point.y >= reference.score) return "High output / lower value";
+  if (point.x > reference.value && point.y >= reference.score) return "High output / higher value";
+  if (point.x <= reference.value) return "Lower output / lower value";
+  return "Lower output / higher value";
+}
+
+const scatterLabelsPlugin = {
+  id: "scatterLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    ctx.save();
+    ctx.fillStyle = "#e2e8f0";
+    ctx.font = "600 10px Inter, sans-serif";
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex);
+      dataset.data.forEach((point, index) => {
+        if (!point.player || !point.labelVisible || !meta.data[index]) return;
+        ctx.fillText(point.player, meta.data[index].x + 7, meta.data[index].y - 7);
+      });
+    });
+    ctx.restore();
+  },
+};
+
+function scatterTooltip(context) {
+  if (!context.raw.player) return ` ${context.dataset.label}`;
+  const point = context.raw;
+  return ` ${point.player} (${point.club})  ${point.position}  EUR ${point.x}M  Role score: ${point.y}  ${point.quadrant}  ${point.status} ${point.date || ""}  ${point.bargain ? "Bargain" : ""}`;
+}
+
+function renderScatterControls() {
+  const trend = document.getElementById("playerTrendScope");
+  const quadrant = document.getElementById("playerQuadrantMode");
+  const labels = document.getElementById("playerLabelMode");
+  if (trend) trend.value = scatterSettings.trendScope;
+  if (quadrant) quadrant.value = scatterSettings.quadrantMode;
+  if (labels) labels.value = scatterSettings.labelMode;
+}
+
+function updateScatterSetting(key, value) {
+  scatterSettings[key] = value;
+  syncUrlState();
+  renderValueCharts(filteredPlayers());
+}
+
+function exportPlayerRankingsCsv() {
+  const rows = [...filteredPlayers()].sort((a, b) => Number(hasFreshValue(b)) - Number(hasFreshValue(a)) || playerRanking(b) - playerRanking(a));
+  downloadTextFile("premvalue-filtered-player-rankings-2024-2025.csv", buildCsv(
+    ["Rank", "Player", "Club", "Position", "Age", "Appearances", "Minutes", "Goals", "Assists", "Role Score", "Market Value EUR M", "Valuation Status", "Valuation Date", "Raw VFM", "Adjusted VFM", "Position Percentile", "Bargain"],
+    rows.map((player, index) => [index + 1, player.player, player.club, player.position, player.age, player.apps, player.mins, player.goals, player.assists, player.perf90, player.market_value_m, player.valuation_status, player.valuation_date, player.raw_vfm, player.adjusted_vfm, player.adjusted_vfm_position_percentile, player.isBargain ? "Yes" : "No"])
+  ));
+  setExportStatus("valueExportStatus", `${rows.length} filtered players exported.`);
+}
+
 function renderValueCharts(players = filteredPlayers()) {
   renderValueKPIs(players);
+  renderScatterControls();
   const ranking = playerRankingConfig();
   const rankingTitle = document.getElementById("valueRankingTitle");
   if (rankingTitle) rankingTitle.textContent = `Top 25 - ${ranking.label}`;
@@ -1234,28 +1554,36 @@ function renderValueCharts(players = filteredPlayers()) {
   destroyChart("cValScatter");
   const ctx1 = document.getElementById("cValScatter"); if (!ctx1) return;
   const validP = players.filter(p => p.market_value_m > 0);
-  const positionColor = { GK: C.yellow, DF: C.green, MF: C.blue, FW: C.red };
+  const positionColor = POSITION_COLORS;
+  const references = scatterReferences(validP);
+  const labelKeys = scatterLabelKeys(validP);
   charts["cValScatter"] = new Chart(ctx1, {
     type: "scatter", data: {
       datasets: [{
         label: "Players",
-        data: validP.map(p => ({ x: p.market_value_m, y: p.perf90, player: p.player, club: p.club, position: p.position, bargain: p.isBargain, status: p.valuation_status, date: p.valuation_date })),
+        data: validP.map(p => {
+          const point = { x: p.market_value_m, y: p.perf90, player: p.player, club: p.club, position: p.position, bargain: p.isBargain, status: p.valuation_status, date: p.valuation_date, labelVisible: labelKeys.has(playerKey(p)) };
+          return { ...point, quadrant: scatterQuadrant(point, references) };
+        }),
         backgroundColor: validP.map(p => (positionColor[p.position] || C.purple) + (p.valuation_status === "stale" ? "77" : "cc")),
         borderColor:     validP.map(p => p.isBargain ? C.yellow : p.valuation_status === "stale" ? C.orange : positionColor[p.position] || C.purple),
         borderWidth: validP.map(p => p.isBargain || p.valuation_status === "stale" ? 2.5 : 1),
         pointRadius: validP.map(p => p.isBargain ? 8 : p.valuation_status === "stale" ? 7 : 5),
         pointHoverRadius: 11,
-      }]
+      }, ...scatterTrendDatasets(validP), ...scatterReferenceDatasets(validP, references)]
     },
     options: { responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false },
-        tooltip: { callbacks: { label: c => ` ${c.raw.player} (${c.raw.club})  ${c.raw.position}  €${c.raw.x}M  Role score: ${c.raw.y}  ${c.raw.status} ${c.raw.date || ""}  ${c.raw.bargain ? "🏷️ Bargain" : ""}` } } },
+      plugins: { legend: { labels: { color: "#94a3b8", boxWidth: 12, filter: item => !item.text.includes("median") } },
+        tooltip: { callbacks: { label: scatterTooltip } } },
       scales: {
         x: { title: { display: true, text: "Market Value (€M)", color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } },
         y: { title: { display: true, text: "Position-aware role score",  color: "#64748b" }, grid: { color: "rgba(255,255,255,0.05)" } }
       }
-    }
+    },
+    plugins: [scatterLabelsPlugin],
   });
+  const summary = document.getElementById("playerScatterSummary");
+  if (summary) summary.textContent = `${validP.length} valued players shown · ${validP.filter(player => player.isBargain).length} bargain candidates · dashed lines show ${scatterSettings.quadrantMode === "position" ? "position" : scatterSettings.quadrantMode === "league" ? "league" : "no"} median references.`;
 
   // VFM Bar chart — top 25
   destroyChart("cValRanking");
@@ -1413,6 +1741,11 @@ function renderTeamDetail(team) {
   el.innerHTML = `
     <div class="team-detail">
       <button class="action-btn" onclick="showAllClubs()">← All clubs</button>
+      <div class="export-toolbar">
+        <strong>Export / Share</strong>
+        <button class="action-btn" onclick="copyCurrentViewLink('clubExportStatus')">Copy club link</button>
+        <span class="export-status" id="clubExportStatus" aria-live="polite"></span>
+      </div>
       <div class="team-detail-header" style="--club-color:${tc(team)};background:linear-gradient(135deg,${tbg(team)},${tc(team)}33)">
         ${crestImg(team, 76)}
         <div><h2>${team}</h2><p>#${standing.position} · ${standing.Pts} points · ${standing.W}W ${standing.D}D ${standing.L}L · ${standing.GF} GF ${standing.GA} GA · ${standing.GD > 0 ? "+" : ""}${standing.GD} GD</p>
@@ -1759,6 +2092,28 @@ function slotLabels(slots) {
 
 function slotIndex(slots, slot) {
   return slotLabels(slots).indexOf(slot);
+}
+
+function exportXiCsv() {
+  const { slots, eligible, lineups } = optimizeXi();
+  if (xiSelectedAlternative >= lineups.length) xiSelectedAlternative = 0;
+  const manual = applyManualXiSwaps(lineups[xiSelectedAlternative] || null, slots, eligible);
+  const lineup = manual.lineup;
+  if (!lineup || lineup.players.length !== 11) {
+    setExportStatus("xiExportStatus", "Build a valid XI before exporting.");
+    return;
+  }
+  const labels = slotLabels(slots);
+  downloadTextFile(`premvalue-best-value-xi-${slug(xiSettings.formation)}-2024-2025.csv`, buildCsv(
+    ["Slot", "Player", "Club", "Position", "Minutes", "Goals", "Assists", "Role Score", "Market Value EUR M", "Adjusted VFM", "Locked", "Manual Swap"],
+    lineup.players.map((player, index) => [
+      labels[index], player.player, player.club, player.position, player.mins, player.goals, player.assists,
+      player.perf90, player.market_value_m, player.adjusted_vfm,
+      xiLocks.includes(playerKey(player)) ? "Yes" : "No",
+      xiManualSwaps[labels[index]] ? "Yes" : "No",
+    ])
+  ));
+  setExportStatus("xiExportStatus", "Best Value XI CSV downloaded.");
 }
 
 function selectXiAlternative(index) {

@@ -247,6 +247,12 @@ body::before {
 }
 .table-action:hover,
 .action-btn:hover { color:#fff;border-color:var(--purple);background:rgba(139,92,246,.3) }
+.export-toolbar {
+  display:flex;align-items:center;flex-wrap:wrap;gap:.55rem;margin-top:.75rem;padding:.7rem .8rem;
+  background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.18);border-radius:var(--r-sm);
+}
+.export-toolbar strong { color:var(--t2);font-size:.73rem;text-transform:uppercase;letter-spacing:.06em;margin-right:.15rem }
+.export-status { color:var(--cyan);font-size:.72rem;line-height:1.4;overflow-wrap:anywhere }
 .metric-good { color:var(--green)!important;font-weight:700 }
 .metric-bad { color:var(--red)!important;font-weight:700 }
 .metric-neutral { color:var(--yellow)!important;font-weight:700 }
@@ -337,9 +343,24 @@ body::before {
 .wage-bar-wrap  { width:80px;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden }
 .wage-bar-fill  { height:100%;border-radius:2px;transition:width .5s ease }
 .data-health {
-  margin-top:.75rem;padding:.9rem 1.1rem;background:rgba(34,211,238,.04);
+  margin-top:.75rem;padding:.8rem 1rem;background:rgba(34,211,238,.04);
   border:1px solid rgba(34,211,238,.18);border-radius:var(--r-md);
 }
+.health-summary-row { display:flex;align-items:center;justify-content:space-between;gap:.8rem }
+.health-summary-row .method-title { margin-bottom:.18rem }
+.health-summary-row p { color:var(--t3);font-size:.72rem;line-height:1.5 }
+.health-overall {
+  display:inline-block;margin-left:.35rem;padding:.13rem .42rem;border-radius:50px;
+  background:rgba(34,211,238,.12);color:var(--cyan);font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;
+}
+.health-audit { margin-top:.75rem;padding-top:.75rem;border-top:1px solid rgba(255,255,255,.08) }
+.health-toolbar { display:flex;align-items:end;flex-wrap:wrap;gap:.55rem;margin-bottom:.65rem }
+.health-toolbar label { display:flex;flex-direction:column;gap:.25rem;color:var(--t3);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em }
+.health-toolbar select,.health-toolbar input {
+  min-width:150px;padding:.42rem .48rem;color:var(--t1);background:rgba(0,0,0,.25);
+  border:1px solid var(--border);border-radius:7px;font:inherit;text-transform:none;letter-spacing:normal;
+}
+.health-toolbar span { color:var(--t3);font-size:.68rem;padding:.42rem 0 }
 .health-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.55rem }
 .health-item { padding:.6rem;border-radius:6px;background:rgba(0,0,0,.16) }
 .health-item summary { display:flex;flex-direction:column;gap:.2rem;cursor:pointer;list-style:none }
@@ -356,6 +377,13 @@ body::before {
 .health-detail li span,.health-detail li a { margin-left:.35rem }
 .health-detail a { color:var(--cyan) }
 .health-status { color:var(--purple-lt)!important }
+.health-more {
+  margin-top:.45rem;color:var(--cyan);background:transparent;border:0;cursor:pointer;
+  font:inherit;font-size:.68rem;font-weight:700;
+}
+.health-passed { margin-top:.65rem;color:var(--green);font-size:.74rem }
+.health-passed summary { cursor:pointer }
+.health-passed .health-grid { margin-top:.55rem }
 @media (min-width:640px) { .health-item[open] { grid-column:span 2 } }
 
 /* ── VALUE FOR MONEY SECTION ─────────────────────────────────── */
@@ -376,6 +404,7 @@ body::before {
 .dot.orange { background:var(--orange) }
 
 .explorer-controls,
+.scatter-controls,
 .xi-controls,
 .xi-roster-controls,
 .finance-compare-controls,
@@ -385,6 +414,7 @@ body::before {
   border:1px solid var(--border);border-radius:var(--r-md);
 }
 .explorer-controls label,
+.scatter-controls label,
 .xi-controls label,
 .xi-roster-controls label,
 .finance-compare-controls label,
@@ -394,6 +424,7 @@ body::before {
 }
 .explorer-controls input,
 .explorer-controls select,
+.scatter-controls select,
 .xi-controls input,
 .xi-controls select,
 .xi-roster-controls select,
@@ -405,6 +436,8 @@ body::before {
 }
 .explorer-controls .check-label { flex-direction:row;align-items:center;padding:.48rem 0;text-transform:none }
 .explorer-controls .check-label input { min-width:auto }
+.scatter-controls { margin:.2rem 0 .85rem;padding:.65rem .75rem }
+.scatter-controls select { min-width:125px }
 .result-count { color:var(--cyan);font-size:.78rem;margin:.75rem 0 0 }
 .compact-hdr { margin-bottom:.75rem }
 .comparison-grid { margin-top:1rem }
@@ -702,11 +735,13 @@ body::before {
   .bargain-grid{ grid-template-columns:1fr }
   .metric-legend { flex-direction:column }
   .explorer-controls label,
+  .scatter-controls label,
   .xi-controls label,
   .xi-roster-controls label,
   .finance-compare-controls label { flex:1 1 135px }
   .explorer-controls input,
   .explorer-controls select,
+  .scatter-controls select,
   .xi-controls input,
   .xi-controls select,
   .xi-roster-controls select,
