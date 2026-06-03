@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Premier League 2024–2025 | Value for Money Dashboard</title>
   <meta name="description" content="Interactive Premier League 2024–2025 analytics dashboard. Explore standings, scorers, finances, value for money, and club profiles." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%238b5cf6'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='34' font-family='Arial' fill='white'%3EP%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -186,6 +187,49 @@
       <div class="finance-kpis" id="financeKpis"></div>
       <div class="finance-methodology" id="financeMethodology"></div>
       <div class="data-health" id="financeDataHealth"></div>
+      <div class="export-toolbar">
+        <strong>Export / Share</strong>
+        <button class="action-btn" onclick="copyCurrentViewLink('financeExportStatus')">Copy finance link</button>
+        <button class="action-btn" onclick="exportTeamEfficiencyCsv()">Export team CSV</button>
+        <button class="action-btn" onclick="downloadChartPng('cFinSpendPoints','premvalue-spending-vs-points-2024-2025.png','financeExportStatus')">Download spending chart PNG</button>
+        <span class="export-status" id="financeExportStatus" aria-live="polite"></span>
+      </div>
+
+      <div class="section-hdr compact-hdr" style="margin-top:2rem">
+        <h2>Club Finance Comparison</h2>
+        <p>Compare two clubs across spending, results, expected points, and tactical context.</p>
+      </div>
+      <div class="finance-compare-controls">
+        <label>First club<select id="financeCompareA" onchange="updateFinanceComparison('a',this.value)"></select></label>
+        <label>Second club<select id="financeCompareB" onchange="updateFinanceComparison('b',this.value)"></select></label>
+        <button class="action-btn" onclick="swapFinanceComparison()">Swap clubs</button>
+        <button class="action-btn" onclick="copyFinanceComparisonLink()">Copy link</button>
+        <button class="action-btn" onclick="exportFinanceComparisonCsv()">Export comparison CSV</button>
+        <button class="action-btn" onclick="downloadChartPng('cFinCompareProfile','premvalue-finance-comparison-profile-2024-2025.png','financeCompareStatus')">Download profile PNG</button>
+        <button class="action-btn" onclick="resetFinanceComparison()">Reset comparison</button>
+      </div>
+      <div class="comparison-status" id="financeCompareStatus" aria-live="polite"></div>
+      <div class="comparison-insights" id="financeCompareInsights"></div>
+      <div class="chart-grid comparison-grid">
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Efficiency Profile</h3><span class="badge">League average = 100</span></div>
+          <div class="chart-wrap"><canvas id="cFinCompareProfile"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>Expected vs Actual Points</h3><span class="badge">Points</span></div>
+          <div class="chart-wrap"><canvas id="cFinComparePoints"></canvas></div>
+        </div>
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Financial Resources</h3><span class="badge">Separate GBP and EUR series</span></div>
+          <div class="chart-wrap"><canvas id="cFinCompareResources"></canvas></div>
+        </div>
+      </div>
+      <div class="table-wrap comparison-table-wrap">
+        <table class="stats-table">
+          <thead><tr><th>Metric</th><th id="financeCompareHeadA">Club A</th><th id="financeCompareHeadB">Club B</th><th>Difference (A - B)</th></tr></thead>
+          <tbody id="financeCompareBody"></tbody>
+        </table>
+      </div>
 
       <div class="chart-grid" style="margin-top:1.5rem">
         <div class="chart-card wide">
@@ -242,7 +286,7 @@
 
       <div class="section-hdr" style="margin-top:2.5rem">
         <h2>Squad Valuation Discrepancy Report</h2>
-        <p>Player-derived euro totals compared with converted external GBP references using the dated ECB exchange-rate snapshot.</p>
+        <p>Player-derived euro totals compared with converted, comparison-only external GBP references using the dated ECB exchange-rate snapshot.</p>
       </div>
       <div class="table-wrap">
         <table class="stats-table">
@@ -263,15 +307,22 @@
     <section class="section" id="sectionValue">
       <div class="section-hdr">
         <h2>⚡ Player Value for Money</h2>
-        <p>Position-aware role score divided by market value — who gives the most for their price tag?</p>
+        <p>Compare raw and adjusted position-aware value scores to find strong performers at sensible prices.</p>
       </div>
 
       <div class="value-kpis" id="valueKpis"></div>
+      <div class="export-toolbar">
+        <strong>Export / Share</strong>
+        <button class="action-btn" onclick="copyCurrentViewLink('valueExportStatus')">Copy player explorer link</button>
+        <button class="action-btn" onclick="exportPlayerRankingsCsv()">Export filtered player CSV</button>
+        <button class="action-btn" onclick="downloadChartPng('cValScatter','premvalue-player-scatter-2024-2025.png','valueExportStatus')">Download scatter PNG</button>
+        <span class="export-status" id="valueExportStatus" aria-live="polite"></span>
+      </div>
 
       <div class="metric-legend">
         <div class="metric-item"><span class="dot green"></span><strong>Role score</strong> = Position-weighted percentile score using output, expected output, defence, clean sheets, and saves</div>
-        <div class="metric-item"><span class="dot cyan"></span><strong>VFM Score</strong> = Role score ÷ Market Value (€M)</div>
-        <div class="metric-item"><span class="dot yellow"></span><strong>Bargain</strong> = Fresh value · Minutes ≥ 900 · Role score ≥ position median · Value ≤ position median</div>
+        <div class="metric-item"><span class="dot cyan"></span><strong>Adjusted VFM</strong> = Role score / square root of Market Value (EUR M)</div>
+        <div class="metric-item"><span class="dot yellow"></span><strong>Bargain</strong> = Fresh value · 900+ minutes · above-position-median role score and adjusted VFM · below-position-median value</div>
         <div class="metric-item"><span class="dot orange"></span><strong>Stale value</strong> = Older than 180 days at the 2025-05-31 cutoff · visible but not featured</div>
       </div>
 
@@ -290,6 +341,12 @@
         <label>Valuation<select id="playerValuationFilter" onchange="updatePlayerFilter('valuation',this.value)">
           <option value="all">All statuses</option><option value="fresh">Fresh</option><option value="stale">Stale</option><option value="missing">Missing</option>
         </select></label>
+        <label>Ranking method<select id="playerRankingFilter" onchange="updatePlayerFilter('rankingMethod',this.value)">
+          <option value="adjusted_vfm">Adjusted VFM</option><option value="raw_vfm">Raw VFM</option><option value="role_score">Role score</option><option value="adjusted_vfm_position_percentile">Position percentile</option>
+        </select></label>
+        <label>Minimum market value<select id="playerMinValueFilter" onchange="updatePlayerFilter('minValue',this.value)">
+          <option value="0">No floor</option><option value="1">EUR 1M+</option><option value="2.5">EUR 2.5M+</option><option value="5">EUR 5M+</option>
+        </select></label>
         <label class="check-label"><input id="playerBargainFilter" type="checkbox" onchange="updatePlayerFilter('bargainOnly',this.checked)" /> Bargains only</label>
         <button class="action-btn" onclick="resetPlayerFilters()">Reset filters</button>
       </div>
@@ -298,10 +355,22 @@
       <div class="chart-grid" style="margin-top:1.5rem">
         <div class="chart-card wide">
           <div class="card-hdr"><h3>Role Score vs Market Value</h3><span class="badge">Position-aware score</span></div>
+          <div class="scatter-controls">
+            <label>Trend scope<select id="playerTrendScope" onchange="updateScatterSetting('trendScope',this.value)">
+              <option value="position">By position</option><option value="all">All players</option><option value="hide">Hide trend lines</option>
+            </select></label>
+            <label>Reference lines<select id="playerQuadrantMode" onchange="updateScatterSetting('quadrantMode',this.value)">
+              <option value="position">Position medians</option><option value="league">League medians</option><option value="hide">Hide quadrants</option>
+            </select></label>
+            <label>Labels<select id="playerLabelMode" onchange="updateScatterSetting('labelMode',this.value)">
+              <option value="outliers">Outliers only</option><option value="bargains">Bargains only</option><option value="position">Selected position</option><option value="hide">Hide labels</option>
+            </select></label>
+          </div>
           <div class="chart-wrap tall"><canvas id="cValScatter"></canvas></div>
+          <p class="chart-note" id="playerScatterSummary"></p>
         </div>
         <div class="chart-card wide">
-          <div class="card-hdr"><h3>Top 25 — Value for Money Score</h3><span class="badge">900+ mins · fresh values</span></div>
+          <div class="card-hdr"><h3 id="valueRankingTitle">Top 25 - Adjusted VFM</h3><span class="badge">900+ mins - fresh values</span></div>
           <div class="chart-wrap tall"><canvas id="cValRanking"></canvas></div>
         </div>
       </div>
@@ -309,7 +378,7 @@
       <!-- Bargain Players Feature Cards -->
       <div class="section-hdr" style="margin-top:2.5rem">
         <h2>🏷️ Bargain Players</h2>
-        <p>Players with fresh valuations meeting all three bargain criteria: 900+ minutes · above-median output · below-median market value</p>
+        <p>Players with fresh valuations meeting the position-relative bargain criteria: 900+ minutes · above-median role score and adjusted VFM · below-median market value</p>
       </div>
       <div class="bargain-grid" id="bargainGrid"></div>
 
@@ -323,7 +392,7 @@
           <thead><tr>
             <th>Rank</th><th>Player</th><th>Club</th><th>Pos</th>
             <th>Age</th><th>Apps</th><th>Mins</th><th>Goals</th><th>Assists</th>
-            <th>Role score</th><th>Value (€M)</th><th>Valuation</th><th>VFM Score</th><th>Bargain?</th>
+            <th>Role score</th><th>Value (€M)</th><th>Valuation</th><th>Raw VFM</th><th>Adjusted VFM</th><th>Pos percentile</th><th>Bargain?</th>
           </tr></thead>
           <tbody id="vfmBody"></tbody>
         </table>
@@ -349,6 +418,12 @@
       <div class="section-hdr">
         <h2>📋 Best Value XI</h2>
         <p>Build a reproducible lineup from fresh player valuations. Broad FBRef position groups are used because the source snapshot does not reliably distinguish detailed roles.</p>
+      </div>
+      <div class="export-toolbar">
+        <strong>Export / Share</strong>
+        <button class="action-btn" onclick="copyCurrentViewLink('xiExportStatus')">Copy XI link</button>
+        <button class="action-btn" onclick="exportXiCsv()">Export XI CSV</button>
+        <span class="export-status" id="xiExportStatus" aria-live="polite"></span>
       </div>
       <div class="xi-controls">
         <label>Formation<select id="xiFormation" onchange="updateXiSetting('formation',this.value)">
@@ -378,6 +453,9 @@
             <option value="2-3-5">2-3-5 (Pyramid)</option>
           </optgroup>
         </select></label>
+        <label>Optimization goal<select id="xiObjective" onchange="updateXiSetting('objective',this.value)">
+          <option value="balanced">Balanced value and quality</option><option value="adjusted_vfm">Best adjusted VFM</option><option value="raw_vfm">Best raw VFM</option><option value="role_score">Best role score under budget</option>
+        </select></label>
         <label>Minimum minutes<select id="xiMinutes" onchange="updateXiSetting('minMinutes',this.value)">
           <option value="900">900+</option><option value="1800">1,800+</option><option value="500">500+</option>
         </select></label>
@@ -387,12 +465,22 @@
         </select></label>
         <button class="action-btn" onclick="resetXiSettings()">Reset lineup</button>
       </div>
+      <div class="xi-roster-controls">
+        <label>Player constraint<select id="xiPlayerConstraint"></select></label>
+        <button class="action-btn" onclick="addXiConstraint('lock')">Lock player</button>
+        <button class="action-btn" onclick="addXiConstraint('exclude')">Exclude player</button>
+        <button class="action-btn" onclick="clearXiConstraints()">Clear constraints</button>
+        <button class="action-btn" onclick="clearXiSwaps()">Clear swaps</button>
+      </div>
+      <div class="xi-constraints" id="xiConstraints"></div>
+      <div class="xi-alternatives" id="xiAlternatives"></div>
       <div class="xi-summary" id="xiSummary"></div>
       <div class="pitch" id="xiPitch"></div>
+      <div class="xi-replacements" id="xiReplacements"></div>
       <div class="section-hdr" style="margin-top:2rem"><h2>Lineup Table</h2><p>Selected players and the explicit metrics behind the lineup.</p></div>
       <div class="table-wrap">
         <table class="stats-table">
-          <thead><tr><th>Slot</th><th>Player</th><th>Club</th><th>Pos</th><th>Mins</th><th>Goals</th><th>Assists</th><th>Role score</th><th>Value (€M)</th><th>VFM</th></tr></thead>
+          <thead><tr><th>Slot</th><th>Player</th><th>Club</th><th>Pos</th><th>Mins</th><th>Goals</th><th>Assists</th><th>Role score</th><th>Value (€M)</th><th>Adjusted VFM</th></tr></thead>
           <tbody id="xiBody"></tbody>
         </table>
       </div>
