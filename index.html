@@ -33,6 +33,10 @@
         <button class="nav-btn value"   data-section="value" onclick="showSection('value')">⚡ Value</button>
         <button class="nav-btn clubs"   data-section="clubs" onclick="showSection('clubs')">🏟️ Clubs</button>
         <button class="nav-btn value"   data-section="xi" onclick="showSection('xi')">📋 Best XI</button>
+        <button class="nav-btn"         data-section="compare" onclick="showSection('compare')">⚔️ Compare</button>
+        <button class="nav-btn"         data-section="xg" onclick="showSection('xg')">📈 xG</button>
+        <button class="nav-btn"         data-section="timeline" onclick="showSection('timeline')">📅 Timeline</button>
+        <button class="nav-btn"         data-section="transfers" onclick="showSection('transfers')">🔄 Transfers</button>
         <button class="nav-btn"         data-section="facts" onclick="showSection('facts')">Season Facts</button>
       </nav>
     </div>
@@ -423,7 +427,31 @@
       </div>
       <div class="xi-controls">
         <label>Formation<select id="xiFormation" onchange="updateXiSetting('formation',this.value)">
-          <option value="4-3-3">4-3-3</option><option value="4-4-2">4-4-2</option><option value="3-5-2">3-5-2</option><option value="4-2-3-1">4-2-3-1</option><option value="3-4-3">3-4-3</option>
+          <optgroup label="4 Defenders">
+            <option value="4-3-3">4-3-3</option>
+            <option value="4-4-2">4-4-2</option>
+            <option value="4-4-1-1">4-4-1-1</option>
+            <option value="4-2-3-1">4-2-3-1</option>
+            <option value="4-1-4-1">4-1-4-1</option>
+            <option value="4-5-1">4-5-1</option>
+            <option value="4-3-2-1">4-3-2-1 (Christmas Tree)</option>
+            <option value="4-2-4">4-2-4</option>
+          </optgroup>
+          <optgroup label="3 Defenders">
+            <option value="3-5-2">3-5-2</option>
+            <option value="3-4-3">3-4-3</option>
+            <option value="3-4-2-1">3-4-2-1</option>
+            <option value="3-6-1">3-6-1</option>
+            <option value="3-3-4">3-3-4</option>
+          </optgroup>
+          <optgroup label="5 Defenders (Wing-backs)">
+            <option value="5-3-2">5-3-2</option>
+            <option value="5-4-1">5-4-1</option>
+            <option value="5-2-3">5-2-3</option>
+          </optgroup>
+          <optgroup label="Classic / Historic">
+            <option value="2-3-5">2-3-5 (Pyramid)</option>
+          </optgroup>
         </select></label>
         <label>Optimization goal<select id="xiObjective" onchange="updateXiSetting('objective',this.value)">
           <option value="balanced">Balanced value and quality</option><option value="adjusted_vfm">Best adjusted VFM</option><option value="raw_vfm">Best raw VFM</option><option value="role_score">Best role score under budget</option>
@@ -456,6 +484,128 @@
           <tbody id="xiBody"></tbody>
         </table>
       </div>
+    </section>
+
+    <!-- CLUB COMPARISON -->
+    <section class="section" id="sectionCompare">
+      <div class="section-hdr">
+        <h2>⚔️ Club Comparison</h2>
+        <p>Head-to-head analysis — stats, finances, and player rosters for any two clubs</p>
+      </div>
+      <div class="club-toolbar">
+        <label>Club A<select id="compareTeamA" onchange="renderCompare()"></select></label>
+        <label>Club B<select id="compareTeamB" onchange="renderCompare()"></select></label>
+      </div>
+      <div id="compareKpis" class="compare-kpis"></div>
+      <div class="chart-grid" style="margin-top:1.25rem">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Normalized Performance Radar</h3><span class="badge">League max = 100</span></div>
+          <div class="chart-wrap tall"><canvas id="cCompareRadar"></canvas></div>
+        </div>
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Full Stats Comparison</h3><span class="badge">Side-by-side</span></div>
+          <div class="table-wrap" style="margin:0">
+            <table class="stats-table">
+              <thead><tr><th>Metric</th><th id="compareHeadA">Club A</th><th id="compareHeadB">Club B</th></tr></thead>
+              <tbody id="compareTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="compare-players" id="comparePlayers"></div>
+    </section>
+
+    <!-- xG -->
+    <section class="section" id="sectionXg">
+      <div class="section-hdr">
+        <h2>📈 Expected Goals (xG)</h2>
+        <p>Expected goals vs actual output — who finishes above and below their chances?</p>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>xG vs Actual Goals — All 20 Clubs</h3><span class="badge">Sorted by xG</span></div>
+          <div class="chart-wrap tall"><canvas id="cXgVsGoals"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>xG vs xGA — Attack vs Defence Quality</h3><span class="badge">Bubble = points</span></div>
+          <div class="chart-wrap"><canvas id="cXgScatter"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-hdr"><h3>xG Overperformance</h3><span class="badge">Goals − xG · +ve = clinical</span></div>
+          <div class="chart-wrap"><canvas id="cXgOverperf"></canvas></div>
+        </div>
+      </div>
+      <div class="chart-grid" style="margin-top:1.5rem">
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Top 20 Players by xG per 90</h3><span class="badge">900+ mins</span></div>
+          <div class="chart-wrap tall"><canvas id="cXgPlayers"></canvas></div>
+        </div>
+        <div class="chart-card wide">
+          <div class="card-hdr"><h3>Top 20 Players by xA per 90</h3><span class="badge">900+ mins</span></div>
+          <div class="chart-wrap tall"><canvas id="cXaPlayers"></canvas></div>
+        </div>
+      </div>
+      <div class="section-hdr" style="margin-top:2.5rem"><h2>xG Intelligence Table</h2><p>All clubs — expected vs actual output and defensive quality</p></div>
+      <div class="table-wrap">
+        <table class="stats-table">
+          <thead><tr>
+            <th>Club</th><th>Pos</th><th>Goals</th><th>xG</th><th class="badge-col">Goals−xG</th>
+            <th>GA</th><th>xGA</th><th class="badge-col">GA−xGA</th>
+            <th>npxG</th><th>npxGA</th><th>xG Diff</th>
+          </tr></thead>
+          <tbody id="xgTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SEASON TIMELINE -->
+    <section class="section" id="sectionTimeline">
+      <div class="section-hdr">
+        <h2>📅 Season Timeline</h2>
+        <p>Key moments from the 2024–2025 Premier League season in chronological order</p>
+      </div>
+      <div class="timeline-filters">
+        <label>Category
+          <select id="timelineCategoryFilter" onchange="renderTimeline()">
+            <option value="all">All events</option>
+            <option value="season">Season milestones</option>
+            <option value="match">Notable matches</option>
+            <option value="record">Records</option>
+            <option value="award">Awards</option>
+          </select>
+        </label>
+      </div>
+      <div class="timeline" id="seasonTimeline"></div>
+    </section>
+
+    <!-- TRANSFER TIMELINE -->
+    <section class="section" id="sectionTransfers">
+      <div class="section-hdr">
+        <h2>🔄 Transfer Timeline</h2>
+        <p>Notable Premier League arrivals and departures — Summer 2024 &amp; January 2025 windows</p>
+      </div>
+      <div class="timeline-filters">
+        <label>Window
+          <select id="transferWindowFilter" onchange="renderTransfers()">
+            <option value="all">All windows</option>
+            <option value="summer">Summer 2024</option>
+            <option value="january">January 2025</option>
+          </select>
+        </label>
+        <label>Club
+          <select id="transferClubFilter" onchange="renderTransfers()"></select>
+        </label>
+        <label>Direction
+          <select id="transferTypeFilter" onchange="renderTransfers()">
+            <option value="all">All</option>
+            <option value="in">Arrivals</option>
+            <option value="out">Departures</option>
+            <option value="loan">Loans</option>
+          </select>
+        </label>
+      </div>
+      <div class="transfer-summary" id="transferSummary"></div>
+      <div class="transfer-timeline" id="transferTimeline"></div>
     </section>
 
     <!-- FACTS -->
