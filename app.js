@@ -2885,5 +2885,5 @@ function renderTransfers() {
   }).join("");
 }
 
-// ── Boot ──────────────────────────────────────────────────────
+────────────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", loadAll);
