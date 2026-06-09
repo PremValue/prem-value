@@ -12,7 +12,7 @@ const C = {
   red:"#ef4444",    blue:"#3b82f6",     orange:"#f97316",
 };
 
-// ── Team metadata (color · emoji · crest) ────────────────────
+// -- Team metadata (color · emoji · crest) --------------------
 const TEAM = {
   "Liverpool":               { color:"#c8102e", bg:"#1a0508", emoji:"🔴", crest:"https://crests.football-data.org/64.png"  },
   "Arsenal":                 { color:"#ef0107", bg:"#1a0001", emoji:"🔴", crest:"https://crests.football-data.org/57.png"  },
@@ -101,11 +101,11 @@ const POS_LABEL = { FW:"Forward", MF:"Midfielder", DF:"Defender", GK:"Goalkeeper
 const posIcon   = p => POS_ICON[p]  || "⚽";
 const posLabel  = p => POS_LABEL[p] || p;
 
-// ── Chart registry ────────────────────────────────────────────
+// -- Chart registry --------------------------------------------
 const charts = {};
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
-// ── State ─────────────────────────────────────────────────────
+// -- State -----------------------------------------------------
 let DATA = {};
 let activeSection = "overview";
 let selectedTeam = "";
@@ -311,7 +311,7 @@ function valuationBadge(player) {
   return `<span class="valuation-badge valuation-${status}" title="${title}">${status}</span>`;
 }
 
-// ── Load generated dashboard bundle ───────────────────────────
+// -- Load generated dashboard bundle ---------------------------
 async function loadAll() {
   try {
     if (window.INLINE_DATA) {
@@ -1295,7 +1295,7 @@ function renderValuationDiscrepancies() {
     </tr>`).join("");
 }
 
-// ── Famous Player Wage Cards ──────────────────────────────────
+// -- Famous Player Wage Cards ----------------------------------
 function renderWageGrid() {
   const el = document.getElementById("wageGrid"); if (!el) return;
   const maxWage = 400; // max weekly wage for scale
@@ -1689,7 +1689,7 @@ function renderValueCharts(players = filteredPlayers()) {
   });
 }
 
-// ── Bargain Player Feature Cards ──────────────────────────────
+// -- Bargain Player Feature Cards ------------------------------
 function renderBargainGrid(players = filteredPlayers()) {
   const bargains = [...players.filter(p => p.isBargain)].sort((a, b) => playerRanking(b) - playerRanking(a));
 
@@ -1731,7 +1731,7 @@ function renderBargainGrid(players = filteredPlayers()) {
   }).join("");
 }
 
-// ── VFM Rankings Table ────────────────────────────────────────
+// -- VFM Rankings Table ----------------------------------------
 function renderVFMTable(players = filteredPlayers()) {
   const body = document.getElementById("vfmBody"); if (!body) return;
   const sorted  = [...players].sort((a, b) => Number(hasFreshValue(b)) - Number(hasFreshValue(a)) || playerRanking(b) - playerRanking(a));
@@ -2448,7 +2448,7 @@ function renderCompare() {
   const mA = teamMetric(teamA),  mB = teamMetric(teamB);
   if (!sA || !sB) return;
 
-  // ── KPI strip ──
+  // -- KPI strip --
   const kpiDefs = [
     { label: "Points",      a: sA.Pts,             b: sB.Pts,             fmt: v => v,           hi: "high" },
     { label: "Goals For",   a: sA.GF,              b: sB.GF,              fmt: v => v,           hi: "high" },
@@ -2484,7 +2484,7 @@ function renderCompare() {
     </div>`;
   }).join("");
 
-  // ── Radar ──
+  // -- Radar --
   const radarFields = [
     { key: "points",       label: "Points",       src: "standing" },
     { key: "GF",           label: "Goals",        src: "standing" },
@@ -2528,7 +2528,7 @@ function renderCompare() {
     },
   });
 
-  // ── Stats table ──
+  // -- Stats table --
   const tableRows = [
     { label: "League Position", a: sA.position, b: sB.position },
     { label: "Matches Played",  a: sA.MP, b: sB.MP },
@@ -2554,7 +2554,7 @@ function renderCompare() {
   document.getElementById("compareTableBody").innerHTML = tableRows.map(r => `
     <tr><td>${r.label}</td><td style="color:${tc(teamA)}">${r.a}</td><td style="color:${tc(teamB)}">${r.b}</td></tr>`).join("");
 
-  // ── Top players ──
+  // -- Top players --
   const topFor = team => allComputedPlayers()
     .filter(p => p.club === team && p.mins >= 500 && p.market_value_m > 0)
     .sort((a, b) => b.vfm - a.vfm).slice(0, 8);
@@ -2885,5 +2885,5 @@ function renderTransfers() {
   }).join("");
 }
 
-────────────────────────────────────────────────────
+// -- Boot ------------------------------------------------------
 window.addEventListener("DOMContentLoaded", loadAll);
