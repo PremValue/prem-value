@@ -1056,4 +1056,68 @@ body::before {
   .finance-compare-controls select { width:100%;min-width:0 }
   .xi-player-card { width:92px }
   .xi-player-card .p-avatar { display:none }
+  .xi-pos-budget-grid { grid-template-columns:1fr 1fr }
+}
+
+/* ── Per-Position Budget ───────────────────────────────────── */
+.xi-pos-budget-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-top: .75rem;
+}
+.xi-pos-budget-card {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-top: 3px solid var(--pos-color, #8b5cf6);
+  border-radius: 12px;
+  padding: 1rem 1.1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.xi-pos-budget-header {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+.xi-pos-budget-icon { font-size: 1.4rem; }
+.xi-pos-budget-name {
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--pos-color, #e2e8f0);
+}
+.xi-pos-budget-slots { font-size: .75rem; margin-top: .1rem; }
+.xi-pos-spent-badge {
+  margin-left: auto;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.xi-pos-budget-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: .78rem;
+  margin-top: -.15rem;
+}
+.xi-pos-budget-label {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  font-size: .8rem;
+  color: var(--t3);
+  margin-top: .25rem;
+}
+.xi-pos-budget-label input {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: .9rem;
+  padding: .4rem .6rem;
+  width: 100%;
+}
+.xi-pos-budget-label input:focus {
+  outline: none;
+  border-color: var(--pos-color, #8b5cf6);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pos-color, #8b5cf6) 25%, transparent);
 }

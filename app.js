@@ -134,6 +134,10 @@ let xiLastSimResult = null;
 let xiBuilderSquad = {};   // slotLabel → playerKey (e.g. "GK1" → "David Raya|Arsenal")
 let xiPickerSlot   = "";   // which slot's picker is open
 let xiPickerSearch = "";
+let xiPositionBudgets = { GK: "", DF: "", MF: "", FW: "" };
+
+// Players permanently excluded from the XI builder out of respect
+const XI_MEMORIAL_EXCLUSIONS = new Set(["Diogo Jota|Liverpool"]);
 const DEFAULT_VALUE_POLICY = {
   explorer_min_minutes: 500,
   featured_min_minutes: 900,
@@ -375,6 +379,7 @@ function init() {
   renderXiControls();
   renderXiRosterControls();
   renderXiBuilder();
+  renderXiPositionBudgets();
   renderCompareControls();
   renderTransferControls();
   showSection(activeSection, { scroll: false });
@@ -2155,26 +2160,36 @@ function autoFillBuilderSquad() {
 
   // Sort eligible players by xiScore descending
   const eligible = allComputedPlayers()
-    .filter(p => hasFreshValue(p) && p.mins >= xiSettings.minMinutes && !filledKeys.has(playerKey(p)))
+    .filter(p => hasFreshValue(p) && p.mins >= xiSettings.minMinutes
+      && !filledKeys.has(playerKey(p)) && !XI_MEMORIAL_EXCLUSIONS.has(playerKey(p)))
     .map(p => ({ ...p, xiScore: xiPlayerScore(p) }))
     .sort((a, b) => b.xiScore - a.xiScore || a.market_value_m - b.market_value_m);
 
   const newSquad = { ...xiBuilderSquad };
   const used     = new Set(filledKeys);
+  // Track per-position spend for position budget caps
+  const posSpend = {};
+  getBuilderSquadPlayers().filter(Boolean).forEach(p => {
+    posSpend[p.position] = (posSpend[p.position] || 0) + p.market_value_m;
+  });
 
   for (const label of emptyLabels) {
-    const pos  = slots[labels.indexOf(label)];
+    const pos       = slots[labels.indexOf(label)];
+    const posCap    = xiPositionBudgets[pos] !== "" ? Number(xiPositionBudgets[pos]) : Infinity;
+    const posSpent  = posSpend[pos] || 0;
     const pick = eligible.find(p =>
       p.position === pos &&
       !used.has(playerKey(p)) &&
       p.market_value_m <= remaining &&
-      (clubCounts[p.club] || 0) < xiSettings.maxPerClub
+      (clubCounts[p.club] || 0) < xiSettings.maxPerClub &&
+      posSpent + p.market_value_m <= posCap
     );
     if (pick) {
       newSquad[label] = playerKey(pick);
       used.add(playerKey(pick));
       remaining -= pick.market_value_m;
       clubCounts[pick.club] = (clubCounts[pick.club] || 0) + 1;
+      posSpend[pick.position] = (posSpend[pick.position] || 0) + pick.market_value_m;
     }
   }
 
@@ -2217,12 +2232,21 @@ function renderXiPickerPanel(slots, labels, squadPlayers) {
       .map(p => playerKey(p))
   );
 
+  // Position budget: how much is already spent on this position (excluding current slot)
+  const posBudgetCap   = xiPositionBudgets[pos] !== "" ? Number(xiPositionBudgets[pos]) : Infinity;
+  const posSpentOthers = squadPlayers.filter(Boolean)
+    .filter(p => p.position === pos && (!currentPlayer || playerKey(p) !== playerKey(currentPlayer)))
+    .reduce((s, p) => s + p.market_value_m, 0);
+  const posBudgetLeft  = posBudgetCap - posSpentOthers;
+
   const eligible = allComputedPlayers()
-    .filter(p => p.position === pos && hasFreshValue(p) && p.mins >= xiSettings.minMinutes && !inSquadKeys.has(playerKey(p)))
+    .filter(p => p.position === pos && hasFreshValue(p) && p.mins >= xiSettings.minMinutes
+      && !inSquadKeys.has(playerKey(p)) && !XI_MEMORIAL_EXCLUSIONS.has(playerKey(p)))
     .map(p => {
       const withinBudget    = p.market_value_m <= budgetLeft;
       const withinClubLimit = (clubCounts[p.club] || 0) < xiSettings.maxPerClub;
-      return { ...p, available: withinBudget && withinClubLimit, withinBudget, withinClubLimit };
+      const withinPosBudget = p.market_value_m <= posBudgetLeft;
+      return { ...p, available: withinBudget && withinClubLimit && withinPosBudget, withinBudget, withinClubLimit, withinPosBudget };
     })
     .sort((a, b) => (b.available - a.available) || (b.role_score || 0) - (a.role_score || 0));
 
@@ -2242,11 +2266,12 @@ function renderXiPickerPanel(slots, labels, squadPlayers) {
       <div class="xi-picker-search-row">
         <input class="replacement-search" type="text" placeholder="Search by name or club…"
           value="${escapeHtml(xiPickerSearch)}" oninput="updateBuilderPickerSearch(this.value)" />
-        ${budget < Infinity ? `<span class="xi-picker-budget-info">Budget left: €${fmt(budgetLeft)}M</span>` : ""}
+        ${budget < Infinity ? `<span class="xi-picker-budget-info">Total budget left: €${fmt(budgetLeft)}M</span>` : ""}
+        ${posBudgetCap < Infinity ? `<span class="xi-picker-budget-info" style="color:var(--yellow)">${pos} cap left: €${fmt(posBudgetLeft)}M</span>` : ""}
       </div>
       <div class="replacement-grid xi-picker-grid">
         ${shown.map(c => {
-          const reason = !c.withinBudget ? "Over remaining budget" : !c.withinClubLimit ? "Club limit reached" : "";
+          const reason = !c.withinBudget ? "Over total budget" : !c.withinPosBudget ? `Over ${pos} position cap` : !c.withinClubLimit ? "Club limit reached" : "";
           return `<button class="replacement-card${c.available ? "" : " xi-card-limited"}"
             type="button" ${reason ? `title="${reason}"` : ""}
             onclick="${c.available ? `setBuilderSlot('${xiPickerSlot}','${encodeURIComponent(playerKey(c))}')` : "void 0"}">
@@ -2352,6 +2377,8 @@ function renderXiBuilder() {
           </tr>`).join("")
       : `<tr><td colspan="10" style="text-align:center;color:var(--t3);padding:1.5rem">No players selected yet — click the pitch slots above to build your squad.</td></tr>`;
   }
+
+  renderXiPositionBudgets();
 }
 
 function xiPlayerScore(player) {
@@ -2758,6 +2785,81 @@ function renderXiBudgetPanel(lineup) {
       <div class="xi-budget-row"><span>Budget cap</span><strong style="color:var(--t3)">None set</strong></div>
       <p class="xi-budget-player-count" style="margin-top:.55rem">Set a budget cap in the controls above.</p>
     `}`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   PER-POSITION BUDGET
+   ════════════════════════════════════════════════════════════ */
+function updateXiPositionBudget(pos, value) {
+  xiPositionBudgets[pos] = value;
+  syncUrlState();
+  renderXiPositionBudgets();
+  // Refresh picker panel constraints if it's open for this position
+  if (xiPickerSlot) {
+    const slots = FORMATIONS[xiSettings.formation] || FORMATIONS["4-3-3"];
+    const labels = slotLabels(slots);
+    renderXiPickerPanel(slots, labels, getBuilderSquadPlayers());
+  }
+}
+
+function renderXiPositionBudgets() {
+  const grid = document.getElementById("xiPosBudgetGrid");
+  if (!grid) return;
+
+  const slots = FORMATIONS[xiSettings.formation] || FORMATIONS["4-3-3"];
+  const squadPlayers = getBuilderSquadPlayers();
+
+  const posSlotCounts = { GK: 0, DF: 0, MF: 0, FW: 0 };
+  slots.forEach(s => { posSlotCounts[s] = (posSlotCounts[s] || 0) + 1; });
+
+  const posSpend  = { GK: 0, DF: 0, MF: 0, FW: 0 };
+  const posFilled = { GK: 0, DF: 0, MF: 0, FW: 0 };
+  squadPlayers.filter(Boolean).forEach(p => {
+    posSpend[p.position]  = (posSpend[p.position]  || 0) + p.market_value_m;
+    posFilled[p.position] = (posFilled[p.position] || 0) + 1;
+  });
+
+  const posIcons  = { GK: "🧤", DF: "🛡️", MF: "🔀", FW: "⚽" };
+  const posNames  = { GK: "Goalkeepers", DF: "Defenders", MF: "Midfielders", FW: "Forwards" };
+  const posColors = { GK: C.yellow, DF: C.green, MF: C.blue, FW: C.red };
+
+  grid.innerHTML = ["GK", "DF", "MF", "FW"].map(pos => {
+    const cap      = xiPositionBudgets[pos] !== "" ? Number(xiPositionBudgets[pos]) : null;
+    const spent    = posSpend[pos]  || 0;
+    const filled   = posFilled[pos] || 0;
+    const total    = posSlotCounts[pos] || 0;
+    const color    = posColors[pos];
+    const over     = cap !== null && spent > cap;
+    const pct      = cap ? Math.min(spent / cap * 100, 100) : 0;
+    const barColor = over ? "var(--red)" : pct > 88 ? "var(--yellow)" : color;
+
+    return `
+    <div class="xi-pos-budget-card" style="--pos-color:${color}">
+      <div class="xi-pos-budget-header">
+        <span class="xi-pos-budget-icon">${posIcons[pos]}</span>
+        <div>
+          <div class="xi-pos-budget-name">${posNames[pos]}</div>
+          <div class="xi-pos-budget-slots" style="color:var(--t3)">${filled}/${total} slots filled</div>
+        </div>
+        <div class="xi-pos-spent-badge" style="color:${over ? "var(--red)" : "var(--cyan)"}">€${fmt(spent)}M</div>
+      </div>
+      ${cap !== null ? `
+        <div class="xi-budget-bar-wrap">
+          <div class="xi-budget-bar-fill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div>
+        </div>
+        <div class="xi-pos-budget-info">
+          <span style="color:var(--t3)">Cap: €${fmt(cap)}M</span>
+          <span style="color:${over ? "var(--red)" : "var(--green)"}">${over ? "⚠️ €" + fmt(spent - cap) + "M over" : "€" + fmt(cap - spent) + "M left"}</span>
+        </div>
+      ` : ""}
+      <label class="xi-pos-budget-label">
+        <span>Cap (€M)</span>
+        <input type="number" min="0" step="5" placeholder="No limit"
+          value="${escapeHtml(xiPositionBudgets[pos])}"
+          oninput="updateXiPositionBudget('${pos}', this.value)" />
+      </label>
+    </div>`;
+  }).join("");
 }
 
 /* ════════════════════════════════════════════════════════════
