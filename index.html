@@ -416,71 +416,105 @@
     <!-- BEST VALUE XI -->
     <section class="section" id="sectionXi">
       <div class="section-hdr">
-        <h2>📋 Best Value XI</h2>
-        <p>Build a reproducible lineup from fresh player valuations. Broad FBRef position groups are used because the source snapshot does not reliably distinguish detailed roles.</p>
+        <h2>📋 Fantasy XI Builder</h2>
+        <p>Step 1: set your rules. Step 2: click each position on the pitch to pick a player. Step 3: simulate your season.</p>
       </div>
-      <div class="export-toolbar">
-        <strong>Export / Share</strong>
-        <button class="action-btn" onclick="copyCurrentViewLink('xiExportStatus')">Copy XI link</button>
-        <button class="action-btn" onclick="exportXiCsv()">Export XI CSV</button>
-        <span class="export-status" id="xiExportStatus" aria-live="polite"></span>
+
+      <!-- Step 1: Rules -->
+      <div class="xi-step-card">
+        <div class="xi-step-label">Step 1 — Set Squad Rules</div>
+        <div class="xi-controls">
+          <label>Formation
+            <select id="xiFormation" onchange="changeXiFormation(this.value)">
+              <optgroup label="4 Defenders">
+                <option value="4-3-3">4-3-3</option>
+                <option value="4-4-2">4-4-2</option>
+                <option value="4-4-1-1">4-4-1-1</option>
+                <option value="4-2-3-1">4-2-3-1</option>
+                <option value="4-1-4-1">4-1-4-1</option>
+                <option value="4-5-1">4-5-1</option>
+                <option value="4-3-2-1">4-3-2-1 (Christmas Tree)</option>
+                <option value="4-2-4">4-2-4</option>
+              </optgroup>
+              <optgroup label="3 Defenders">
+                <option value="3-5-2">3-5-2</option>
+                <option value="3-4-3">3-4-3</option>
+                <option value="3-4-2-1">3-4-2-1</option>
+                <option value="3-6-1">3-6-1</option>
+                <option value="3-3-4">3-3-4</option>
+              </optgroup>
+              <optgroup label="5 Defenders (Wing-backs)">
+                <option value="5-3-2">5-3-2</option>
+                <option value="5-4-1">5-4-1</option>
+                <option value="5-2-3">5-2-3</option>
+              </optgroup>
+              <optgroup label="Classic / Historic">
+                <option value="2-3-5">2-3-5 (Pyramid)</option>
+              </optgroup>
+            </select>
+          </label>
+          <label>💰 Budget cap (€M)
+            <input id="xiBudget" type="number" min="0" step="5" placeholder="No limit"
+              oninput="updateXiSetting('maxValue',this.value)" />
+          </label>
+          <label>Min minutes played
+            <select id="xiMinutes" onchange="updateXiSetting('minMinutes',this.value)">
+              <option value="500">500+</option>
+              <option value="900" selected>900+</option>
+              <option value="1800">1,800+</option>
+            </select>
+          </label>
+          <label>Max per club
+            <select id="xiClubLimit" onchange="updateXiSetting('maxPerClub',this.value)">
+              <option value="3">3 players max</option>
+              <option value="2">2 players max</option>
+              <option value="1">1 player max</option>
+              <option value="11">No limit</option>
+            </select>
+          </label>
+        </div>
+        <div class="xi-setup-actions">
+          <button class="action-btn xi-autofill-btn" onclick="autoFillBuilderSquad()">⚡ Auto-fill squad</button>
+          <button class="action-btn" onclick="clearBuilderSquad()">🗑️ Clear squad</button>
+          <button class="action-btn" onclick="copyCurrentViewLink('xiExportStatus')">🔗 Copy link</button>
+          <button class="action-btn" onclick="exportXiCsv()">⬇ Export CSV</button>
+          <span class="export-status" id="xiExportStatus" aria-live="polite"></span>
+        </div>
       </div>
-      <div class="xi-controls">
-        <label>Formation<select id="xiFormation" onchange="updateXiSetting('formation',this.value)">
-          <optgroup label="4 Defenders">
-            <option value="4-3-3">4-3-3</option>
-            <option value="4-4-2">4-4-2</option>
-            <option value="4-4-1-1">4-4-1-1</option>
-            <option value="4-2-3-1">4-2-3-1</option>
-            <option value="4-1-4-1">4-1-4-1</option>
-            <option value="4-5-1">4-5-1</option>
-            <option value="4-3-2-1">4-3-2-1 (Christmas Tree)</option>
-            <option value="4-2-4">4-2-4</option>
-          </optgroup>
-          <optgroup label="3 Defenders">
-            <option value="3-5-2">3-5-2</option>
-            <option value="3-4-3">3-4-3</option>
-            <option value="3-4-2-1">3-4-2-1</option>
-            <option value="3-6-1">3-6-1</option>
-            <option value="3-3-4">3-3-4</option>
-          </optgroup>
-          <optgroup label="5 Defenders (Wing-backs)">
-            <option value="5-3-2">5-3-2</option>
-            <option value="5-4-1">5-4-1</option>
-            <option value="5-2-3">5-2-3</option>
-          </optgroup>
-          <optgroup label="Classic / Historic">
-            <option value="2-3-5">2-3-5 (Pyramid)</option>
-          </optgroup>
-        </select></label>
-        <label>Optimization goal<select id="xiObjective" onchange="updateXiSetting('objective',this.value)">
-          <option value="balanced">Balanced value and quality</option><option value="adjusted_vfm">Best adjusted VFM</option><option value="raw_vfm">Best raw VFM</option><option value="role_score">Best role score under budget</option>
-        </select></label>
-        <label>Minimum minutes<select id="xiMinutes" onchange="updateXiSetting('minMinutes',this.value)">
-          <option value="900">900+</option><option value="1800">1,800+</option><option value="500">500+</option>
-        </select></label>
-        <label>Maximum value (€M)<input id="xiBudget" type="number" min="0" step="5" placeholder="No limit" oninput="updateXiSetting('maxValue',this.value)" /></label>
-        <label>Max per club<select id="xiClubLimit" onchange="updateXiSetting('maxPerClub',this.value)">
-          <option value="3">3</option><option value="2">2</option><option value="1">1</option><option value="11">No limit</option>
-        </select></label>
-        <button class="action-btn" onclick="resetXiSettings()">Reset lineup</button>
+
+      <!-- Step 2: Build pitch + side panel -->
+      <div class="xi-step-card" style="padding:0;overflow:visible;background:transparent;border:none">
+        <div class="xi-builder-layout">
+          <div class="xi-pitch-col">
+            <div class="xi-step-label" style="padding:0 0 .5rem">Step 2 — Click a slot to pick a player</div>
+            <!-- Squad status bar -->
+            <div class="xi-squad-status" id="xiSquadStatus"></div>
+            <div class="pitch" id="xiPitch"></div>
+            <!-- Player picker (appears inline when slot clicked) -->
+            <div id="xiPickerPanel"></div>
+          </div>
+          <div class="xi-side-panel">
+            <!-- Budget Tracker -->
+            <div class="xi-budget-panel" id="xiBudgetPanel">
+              <div class="xi-panel-title">💰 Budget Tracker</div>
+              <p class="xi-panel-hint">Set a budget cap above to track spending.</p>
+            </div>
+            <!-- Season Simulator -->
+            <div class="xi-sim-section">
+              <div class="xi-panel-title">⚡ Season Predictor</div>
+              <p class="xi-panel-hint" style="margin-bottom:.6rem">Fill all 11 slots, then simulate 38 PL matches based on player stats &amp; ratings.</p>
+              <button class="xi-sim-btn" onclick="runXiSimulation()">▶ Simulate Season</button>
+              <div id="xiSimResults"></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="xi-roster-controls">
-        <label>Player constraint<select id="xiPlayerConstraint"></select></label>
-        <button class="action-btn" onclick="addXiConstraint('lock')">Lock player</button>
-        <button class="action-btn" onclick="addXiConstraint('exclude')">Exclude player</button>
-        <button class="action-btn" onclick="clearXiConstraints()">Clear constraints</button>
-        <button class="action-btn" onclick="clearXiSwaps()">Clear swaps</button>
-      </div>
-      <div class="xi-constraints" id="xiConstraints"></div>
-      <div class="xi-alternatives" id="xiAlternatives"></div>
-      <div class="xi-summary" id="xiSummary"></div>
-      <div class="pitch" id="xiPitch"></div>
-      <div class="xi-replacements" id="xiReplacements"></div>
-      <div class="section-hdr" style="margin-top:2rem"><h2>Lineup Table</h2><p>Selected players and the explicit metrics behind the lineup.</p></div>
+
+      <!-- Lineup Table -->
+      <div class="section-hdr" style="margin-top:1.5rem"><h2>Lineup Table</h2><p>Your selected squad and their key stats.</p></div>
       <div class="table-wrap">
         <table class="stats-table">
-          <thead><tr><th>Slot</th><th>Player</th><th>Club</th><th>Pos</th><th>Mins</th><th>Goals</th><th>Assists</th><th>Role score</th><th>Value (€M)</th><th>Adjusted VFM</th></tr></thead>
+          <thead><tr><th>Slot</th><th>Player</th><th>Club</th><th>Pos</th><th>Mins</th><th>Goals</th><th>Assists</th><th>Role score</th><th>Value (€M)</th><th>Adj VFM</th></tr></thead>
           <tbody id="xiBody"></tbody>
         </table>
       </div>

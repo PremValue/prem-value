@@ -127,6 +127,13 @@ let xiExclusions = [];
 let xiSelectedAlternative = 0;
 let xiManualSwaps = {};
 let xiSwapSlot = "";
+let xiReplacementSearch = "";
+let xiShowAllCandidates = false;
+let xiLastSimResult = null;
+// Builder state
+let xiBuilderSquad = {};   // slotLabel → playerKey (e.g. "GK1" → "David Raya|Arsenal")
+let xiPickerSlot   = "";   // which slot's picker is open
+let xiPickerSearch = "";
 const DEFAULT_VALUE_POLICY = {
   explorer_min_minutes: 500,
   featured_min_minutes: 900,
@@ -252,6 +259,17 @@ function readUrlState() {
       return separator > 0 ? [value.slice(0, separator), value.slice(separator + 1)] : ["", ""];
     }).filter(([slot, key]) => slot && key)
   );
+  // Builder squad
+  xiBuilderSquad = {};
+  const squadParam = params.get("squad");
+  if (squadParam) {
+    squadParam.split("~").forEach(pair => {
+      const eq = pair.indexOf("=");
+      if (eq > 0) {
+        xiBuilderSquad[pair.slice(0, eq)] = decodeURIComponent(pair.slice(eq + 1));
+      }
+    });
+  }
 }
 
 function syncUrlState() {
@@ -286,6 +304,11 @@ function syncUrlState() {
   if (xiSelectedAlternative) params.set("alternative", xiSelectedAlternative);
   const swaps = Object.entries(xiManualSwaps).map(([slot, key]) => `${slot}=${key}`);
   if (swaps.length) params.set("swaps", serializeListParam(swaps));
+  // Builder squad
+  const squadPairs = Object.entries(xiBuilderSquad)
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`);
+  if (squadPairs.length) params.set("squad", squadPairs.join("~"));
   const query = params.toString();
   history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);
 }
@@ -351,7 +374,7 @@ function init() {
   renderClubs();
   renderXiControls();
   renderXiRosterControls();
-  renderXi();
+  renderXiBuilder();
   renderCompareControls();
   renderTransferControls();
   showSection(activeSection, { scroll: false });
@@ -489,6 +512,7 @@ function renderAllCharts() {
   if (activeSection === "xg")         { renderXg(); }
   if (activeSection === "timeline")   { renderTimeline(); }
   if (activeSection === "transfers")  { renderTransfers(); }
+  if (activeSection === "xi")         { renderXiBuilder(); }
 }
 
 function renderTacticControls() {
@@ -1992,7 +2016,8 @@ const FORMATIONS = {
 
 function renderXiControls() {
   document.getElementById("xiFormation").value = xiSettings.formation;
-  document.getElementById("xiObjective").value = xiSettings.objective;
+  const obj = document.getElementById("xiObjective");
+  if (obj) obj.value = xiSettings.objective;
   document.getElementById("xiMinutes").value = String(xiSettings.minMinutes);
   document.getElementById("xiBudget").value = xiSettings.maxValue;
   document.getElementById("xiClubLimit").value = String(xiSettings.maxPerClub);
@@ -2003,6 +2028,9 @@ function updateXiSetting(key, value) {
   xiSelectedAlternative = 0;
   xiManualSwaps = {};
   xiSwapSlot = "";
+  xiReplacementSearch = "";
+  xiShowAllCandidates = false;
+  xiLastSimResult = null;
   syncUrlState();
   renderXi();
 }
@@ -2014,10 +2042,316 @@ function resetXiSettings() {
   xiManualSwaps = {};
   xiSelectedAlternative = 0;
   xiSwapSlot = "";
+  xiReplacementSearch = "";
+  xiShowAllCandidates = false;
+  xiLastSimResult = null;
   renderXiControls();
   renderXiRosterControls();
   syncUrlState();
   renderXi();
+}
+
+/* ════════════════════════════════════════════════════════════
+   BUILDER — formation change, squad state helpers
+   ════════════════════════════════════════════════════════════ */
+function changeXiFormation(value) {
+  const newSlots  = slotLabels(FORMATIONS[value] || FORMATIONS["4-3-3"]);
+  const newSquad  = {};
+  // Keep any player whose slot label exists in the new formation
+  newSlots.forEach(label => { if (xiBuilderSquad[label]) newSquad[label] = xiBuilderSquad[label]; });
+  xiSettings.formation = value;
+  xiBuilderSquad  = newSquad;
+  xiPickerSlot    = "";
+  xiPickerSearch  = "";
+  xiLastSimResult = null;
+  syncUrlState();
+  renderXiControls();
+  renderXiBuilder();
+}
+
+function getBuilderSquadPlayers() {
+  const all    = allComputedPlayers();
+  const slots  = FORMATIONS[xiSettings.formation] || FORMATIONS["4-3-3"];
+  const labels = slotLabels(slots);
+  return labels.map((label, i) => {
+    const key    = xiBuilderSquad[label];
+    if (!key) return null;
+    const player = all.find(p => playerKey(p) === key);
+    return player ? { ...player, slot: label } : null;
+  });
+}
+
+function getBuilderSpent() {
+  return getBuilderSquadPlayers()
+    .filter(Boolean)
+    .reduce((sum, p) => sum + p.market_value_m, 0);
+}
+
+function openBuilderSlotPicker(slot) {
+  if (xiPickerSlot === slot) {
+    xiPickerSlot = "";
+  } else {
+    xiPickerSlot  = slot;
+    xiPickerSearch = "";
+  }
+  renderXiBuilder();
+}
+
+function closeBuilderPicker() {
+  xiPickerSlot   = "";
+  xiPickerSearch = "";
+  renderXiBuilder();
+}
+
+function updateBuilderPickerSearch(val) {
+  xiPickerSearch = val;
+  // Re-render only the picker panel (fast path)
+  const slots       = FORMATIONS[xiSettings.formation] || FORMATIONS["4-3-3"];
+  const labels      = slotLabels(slots);
+  const squadPlayers = getBuilderSquadPlayers();
+  renderXiPickerPanel(slots, labels, squadPlayers);
+}
+
+function setBuilderSlot(slot, encodedKey) {
+  xiBuilderSquad[slot] = decodeURIComponent(encodedKey);
+  xiPickerSlot    = "";
+  xiPickerSearch  = "";
+  xiLastSimResult = null;
+  syncUrlState();
+  renderXiBuilder();
+}
+
+function removeBuilderSlot(slot) {
+  delete xiBuilderSquad[slot];
+  xiPickerSlot    = "";
+  xiLastSimResult = null;
+  syncUrlState();
+  renderXiBuilder();
+}
+
+function clearBuilderSquad() {
+  xiBuilderSquad  = {};
+  xiPickerSlot    = "";
+  xiPickerSearch  = "";
+  xiLastSimResult = null;
+  syncUrlState();
+  renderXiBuilder();
+}
+
+function autoFillBuilderSquad() {
+  const slots   = FORMATIONS[xiSettings.formation] || FORMATIONS["4-3-3"];
+  const labels  = slotLabels(slots);
+  const budget  = xiSettings.maxValue === "" ? Infinity : Number(xiSettings.maxValue);
+
+  // Current state
+  const filledKeys = new Set(Object.values(xiBuilderSquad).filter(Boolean));
+  let remaining    = budget - getBuilderSpent();
+  const clubCounts = {};
+  getBuilderSquadPlayers().filter(Boolean).forEach(p => {
+    clubCounts[p.club] = (clubCounts[p.club] || 0) + 1;
+  });
+
+  const emptyLabels = labels.filter(label => !xiBuilderSquad[label]);
+
+  // Sort eligible players by xiScore descending
+  const eligible = allComputedPlayers()
+    .filter(p => hasFreshValue(p) && p.mins >= xiSettings.minMinutes && !filledKeys.has(playerKey(p)))
+    .map(p => ({ ...p, xiScore: xiPlayerScore(p) }))
+    .sort((a, b) => b.xiScore - a.xiScore || a.market_value_m - b.market_value_m);
+
+  const newSquad = { ...xiBuilderSquad };
+  const used     = new Set(filledKeys);
+
+  for (const label of emptyLabels) {
+    const pos  = slots[labels.indexOf(label)];
+    const pick = eligible.find(p =>
+      p.position === pos &&
+      !used.has(playerKey(p)) &&
+      p.market_value_m <= remaining &&
+      (clubCounts[p.club] || 0) < xiSettings.maxPerClub
+    );
+    if (pick) {
+      newSquad[label] = playerKey(pick);
+      used.add(playerKey(pick));
+      remaining -= pick.market_value_m;
+      clubCounts[pick.club] = (clubCounts[pick.club] || 0) + 1;
+    }
+  }
+
+  xiBuilderSquad  = newSquad;
+  xiPickerSlot    = "";
+  xiLastSimResult = null;
+  syncUrlState();
+  renderXiBuilder();
+}
+
+/* ════════════════════════════════════════════════════════════
+   BUILDER — picker panel renderer
+   ════════════════════════════════════════════════════════════ */
+function renderXiPickerPanel(slots, labels, squadPlayers) {
+  const panel = document.getElementById("xiPickerPanel");
+  if (!panel) return;
+  if (!xiPickerSlot) { panel.innerHTML = ""; return; }
+
+  const slotIdx = labels.indexOf(xiPickerSlot);
+  if (slotIdx < 0) { panel.innerHTML = ""; return; }
+
+  const pos           = slots[slotIdx];
+  const currentPlayer = squadPlayers[slotIdx];
+  const budget        = xiSettings.maxValue === "" ? Infinity : Number(xiSettings.maxValue);
+  const spent         = getBuilderSpent();
+  const currentCost   = currentPlayer ? currentPlayer.market_value_m : 0;
+  const budgetLeft    = budget - spent + currentCost; // credit back current player
+
+  // Club counts (excluding current slot)
+  const clubCounts = {};
+  squadPlayers.filter(Boolean).forEach(p => {
+    if (currentPlayer && playerKey(p) === playerKey(currentPlayer)) return;
+    clubCounts[p.club] = (clubCounts[p.club] || 0) + 1;
+  });
+
+  // All players already in the squad (excluding the current slot's player)
+  const inSquadKeys = new Set(
+    squadPlayers.filter(Boolean)
+      .filter(p => !currentPlayer || playerKey(p) !== playerKey(currentPlayer))
+      .map(p => playerKey(p))
+  );
+
+  const eligible = allComputedPlayers()
+    .filter(p => p.position === pos && hasFreshValue(p) && p.mins >= xiSettings.minMinutes && !inSquadKeys.has(playerKey(p)))
+    .map(p => {
+      const withinBudget    = p.market_value_m <= budgetLeft;
+      const withinClubLimit = (clubCounts[p.club] || 0) < xiSettings.maxPerClub;
+      return { ...p, available: withinBudget && withinClubLimit, withinBudget, withinClubLimit };
+    })
+    .sort((a, b) => (b.available - a.available) || (b.role_score || 0) - (a.role_score || 0));
+
+  const sq       = xiPickerSearch.trim().toLowerCase();
+  const filtered = sq ? eligible.filter(p => p.player.toLowerCase().includes(sq) || p.club.toLowerCase().includes(sq)) : eligible;
+  const shown    = filtered.slice(0, 36);
+
+  panel.innerHTML = `
+    <div class="xi-picker-panel">
+      <div class="xi-picker-header">
+        <div>
+          <strong>Pick a ${pos} for slot ${xiPickerSlot}</strong>
+          <span class="xi-picker-count">${filtered.length} eligible · ${eligible.filter(p => p.available).length} within constraints</span>
+        </div>
+        <button class="xi-picker-close" onclick="closeBuilderPicker()">✕ Close</button>
+      </div>
+      <div class="xi-picker-search-row">
+        <input class="replacement-search" type="text" placeholder="Search by name or club…"
+          value="${escapeHtml(xiPickerSearch)}" oninput="updateBuilderPickerSearch(this.value)" />
+        ${budget < Infinity ? `<span class="xi-picker-budget-info">Budget left: €${fmt(budgetLeft)}M</span>` : ""}
+      </div>
+      <div class="replacement-grid xi-picker-grid">
+        ${shown.map(c => {
+          const reason = !c.withinBudget ? "Over remaining budget" : !c.withinClubLimit ? "Club limit reached" : "";
+          return `<button class="replacement-card${c.available ? "" : " xi-card-limited"}"
+            type="button" ${reason ? `title="${reason}"` : ""}
+            onclick="${c.available ? `setBuilderSlot('${xiPickerSlot}','${encodeURIComponent(playerKey(c))}')` : "void 0"}">
+            <strong>${escapeHtml(c.player)}</strong>
+            <span>${escapeHtml(sn(c.club))} · €${c.market_value_m}M</span>
+            <div class="replacement-card-stats">
+              <span class="replacement-card-stat">⚽ ${c.goals}G ${c.assists}A</span>
+              <span class="replacement-card-stat">⭐ ${fmt(c.role_score || 0, 1)}</span>
+              <span class="replacement-card-stat">📈 ${fmt(c.adjusted_vfm || 0, 1)} VFM</span>
+              ${reason ? `<span class="replacement-card-stat" style="color:var(--red)">${reason}</span>` : ""}
+            </div>
+          </button>`;
+        }).join("") || `<span class="comparison-status">No players match — try a different search or lower the min-minutes filter.</span>`}
+      </div>
+    </div>`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   BUILDER — main render
+   ════════════════════════════════════════════════════════════ */
+function renderXiBuilder() {
+  const pitch  = document.getElementById("xiPitch");
+  const body   = document.getElementById("xiBody");
+  if (!pitch) return;
+
+  const formation    = xiSettings.formation;
+  const slots        = FORMATIONS[formation] || FORMATIONS["4-3-3"];
+  const labels       = slotLabels(slots);
+  const squadPlayers = getBuilderSquadPlayers();
+  const filledCount  = squadPlayers.filter(Boolean).length;
+  const budget       = xiSettings.maxValue === "" ? null : Number(xiSettings.maxValue);
+  const spent        = getBuilderSpent();
+
+  // Squad status bar
+  const statusEl = document.getElementById("xiSquadStatus");
+  if (statusEl) {
+    const isComplete = filledCount === 11;
+    const remaining  = budget !== null ? budget - spent : null;
+    const over       = remaining !== null && remaining < 0;
+    statusEl.innerHTML = `
+      <span class="xi-squad-count">${filledCount}/11 players</span>
+      <span class="xi-squad-spent">€${fmt(spent)}M spent</span>
+      ${remaining !== null ? `<span class="xi-squad-remaining-${over ? "over" : remaining < 20 ? "warn" : "ok"}">${over ? "⚠️ €" + fmt(Math.abs(remaining)) + "M over budget" : "€" + fmt(remaining) + "M remaining"}</span>` : ""}
+      ${isComplete && !over ? `<span class="xi-squad-complete">✓ Squad complete</span>` : ""}`;
+  }
+
+  // Pitch
+  const rows = ["FW", "MF", "DF", "GK"];
+  pitch.innerHTML = rows.map(role => {
+    const roleSlots = labels.filter((_, i) => slots[i] === role);
+    if (!roleSlots.length) return "";
+    return `<div class="pitch-row pitch-${role.toLowerCase()}">
+      ${roleSlots.map(label => {
+        const player   = squadPlayers[labels.indexOf(label)];
+        const isActive = xiPickerSlot === label;
+        if (player) {
+          return `<div class="xi-player-card${isActive ? " xi-card-active" : ""}" style="--club-color:${tc(player.club)}">
+            ${playerAvatar(player.player, player.club, 42)}
+            <strong>${escapeHtml(player.player)}</strong>
+            <span>${escapeHtml(sn(player.club))}</span>
+            <small>${label} · €${player.market_value_m}M</small>
+            <div class="xi-slot-actions">
+              <button class="xi-slot-swap" type="button" onclick="openBuilderSlotPicker('${label}')">⇄ Swap</button>
+              <button class="xi-slot-remove" type="button" onclick="removeBuilderSlot('${label}')">✕ Remove</button>
+            </div>
+          </div>`;
+        }
+        return `<button class="xi-empty-slot${isActive ? " xi-card-active" : ""}"
+          type="button" onclick="openBuilderSlotPicker('${label}')">
+          <span class="xi-empty-pos">${role}</span>
+          <span class="xi-empty-plus">+</span>
+          <span class="xi-empty-label">${label}</span>
+        </button>`;
+      }).join("")}
+    </div>`;
+  }).join("");
+
+  // Budget panel
+  renderXiBudgetPanel({ totalValue: spent, filledCount });
+
+  // Re-render sim results if available
+  if (xiLastSimResult) renderXiPrediction(xiLastSimResult);
+
+  // Picker panel
+  renderXiPickerPanel(slots, labels, squadPlayers);
+
+  // Lineup table
+  if (body) {
+    const filled = squadPlayers.filter(Boolean);
+    body.innerHTML = filled.length
+      ? filled.map(p => `
+          <tr>
+            <td>${p.slot}</td>
+            <td class="name-col">${playerAvatar(p.player, p.club, 26)} ${p.player}</td>
+            <td>${crestImg(p.club, 18)} ${sn(p.club)}</td>
+            <td>${p.position}</td>
+            <td>${p.mins.toLocaleString()}</td>
+            <td>${p.goals}</td>
+            <td>${p.assists}</td>
+            <td>${fmt(p.perf90, 2)}</td>
+            <td>€${p.market_value_m}M</td>
+            <td class="vfm-col">${fmt(p.adjusted_vfm, 1)}</td>
+          </tr>`).join("")
+      : `<tr><td colspan="10" style="text-align:center;color:var(--t3);padding:1.5rem">No players selected yet — click the pitch slots above to build your squad.</td></tr>`;
+  }
 }
 
 function xiPlayerScore(player) {
@@ -2193,25 +2527,21 @@ function slotIndex(slots, slot) {
 }
 
 function exportXiCsv() {
-  const { slots, eligible, lineups } = optimizeXi();
-  if (xiSelectedAlternative >= lineups.length) xiSelectedAlternative = 0;
-  const manual = applyManualXiSwaps(lineups[xiSelectedAlternative] || null, slots, eligible);
-  const lineup = manual.lineup;
-  if (!lineup || lineup.players.length !== 11) {
-    setExportStatus("xiExportStatus", "Build a valid XI before exporting.");
+  const slots = FORMATIONS[xiSettings.formation] || FORMATIONS["4-3-3"];
+  const labels = slotLabels(slots);
+  const players = getBuilderSquadPlayers();
+  if (players.filter(Boolean).length !== 11) {
+    setExportStatus("xiExportStatus", "Fill all 11 slots before exporting.");
     return;
   }
-  const labels = slotLabels(slots);
-  downloadTextFile(`premvalue-best-value-xi-${slug(xiSettings.formation)}-2024-2025.csv`, buildCsv(
-    ["Slot", "Player", "Club", "Position", "Minutes", "Goals", "Assists", "Role Score", "Market Value EUR M", "Adjusted VFM", "Locked", "Manual Swap"],
-    lineup.players.map((player, index) => [
+  downloadTextFile(`premvalue-xi-${slug(xiSettings.formation)}-2024-2025.csv`, buildCsv(
+    ["Slot", "Player", "Club", "Position", "Minutes", "Goals", "Assists", "Role Score", "Market Value EUR M", "Adjusted VFM"],
+    players.map((player, index) => player ? [
       labels[index], player.player, player.club, player.position, player.mins, player.goals, player.assists,
       player.perf90, player.market_value_m, player.adjusted_vfm,
-      xiLocks.includes(playerKey(player)) ? "Yes" : "No",
-      xiManualSwaps[labels[index]] ? "Yes" : "No",
-    ])
+    ] : [labels[index], "Empty", "", "", "", "", "", "", "", ""])
   ));
-  setExportStatus("xiExportStatus", "Best Value XI CSV downloaded.");
+  setExportStatus("xiExportStatus", "XI CSV downloaded.");
 }
 
 function selectXiAlternative(index) {
@@ -2223,7 +2553,14 @@ function selectXiAlternative(index) {
 }
 
 function openXiReplacements(slot) {
-  xiSwapSlot = slot;
+  // Toggle off if clicking the already-active slot
+  if (xiSwapSlot === slot) {
+    xiSwapSlot = "";
+  } else {
+    xiSwapSlot = slot;
+    xiReplacementSearch = "";
+    xiShowAllCandidates = false;
+  }
   renderXi();
 }
 
@@ -2269,6 +2606,7 @@ function renderXi() {
     pitch.innerHTML = "";
     body.innerHTML = "";
     if (replacements) replacements.innerHTML = "";
+    renderXiBudgetPanel(null);
     return;
   }
   const labels = slotLabels(slots);
@@ -2287,38 +2625,308 @@ function renderXi() {
       <div class="detail-kpi"><strong>${isCustom ? "Custom XI" : "Optimized XI"}</strong><span>${XI_OBJECTIVES[xiSettings.objective]}</span></div>
     </div>
     ${manual.error ? `<div class="empty-state">${manual.error} The last valid XI is shown.</div>` : ""}
-    <p class="xi-explanation">Lineup score: ${fmt(lineup.score, 1)}. Click any pitch card to review valid replacements for that slot.</p>`;
+    <p class="xi-explanation">Lineup score: ${fmt(lineup.score, 1)}. Click a pitch card to swap that player — or use the controls to lock/remove players.</p>`;
   const rows = ["FW", "MF", "DF", "GK"];
   pitch.innerHTML = rows.map(role => `
     <div class="pitch-row pitch-${role.toLowerCase()}">
-      ${selected.filter(player => player.position === role).map(player => `
-        <button class="xi-player-card" type="button" onclick="openXiReplacements('${player.slot}')" style="--club-color:${tc(player.club)}">
+      ${selected.filter(player => player.position === role).map(player => {
+        const isLocked = xiLocks.includes(playerKey(player));
+        const isActive = xiSwapSlot === player.slot;
+        return `<button class="xi-player-card${isActive ? " xi-card-active" : ""}" type="button"
+          onclick="openXiReplacements('${player.slot}')" style="--club-color:${tc(player.club)}">
           ${playerAvatar(player.player, player.club, 42)}
-          <strong>${player.player}</strong><span>${sn(player.club)}</span>
-          <small>${player.slot} · €${player.market_value_m}M · adj ${fmt(player.adjusted_vfm, 1)}${xiLocks.includes(playerKey(player)) ? " · locked" : ""}</small>
-        </button>`).join("")}
+          <strong>${escapeHtml(player.player)}</strong>
+          <span>${escapeHtml(sn(player.club))}</span>
+          <small>${player.slot} · €${player.market_value_m}M${isLocked ? " 🔒" : ""}</small>
+        </button>`;
+      }).join("")}
     </div>`).join("");
   body.innerHTML = selected.map(player => `
     <tr><td>${player.slot}</td><td class="name-col">${playerAvatar(player.player, player.club, 26)} ${player.player}</td>
     <td>${crestImg(player.club, 18)} ${sn(player.club)}</td><td>${player.position}</td><td>${player.mins.toLocaleString()}</td>
     <td>${player.goals}</td><td>${player.assists}</td><td>${fmt(player.perf90, 2)}</td><td>€${player.market_value_m}M</td><td class="vfm-col">${fmt(player.adjusted_vfm, 1)}</td></tr>`).join("");
-  if (replacements) {
-    if (!xiSwapSlot) {
-      replacements.innerHTML = `<span class="comparison-status">Select a pitch card to review valid replacements.</span>`;
-    } else {
-      const index = slotIndex(slots, xiSwapSlot);
-      const candidates = eligible.filter(candidate => candidate.position === slots[index] && !selected.some(player => playerKey(player) === playerKey(candidate)))
-        .filter(candidate => {
-          const players = [...lineup.players];
-          players[index] = candidate;
-          return !validateXiLineup(players, slots);
-        }).slice(0, 12);
-      replacements.innerHTML = `<div class="section-hdr compact-hdr"><h3>Valid replacements for ${xiSwapSlot}</h3><p>Each option preserves formation, budget, club limit, locks, and exclusions.</p></div>
-        <div class="replacement-grid">${candidates.map(candidate =>
-          `<button class="replacement-card" type="button" onclick="applyXiSwap('${xiSwapSlot}','${encodeURIComponent(playerKey(candidate))}')"><strong>${escapeHtml(candidate.player)}</strong><span>${escapeHtml(sn(candidate.club))} · €${candidate.market_value_m}M · adj ${fmt(candidate.adjusted_vfm, 1)}</span></button>`
-        ).join("") || `<span class="comparison-status">No alternate player satisfies the active constraints.</span>`}</div>`;
+
+  // Render budget panel
+  renderXiBudgetPanel(lineup);
+
+  // Re-render sim results if we already ran a simulation
+  if (xiLastSimResult) renderXiPrediction(xiLastSimResult);
+
+  if (!replacements) return;
+  if (!xiSwapSlot) {
+    replacements.innerHTML = `<span class="comparison-status">👆 Click a pitch card to swap that player for another eligible option.</span>`;
+    return;
+  }
+
+  // Enhanced replacement picker
+  const slotIdx = slotIndex(slots, xiSwapSlot);
+  const slotPos = slots[slotIdx];
+  const currentPlayer = selected.find(p => p.slot === xiSwapSlot);
+
+  // Pool of candidates: all eligible for this position (minus already-selected players)
+  const positionPool = eligible
+    .filter(c => c.position === slotPos && !selected.some(p => playerKey(p) === playerKey(c)));
+
+  // Constraint-valid subset
+  const validCandidates = positionPool.filter(c => {
+    const players = [...lineup.players];
+    players[slotIdx] = c;
+    return !validateXiLineup(players, slots);
+  });
+
+  // Decide which pool to show
+  const showPool = xiShowAllCandidates ? positionPool : validCandidates;
+
+  // Apply search filter
+  const sq = xiReplacementSearch.trim().toLowerCase();
+  const filtered = sq
+    ? showPool.filter(c => c.player.toLowerCase().includes(sq) || c.club.toLowerCase().includes(sq))
+    : showPool;
+
+  const displayedCandidates = filtered.slice(0, 24);
+
+  const excludeKey = currentPlayer ? encodeURIComponent(playerKey(currentPlayer)) : "";
+  replacements.innerHTML = `
+    <div class="section-hdr compact-hdr">
+      <h3>Pick player for ${xiSwapSlot} (${slotPos})</h3>
+      <p>${validCandidates.length} constraint-valid · ${positionPool.length} total eligible</p>
+    </div>
+    <div class="replacement-header-row">
+      <input class="replacement-search" type="text" placeholder="Search by name or club…"
+        value="${escapeHtml(xiReplacementSearch)}"
+        oninput="updateXiReplacementSearch(this.value)" />
+      <button class="replacement-show-all-btn${xiShowAllCandidates ? " active" : ""}"
+        onclick="toggleXiShowAll()">
+        ${xiShowAllCandidates ? "Constraint-valid only" : "Show all eligible"}
+      </button>
+      ${currentPlayer && !xiLocks.includes(playerKey(currentPlayer)) ? `
+        <button class="replacement-exclude-btn"
+          onclick="excludeCurrentXiSlot('${xiSwapSlot}','${excludeKey}')">
+          🚫 Remove ${escapeHtml(currentPlayer.player)}
+        </button>` : ""}
+    </div>
+    <div class="replacement-grid">
+      ${displayedCandidates.map(c => {
+        const valid = !xiShowAllCandidates || !validCandidates.some(vc => playerKey(vc) === playerKey(c))
+          ? validCandidates.some(vc => playerKey(vc) === playerKey(c)) : false;
+        const borderStyle = (!xiShowAllCandidates || valid) ? "" : "opacity:.55";
+        const ga = c.goals + c.assists;
+        return `<button class="replacement-card" type="button" style="${borderStyle}"
+          onclick="applyXiSwap('${xiSwapSlot}','${encodeURIComponent(playerKey(c))}')">
+          <strong>${escapeHtml(c.player)}</strong>
+          <span>${escapeHtml(sn(c.club))} · €${c.market_value_m}M</span>
+          <div class="replacement-card-stats">
+            <span class="replacement-card-stat">⚽ ${c.goals}G ${c.assists}A</span>
+            <span class="replacement-card-stat">📊 ${fmt(c.adjusted_vfm, 1)} VFM</span>
+            <span class="replacement-card-stat">⭐ ${fmt(c.role_score || 0, 1)}</span>
+          </div>
+        </button>`;
+      }).join("") || `<span class="comparison-status">No players match — try clearing the search or toggling "Show all eligible".</span>`}
+    </div>`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   XI BUDGET PANEL
+   ════════════════════════════════════════════════════════════ */
+function renderXiBudgetPanel(lineup) {
+  const panel = document.getElementById("xiBudgetPanel");
+  if (!panel) return;
+
+  const budget = xiSettings.maxValue === "" ? null : Number(xiSettings.maxValue);
+  const spent  = lineup ? lineup.totalValue : 0;
+  const count  = lineup ? (lineup.players?.length ?? lineup.filledCount ?? 0) : 0;
+  const remaining = budget !== null ? budget - spent : null;
+  const pct    = budget ? Math.min((spent / budget) * 100, 100) : 0;
+  const over   = budget !== null && spent > budget;
+  const barColor = over ? "var(--red)" : pct > 88 ? "var(--yellow)" : "var(--green)";
+
+  panel.innerHTML = `
+    <div class="xi-panel-title">💰 Budget Tracker</div>
+    <div class="xi-budget-row"><span>Players picked</span><strong>${count} / 11</strong></div>
+    <div class="xi-budget-row"><span>Total spent</span><strong style="color:var(--cyan)">€${fmt(spent)}M</strong></div>
+    ${budget !== null ? `
+      <div class="xi-budget-row"><span>Budget cap</span><strong>€${fmt(budget)}M</strong></div>
+      <div class="xi-budget-row">
+        <span>Remaining</span>
+        <strong style="color:${over ? "var(--red)" : "var(--green)"}">${over ? "" : "+"}€${fmt(remaining)}M</strong>
+      </div>
+      <div class="xi-budget-bar-wrap">
+        <div class="xi-budget-bar-fill" style="width:${pct.toFixed(1)}%;background-color:${barColor}"></div>
+      </div>
+      <p class="xi-budget-player-count">${over ? "⚠️ Over budget" : pct > 88 ? "⚡ Nearly full" : "✅ Within budget"}</p>
+    ` : `
+      <div class="xi-budget-row"><span>Budget cap</span><strong style="color:var(--t3)">None set</strong></div>
+      <p class="xi-budget-player-count" style="margin-top:.55rem">Set a budget cap in the controls above.</p>
+    `}`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   REPLACEMENT SEARCH HELPER
+   ════════════════════════════════════════════════════════════ */
+function updateXiReplacementSearch(val) {
+  xiReplacementSearch = val;
+  renderXi();
+}
+
+function toggleXiShowAll() {
+  xiShowAllCandidates = !xiShowAllCandidates;
+  renderXi();
+}
+
+function excludeCurrentXiSlot(slot, encodedKey) {
+  const key = decodeURIComponent(encodedKey);
+  if (!xiExclusions.includes(key)) xiExclusions.push(key);
+  xiManualSwaps = Object.fromEntries(
+    Object.entries(xiManualSwaps).filter(([s]) => s !== slot)
+  );
+  xiSwapSlot = "";
+  xiReplacementSearch = "";
+  xiShowAllCandidates = false;
+  renderXiRosterControls();
+  syncUrlState();
+  renderXi();
+}
+
+/* ════════════════════════════════════════════════════════════
+   TEAM STRENGTH CALCULATOR
+   ════════════════════════════════════════════════════════════ */
+function computeTeamStrength(players) {
+  const all = allComputedPlayers();
+  const maxRS = Math.max(...all.map(p => p.role_score || 0)) || 1;
+
+  const fwPool = all.filter(p => p.position === "FW" && p.mins > 0);
+  const mfPool = all.filter(p => p.position === "MF" && p.mins > 0);
+  const maxG90FW  = Math.max(...fwPool.map(p => p.goals / (p.mins / 90))) || 1;
+  const maxGA90MF = Math.max(...mfPool.map(p => (p.goals + p.assists) / (p.mins / 90))) || 1;
+
+  const gk = players.filter(p => p.position === "GK");
+  const df = players.filter(p => p.position === "DF");
+  const mf = players.filter(p => p.position === "MF");
+  const fw = players.filter(p => p.position === "FW");
+
+  const avg = (arr, fn) => arr.length ? arr.reduce((s, p) => s + fn(p), 0) / arr.length : 0.45;
+
+  const gkScore = avg(gk, p => {
+    const rs = (p.role_score || 0) / maxRS;
+    const cs = Math.min((p.clean_sheets || 0) / Math.max(p.apps || 1, 1) / 0.42, 1);
+    return rs * 0.65 + cs * 0.35;
+  });
+
+  const dfScore = avg(df, p => {
+    const rs = (p.role_score || 0) / maxRS;
+    const t90 = p.mins > 0 ? (p.tackles_won || 0) / (p.mins / 90) : 0;
+    const i90 = p.mins > 0 ? (p.interceptions || 0) / (p.mins / 90) : 0;
+    return rs * 0.65 + Math.min((t90 + i90) / 7, 1) * 0.35;
+  });
+
+  const mfScore = avg(mf, p => {
+    const rs = (p.role_score || 0) / maxRS;
+    const ga90 = p.mins > 0 ? (p.goals + p.assists) / (p.mins / 90) / maxGA90MF : 0;
+    return rs * 0.70 + ga90 * 0.30;
+  });
+
+  const fwScore = avg(fw, p => {
+    const rs = (p.role_score || 0) / maxRS;
+    const g90 = p.mins > 0 ? p.goals / (p.mins / 90) / maxG90FW : 0;
+    const a90 = p.mins > 0 ? p.assists / (p.mins / 90) / maxGA90MF : 0;
+    return rs * 0.55 + g90 * 0.30 + a90 * 0.15;
+  });
+
+  // Weighted composite (FW 35%, MF 25%, DF 25%, GK 15%)
+  const composite = fwScore * 35 + mfScore * 25 + dfScore * 25 + gkScore * 15;
+
+  return {
+    overall:  Math.min(composite, 100),
+    attack:   Math.min((fwScore * 0.70 + mfScore * 0.30) * 100, 100),
+    midfield: Math.min(mfScore * 100, 100),
+    defense:  Math.min((dfScore * 0.75 + gkScore * 0.25) * 100, 100),
+    gk:       Math.min(gkScore * 100, 100),
+  };
+}
+
+/* ════════════════════════════════════════════════════════════
+   SEASON PREDICTOR  (Monte Carlo, 3 000 runs)
+   ════════════════════════════════════════════════════════════ */
+function runXiSimulation() {
+  const resultsEl = document.getElementById("xiSimResults");
+  if (!resultsEl) return;
+
+  const players = getBuilderSquadPlayers().filter(Boolean);
+  if (players.length !== 11) {
+    resultsEl.innerHTML = `<p class="xi-panel-hint" style="color:var(--red);margin-top:.6rem">Fill all 11 slots first, then simulate.</p>`;
+    return;
+  }
+
+  const strength = computeTeamStrength(players);
+
+  // Calibrated win probability per match:
+  // strength=0   → win%≈6%, draw%≈24%   (relegated-level, ~3 wins)
+  // strength=55  → win%≈40%, draw%≈22%  (mid-table, ~15 wins)
+  // strength=82  → win%≈57%, draw%≈19%  (Liverpool 24/25: 25 wins)
+  // strength=100 → win%≈68%, draw%≈17%  (~26-28 wins possible)
+  const s = strength.overall / 100;
+  const winP  = 0.06 + s * 0.62;
+  const drawP = 0.24 - s * 0.07;
+
+  const N = 3000;
+  let tw = 0, td = 0;
+  for (let sim = 0; sim < N; sim++) {
+    for (let m = 0; m < 38; m++) {
+      const r = Math.random();
+      if (r < winP) tw++;
+      else if (r < winP + drawP) td++;
     }
   }
+
+  const wins   = Math.round(tw / N);
+  const draws  = Math.round(td / N);
+  const losses = 38 - wins - draws;
+  const points = wins * 3 + draws;
+
+  xiLastSimResult = { wins, draws, losses, points, strength };
+  renderXiPrediction(xiLastSimResult);
+}
+
+function renderXiPrediction(res) {
+  const el = document.getElementById("xiSimResults");
+  if (!el || !res) return;
+  const { wins, draws, losses, points, strength } = res;
+  const winPct = ((wins / 38) * 100).toFixed(1);
+
+  const sc = v => v >= 75 ? "#10b981" : v >= 50 ? "#22d3ee" : v >= 28 ? "#f59e0b" : "#ef4444";
+  const bar = (label, val) => `
+    <div class="xi-strength-item">
+      <span class="xi-strength-label">${label}</span>
+      <div class="xi-strength-bar-wrap">
+        <div class="xi-strength-bar" style="width:${val.toFixed(1)}%;background:${sc(val)}"></div>
+      </div>
+      <span class="xi-strength-val">${val.toFixed(0)}</span>
+    </div>`;
+
+  el.innerHTML = `
+    <div class="xi-sim-result-main">
+      <div class="xi-sim-wins">${wins}<sub>/38</sub></div>
+      <div class="xi-sim-label">Predicted Wins · ${winPct}%</div>
+      <div class="xi-sim-pts">${points} pts · ${draws}D · ${losses}L</div>
+    </div>
+    <div class="xi-wdl-legend">
+      <span style="color:var(--green)">W ${wins}</span>
+      <span style="color:var(--yellow)">D ${draws}</span>
+      <span style="color:var(--red)">L ${losses}</span>
+    </div>
+    <div class="xi-wdl-bar">
+      <div class="xi-wdl-w" style="width:${(wins/38*100).toFixed(1)}%"></div>
+      <div class="xi-wdl-d" style="width:${(draws/38*100).toFixed(1)}%"></div>
+      <div class="xi-wdl-l" style="width:${(losses/38*100).toFixed(1)}%"></div>
+    </div>
+    <div class="xi-strength-section">
+      <div class="xi-strength-title">Team Strength</div>
+      ${bar("Overall", strength.overall)}
+      ${bar("Attack", strength.attack)}
+      ${bar("Midfield", strength.midfield)}
+      ${bar("Defense", strength.defense)}
+      ${bar("GK", strength.gk)}
+    </div>`;
 }
 
 /* ════════════════════════════════════════════════════════════
