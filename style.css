@@ -690,6 +690,17 @@ body::before {
   border-color:rgba(251,146,60,.55) !important;color:#fbbf24 !important;
   font-weight:700;
 }
+.picker-card-top {
+  display:flex;justify-content:space-between;align-items:flex-start;gap:.4rem;
+}
+.picker-pos-badge {
+  flex-shrink:0;font-size:.6rem;font-weight:800;letter-spacing:.04em;
+  padding:2px 6px;border-radius:4px;line-height:1.4;
+}
+.picker-pos-GK { background:rgba(16,185,129,.22);color:#10b981; }
+.picker-pos-DF { background:rgba(59,130,246,.22);color:#60a5fa; }
+.picker-pos-MF { background:rgba(139,92,246,.22);color:#a78bfa; }
+.picker-pos-FW { background:rgba(239,68,68,.22);color:#f87171; }
 .xi-squad-status {
   display:flex;align-items:center;gap:.75rem;margin-bottom:.65rem;
   font-size:.78rem;flex-wrap:wrap;

@@ -2110,11 +2110,13 @@ function closeBuilderPicker() {
 
 function updateBuilderPickerSearch(val) {
   xiPickerSearch = val;
-  // Re-render only the picker panel (fast path)
-  const slots       = FORMATIONS[xiSettings.formation] || FORMATIONS["4-3-3"];
-  const labels      = slotLabels(slots);
+  const slots        = FORMATIONS[xiSettings.formation] || FORMATIONS["4-3-3"];
+  const labels       = slotLabels(slots);
   const squadPlayers = getBuilderSquadPlayers();
   renderXiPickerPanel(slots, labels, squadPlayers);
+  // Restore focus + cursor after innerHTML replacement so typing is uninterrupted
+  const input = document.querySelector("#xiPickerPanel .replacement-search");
+  if (input) { input.focus(); input.setSelectionRange(val.length, val.length); }
 }
 
 function setBuilderSlot(slot, encodedKey) {
@@ -2194,6 +2196,35 @@ function randomizeBuilderSquad() {
 /* ════════════════════════════════════════════════════════════
    BUILDER — picker panel renderer
    ════════════════════════════════════════════════════════════ */
+function pickerCardStats(p) {
+  const f2 = v => (v || 0).toFixed(2);
+  const f1 = v => (v || 0).toFixed(1);
+  const f0 = v => Math.round(v || 0);
+  switch (p.position) {
+    case "GK": return [
+      `🧤 ${f0(p.saves)} saves`,
+      `${f1(p.save_pct)}% sv%`,
+      `🔒 ${f0(p.clean_sheets)} CS`,
+    ];
+    case "DF": return [
+      `🛡 ${f0(p.tackles_won)} tkl`,
+      `✂️ ${f0(p.interceptions)} int`,
+      `🔒 ${f1(p.clean_sheet_credit)} CS`,
+    ];
+    case "MF": return [
+      `⚽ ${f0(p.goals)}G  ${f0(p.assists)}A`,
+      `🛡 ${f0(p.tackles_won)} tkl`,
+      `${f2(p.goals_per90)}+${f2(p.assists_per90)}/90`,
+    ];
+    case "FW": return [
+      `⚽ ${f0(p.goals)}G  ${f0(p.assists)}A`,
+      `${f2(p.goals_per90)} G/90`,
+      `🎯 ${f1(p.xg || 0)} xG`,
+    ];
+    default: return [`⚽ ${f0(p.goals || 0)}G  ${f0(p.assists || 0)}A`];
+  }
+}
+
 function renderXiPickerPanel(slots, labels, squadPlayers) {
   const panel = document.getElementById("xiPickerPanel");
   if (!panel) return;
@@ -2266,11 +2297,13 @@ function renderXiPickerPanel(slots, labels, squadPlayers) {
           return `<button class="replacement-card${c.available ? "" : " xi-card-limited"}"
             type="button" ${reason ? `title="${reason}"` : ""}
             onclick="${c.available ? `setBuilderSlot('${xiPickerSlot}','${encodeURIComponent(playerKey(c))}')` : "void 0"}">
-            <strong>${escapeHtml(c.player)}</strong>
+            <div class="picker-card-top">
+              <strong>${escapeHtml(c.player)}</strong>
+              <span class="picker-pos-badge picker-pos-${c.position}">${c.position}</span>
+            </div>
             <span>${escapeHtml(sn(c.club))} · €${c.market_value_m}M</span>
             <div class="replacement-card-stats">
-              <span class="replacement-card-stat">⚽ ${c.goals}G ${c.assists}A</span>
-              <span class="replacement-card-stat">⭐ ${fmt(c.role_score || 0, 1)}</span>
+              ${pickerCardStats(c).map(s => `<span class="replacement-card-stat">${s}</span>`).join("")}
               <span class="replacement-card-stat">📈 ${fmt(c.adjusted_vfm || 0, 1)} VFM</span>
               ${reason ? `<span class="replacement-card-stat" style="color:var(--red)">${reason}</span>` : ""}
             </div>
