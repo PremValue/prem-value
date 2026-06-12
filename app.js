@@ -2894,55 +2894,54 @@ function excludeCurrentXiSlot(slot, encodedKey) {
    ════════════════════════════════════════════════════════════ */
 function computeTeamStrength(players) {
   const all = allComputedPlayers();
-  const maxRS = Math.max(...all.map(p => p.role_score || 0)) || 1;
 
-  const fwPool = all.filter(p => p.position === "FW" && p.mins > 0);
-  const mfPool = all.filter(p => p.position === "MF" && p.mins > 0);
-  const maxG90FW  = Math.max(...fwPool.map(p => p.goals / (p.mins / 90))) || 1;
-  const maxGA90MF = Math.max(...mfPool.map(p => (p.goals + p.assists) / (p.mins / 90))) || 1;
+  // Build sorted attack-output arrays for percentile ranking within position
+  const fwG90sorted  = all.filter(p => p.position === "FW" && p.mins >= 450)
+                          .map(p => p.goals_per90 || 0).sort((a, b) => a - b);
+  const mfGA90sorted = all.filter(p => p.position === "MF" && p.mins >= 450)
+                          .map(p => (p.goals_per90 || 0) + (p.assists_per90 || 0)).sort((a, b) => a - b);
+
+  // Binary-search percentile rank in a pre-sorted array (0–100)
+  const rankPct = (val, sorted) => {
+    if (!sorted.length) return 50;
+    let lo = 0, hi = sorted.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (sorted[m] < val) lo = m + 1; else hi = m; }
+    return (lo / sorted.length) * 100;
+  };
 
   const gk = players.filter(p => p.position === "GK");
   const df = players.filter(p => p.position === "DF");
   const mf = players.filter(p => p.position === "MF");
   const fw = players.filter(p => p.position === "FW");
 
-  const avg = (arr, fn) => arr.length ? arr.reduce((s, p) => s + fn(p), 0) / arr.length : 0.45;
+  // role_score_position_percentile is pre-computed (0-100, within-position rank)
+  // It fully captures quality differences between players at the same position.
+  // Fallback of 50 only triggers if the field is missing; 25 used for empty position groups.
+  const pq = p => p.role_score_position_percentile ?? 50;
 
-  const gkScore = avg(gk, p => {
-    const rs = (p.role_score || 0) / maxRS;
-    const cs = Math.min((p.clean_sheets || 0) / Math.max(p.apps || 1, 1) / 0.42, 1);
-    return rs * 0.65 + cs * 0.35;
-  });
+  // Forwards: quality percentile + goals-per-90 percentile (attack output is decisive)
+  const fwStr = fw.length
+    ? fw.reduce((s, p) => s + pq(p) * 0.50 + rankPct(p.goals_per90 || 0, fwG90sorted) * 0.50, 0) / fw.length
+    : 25;
 
-  const dfScore = avg(df, p => {
-    const rs = (p.role_score || 0) / maxRS;
-    const t90 = p.mins > 0 ? (p.tackles_won || 0) / (p.mins / 90) : 0;
-    const i90 = p.mins > 0 ? (p.interceptions || 0) / (p.mins / 90) : 0;
-    return rs * 0.65 + Math.min((t90 + i90) / 7, 1) * 0.35;
-  });
+  // Midfielders: quality percentile + combined goal-contribution percentile
+  const mfStr = mf.length
+    ? mf.reduce((s, p) => s + pq(p) * 0.60 + rankPct((p.goals_per90 || 0) + (p.assists_per90 || 0), mfGA90sorted) * 0.40, 0) / mf.length
+    : 25;
 
-  const mfScore = avg(mf, p => {
-    const rs = (p.role_score || 0) / maxRS;
-    const ga90 = p.mins > 0 ? (p.goals + p.assists) / (p.mins / 90) / maxGA90MF : 0;
-    return rs * 0.70 + ga90 * 0.30;
-  });
+  // Defenders & GK: role_score already embeds defensive stats (tackles, saves, clean sheets)
+  const dfStr = df.length ? df.reduce((s, p) => s + pq(p), 0) / df.length : 25;
+  const gkStr = gk.length ? gk.reduce((s, p) => s + pq(p), 0) / gk.length : 25;
 
-  const fwScore = avg(fw, p => {
-    const rs = (p.role_score || 0) / maxRS;
-    const g90 = p.mins > 0 ? p.goals / (p.mins / 90) / maxG90FW : 0;
-    const a90 = p.mins > 0 ? p.assists / (p.mins / 90) / maxGA90MF : 0;
-    return rs * 0.55 + g90 * 0.30 + a90 * 0.15;
-  });
-
-  // Weighted composite (FW 35%, MF 25%, DF 25%, GK 15%)
-  const composite = fwScore * 35 + mfScore * 25 + dfScore * 25 + gkScore * 15;
+  // Weighted composite: FW 35%, MF 25%, DF 25%, GK 15%
+  const overall = fwStr * 0.35 + mfStr * 0.25 + dfStr * 0.25 + gkStr * 0.15;
 
   return {
-    overall:  Math.min(composite, 100),
-    attack:   Math.min((fwScore * 0.70 + mfScore * 0.30) * 100, 100),
-    midfield: Math.min(mfScore * 100, 100),
-    defense:  Math.min((dfScore * 0.75 + gkScore * 0.25) * 100, 100),
-    gk:       Math.min(gkScore * 100, 100),
+    overall:  Math.min(Math.max(overall, 0), 100),
+    attack:   Math.min(fwStr * 0.70 + mfStr * 0.30, 100),
+    midfield: Math.min(mfStr, 100),
+    defense:  Math.min(dfStr * 0.75 + gkStr * 0.25, 100),
+    gk:       Math.min(gkStr, 100),
   };
 }
 
@@ -2961,14 +2960,14 @@ function runXiSimulation() {
 
   const strength = computeTeamStrength(players);
 
-  // Calibrated win probability per match:
-  // strength=0   → win%≈6%, draw%≈24%   (relegated-level, ~3 wins)
-  // strength=55  → win%≈40%, draw%≈22%  (mid-table, ~15 wins)
-  // strength=82  → win%≈57%, draw%≈19%  (Liverpool 24/25: 25 wins)
-  // strength=100 → win%≈68%, draw%≈17%  (~26-28 wins possible)
+  // Calibrated win probability per match (overall is now a true 0–100 percentile scale):
+  // strength=25 → ~6-7 wins (relegation battle)
+  // strength=50 → ~12-13 wins (mid-table)
+  // strength=70 → ~18-20 wins (European places)
+  // strength=85 → ~23-25 wins (title contender)
   const s = strength.overall / 100;
-  const winP  = 0.06 + s * 0.62;
-  const drawP = 0.24 - s * 0.07;
+  const winP  = Math.max(-0.178 + 0.988 * s, 0.01);
+  const drawP = Math.max(0.22 - s * 0.04, 0.05);
 
   const N = 3000;
   let tw = 0, td = 0;
