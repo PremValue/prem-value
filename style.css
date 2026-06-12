@@ -685,9 +685,9 @@ body::before {
 .xi-setup-actions {
   display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:.85rem;
 }
-.xi-autofill-btn {
-  background:linear-gradient(135deg,rgba(139,92,246,.35),rgba(236,72,153,.2)) !important;
-  border-color:rgba(139,92,246,.5) !important;color:var(--purple-lt) !important;
+.xi-randomize-btn {
+  background:linear-gradient(135deg,rgba(251,146,60,.30),rgba(245,158,11,.18)) !important;
+  border-color:rgba(251,146,60,.55) !important;color:#fbbf24 !important;
   font-weight:700;
 }
 .xi-squad-status {

@@ -2143,58 +2143,49 @@ function clearBuilderSquad() {
   renderXiBuilder();
 }
 
-function autoFillBuilderSquad() {
-  const slots   = FORMATIONS[xiSettings.formation] || FORMATIONS["4-3-3"];
-  const labels  = slotLabels(slots);
-  const budget  = xiSettings.maxValue === "" ? Infinity : Number(xiSettings.maxValue);
+function randomizeBuilderSquad() {
+  const slots  = FORMATIONS[xiSettings.formation] || FORMATIONS["4-3-3"];
+  const labels = slotLabels(slots);
+  const budget = xiSettings.maxValue === "" ? Infinity : Number(xiSettings.maxValue);
 
-  // Current state
-  const filledKeys = new Set(Object.values(xiBuilderSquad).filter(Boolean));
-  let remaining    = budget - getBuilderSpent();
+  // Always start from a blank slate so every click is a fresh random team
+  const newSquad   = {};
+  const used       = new Set();
   const clubCounts = {};
-  getBuilderSquadPlayers().filter(Boolean).forEach(p => {
-    clubCounts[p.club] = (clubCounts[p.club] || 0) + 1;
-  });
+  const posSpend   = {};
+  let remaining    = budget;
 
-  const emptyLabels = labels.filter(label => !xiBuilderSquad[label]);
+  for (const label of labels) {
+    const pos     = slots[labels.indexOf(label)];
+    const posCap  = xiPositionBudgets[pos] !== "" ? Number(xiPositionBudgets[pos]) : Infinity;
+    const posSpent = posSpend[pos] || 0;
 
-  // Sort eligible players by xiScore descending
-  const eligible = allComputedPlayers()
-    .filter(p => hasFreshValue(p) && p.mins >= xiSettings.minMinutes
-      && !filledKeys.has(playerKey(p)) && !XI_MEMORIAL_EXCLUSIONS.has(playerKey(p)))
-    .map(p => ({ ...p, xiScore: xiPlayerScore(p) }))
-    .sort((a, b) => b.xiScore - a.xiScore || a.market_value_m - b.market_value_m);
-
-  const newSquad = { ...xiBuilderSquad };
-  const used     = new Set(filledKeys);
-  // Track per-position spend for position budget caps
-  const posSpend = {};
-  getBuilderSquadPlayers().filter(Boolean).forEach(p => {
-    posSpend[p.position] = (posSpend[p.position] || 0) + p.market_value_m;
-  });
-
-  for (const label of emptyLabels) {
-    const pos       = slots[labels.indexOf(label)];
-    const posCap    = xiPositionBudgets[pos] !== "" ? Number(xiPositionBudgets[pos]) : Infinity;
-    const posSpent  = posSpend[pos] || 0;
-    const pick = eligible.find(p =>
+    // Collect every player that fits the slot constraints
+    const pool = allComputedPlayers().filter(p =>
       p.position === pos &&
+      hasFreshValue(p) &&
+      p.mins >= xiSettings.minMinutes &&
       !used.has(playerKey(p)) &&
+      !XI_MEMORIAL_EXCLUSIONS.has(playerKey(p)) &&
       p.market_value_m <= remaining &&
       (clubCounts[p.club] || 0) < xiSettings.maxPerClub &&
       posSpent + p.market_value_m <= posCap
     );
-    if (pick) {
-      newSquad[label] = playerKey(pick);
-      used.add(playerKey(pick));
-      remaining -= pick.market_value_m;
-      clubCounts[pick.club] = (clubCounts[pick.club] || 0) + 1;
-      posSpend[pick.position] = (posSpend[pick.position] || 0) + pick.market_value_m;
-    }
+
+    if (!pool.length) continue;
+
+    // Pick a random player from the eligible pool
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    newSquad[label] = playerKey(pick);
+    used.add(playerKey(pick));
+    remaining -= pick.market_value_m;
+    clubCounts[pick.club] = (clubCounts[pick.club] || 0) + 1;
+    posSpend[pick.position] = (posSpend[pick.position] || 0) + pick.market_value_m;
   }
 
   xiBuilderSquad  = newSquad;
   xiPickerSlot    = "";
+  xiPickerSearch  = "";
   xiLastSimResult = null;
   syncUrlState();
   renderXiBuilder();
@@ -2352,8 +2343,13 @@ function renderXiBuilder() {
   // Budget panel
   renderXiBudgetPanel({ totalValue: spent, filledCount });
 
-  // Re-render sim results if available
-  if (xiLastSimResult) renderXiPrediction(xiLastSimResult);
+  // Render sim results when available; clear the div when not (e.g. after clear/randomize)
+  const simEl = document.getElementById("xiSimResults");
+  if (xiLastSimResult) {
+    renderXiPrediction(xiLastSimResult);
+  } else if (simEl) {
+    simEl.innerHTML = "";
+  }
 
   // Picker panel
   renderXiPickerPanel(slots, labels, squadPlayers);
